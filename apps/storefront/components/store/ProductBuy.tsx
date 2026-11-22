@@ -206,11 +206,6 @@ export function ProductBuy({
         <div className="rounded-lg border border-border bg-card p-4 space-y-3">
           <h3 className="font-semibold">ÙØ­ØªØ§Ø¬ ÙØ¹Ø§ÙÙØ©</h3>
           <p className="text-sm text-muted-foreground whitespace-pre-wrap">{installation.inspectionNote}</p>
-          
-          <div className="text-sm space-y-2 mt-4 pt-4 border-t border-border">
-            <p className="font-medium">الرسالة اللي هتتبعت:</p>
-            <p className="text-muted-foreground whitespace-pre-wrap">{buildInspectionMessage(product.name_ar, (() => { const d = decide(); return d.kind === 'add' ? { length: d.lengthCm, width: chosenWidth } : undefined })(), product.id, installation.whatsappMessage)}</p>
-          </div>
           <a
             href={buildWhatsAppUrl(
               whatsappNumber,
