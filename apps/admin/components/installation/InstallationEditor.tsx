@@ -1,24 +1,24 @@
 'use clien
 
       <div>
-        <label className="block text-sm font-medium mb-2">الرسالة - الواتساب</label>
+        <label className="block text-sm font-medium mb-2">قالب واتساب المعاينة</label>
         <textarea
-          value={values.whatsappMessage || ''}
-          onChange={(e) => setFieldValue('whatsappMessage', e.target.value)}
-          placeholder="قالب الواتساب"
+          value={current.whatsappMessage}
+          onChange={(event) => update((current) => ({ ...current, whatsappMessage: event.target.value }))}
+          placeholder="قالب الواتساب بـ {{product}} و{{measurements}} و{{link}} — جملة 'المقاسات: {{measurements}}.' تُحذف كاملة عند غياب القياسات"
           className="w-full border rounded px-3 py-2 font-mono text-sm"
           rows={6}
           maxLength={INSTALLATION_LIMITS.whatsappMessage}
         />
         <div className="text-xs text-gray-500 mt-1">
-          ({values.whatsappMessage?.length || 0} / {INSTALLATION_LIMITS.whatsappMessage})
+          ({current.whatsappMessage.length} / {INSTALLATION_LIMITS.whatsappMessage})
         </div>
       </div>t'
 
 import { useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { DEFAULT_INSPECTION_NOTE, INSTALLATION_LIMITS, type InstallationAreas, type InstallationMode } from '@zell/core'
+import { DEFAULT_INSPECTION_NOTE, DEFAULT_WHATSAPP_MESSAGE, INSTALLATION_LIMITS, type InstallationAreas, type InstallationMode } from '@zell/core'
 import { saveInstallationAction } from '../../lib/actions'
 import { useSaveAction } from '../../lib/client/useSaveAction'
 import { formatPiastres, piastresToPounds } from '../../lib/format'
@@ -81,6 +81,7 @@ function toDraft(record: InstallationRecord, groups: ShippingAreaGroup[]): Draft
     enabled: record.config.enabled,
     note: record.config.note,
     inspectionNote: record.config.inspectionNote ?? DEFAULT_INSPECTION_NOTE,
+    whatsappMessage: record.config.whatsappMessage ?? DEFAULT_WHATSAPP_MESSAGE,
     fee: fee === null ? '' : piastresToPounds(fee),
     areas,
     mode: record.config.mode ?? 'choice',
@@ -126,7 +127,8 @@ function validate(draft: Draft): Checked {
   }
   return {
     ok: true,
-    input: { enabled: draft.enabled, note: draft.note, inspectionNote: draft.inspectionNote, feePerMeterPiastres: fee, areas, mode: draft.mode, installerOnlyProductIds: draft.productIds },
+    input: { enabled: draft.enabled, note: draft.note, inspectionNote: draft.inspectionNote,
+      whatsappMessage: draft.whatsappMessage, feePerMeterPiastres: fee, areas, mode: draft.mode, installerOnlyProductIds: draft.productIds },
   }
 }
 
