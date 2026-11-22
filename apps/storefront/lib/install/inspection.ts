@@ -34,7 +34,7 @@ export function buildInspectionMessage(
   // بناء الرسالة من القالب
   let template = whatsappTemplate || DEFAULT_WHATSAPP_MESSAGE;
   if (measurements === '') {
-    template = template.replace('المقاسات: {measurements}.', '');
+    template = template.replaceAll('المقاسات: {measurements}.', '');
   }
   
   let message = template
