@@ -11,7 +11,7 @@
  * 🚫 **مفيش أي مسار صور من Production هنا.** المعارض فاضية عن قصد —
  * الروابط الحقيقية بتتبنى في طبقة القراءة المعتمدة على السيرفر.
  */
-import { DEFAULT_INSPECTION_NOTE } from '@zell/core'
+import { DEFAULT_INSPECTION_NOTE, DEFAULT_WHATSAPP_MESSAGE } from '@zell/core'
 import type { StoreProduct, StoreCollection, StoreSettings } from '@zell/core'
 import { DEFAULT_INSTALLATION_TOOLS_PAGE, DEFAULT_STORE_CONTENT, NO_PUBLISHED_POLICIES } from '@zell/core'
 
@@ -112,7 +112,7 @@ export const FALLBACK_SETTINGS: StoreSettings = {
   offerText: 'أدوات التركيب مرفقة مجاناً',
   offerEnabled: true,
   installation: {
-    inspectionNote: DEFAULT_INSPECTION_NOTE, enabled: false, note: '', feePerMeterPiastres: null, areas: {} },
+    inspectionNote: DEFAULT_INSPECTION_NOTE, whatsappMessage: DEFAULT_WHATSAPP_MESSAGE, enabled: false, note: '', feePerMeterPiastres: null, areas: {} },
   whatsappNumber: '201000000000',
   whatsappMessage: 'مرحباً myzill، عايز أستفسر عن فيلم زجاج للبيت',
   shippingRates: FALLBACK_SHIPPING_RATES,

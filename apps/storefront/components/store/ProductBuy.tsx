@@ -174,6 +174,17 @@ export function ProductBuy({
     )
   }
 
+  /** رسالة المعاينة (واتساب) — بتتبنى مرة واحدة: بتتعرض في الصندوق وبتتبعت زي ما هي. */
+  const inspectionMessage = buildInspectionMessage(
+    product.name_ar,
+    (() => {
+      const d = decide()
+      return d.kind === 'add' ? { length: d.lengthCm, width: chosenWidth } : undefined
+    })(),
+    product.id,
+    installation?.whatsappMessage,
+  )
+
   return (
     <div className="space-y-4">
       {/* BUY-NOW: وقت «اطلب دلوقتي» كل الاختيارات والأزرار مقفولة لحد ما الانتقال يتحسم — اللي ظاهر = اللي اتضاف */}
@@ -206,11 +217,10 @@ export function ProductBuy({
         <div className="rounded-lg border border-border bg-card p-4 space-y-3">
           <h3 className="font-semibold">محتاج معاينة</h3>
           <p className="text-sm text-muted-foreground whitespace-pre-wrap">{installation.inspectionNote}</p>
+          <p className="font-medium">الرسالة اللي هتتبعت:</p>
+          <p className="text-sm text-muted-foreground whitespace-pre-wrap">{inspectionMessage}</p>
           <a
-            href={buildWhatsAppUrl(
-              whatsappNumber,
-              buildInspectionMessage(product.name_ar, (() => { const d = decide(); return d.kind === 'add' ? { length: d.lengthCm, width: chosenWidth } : undefined })(), product.id, installation.inspectionNote)
-            )}
+            href={buildWhatsAppUrl(whatsappNumber, inspectionMessage)}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700"

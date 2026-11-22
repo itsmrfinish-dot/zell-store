@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { DEFAULT_INSPECTION_NOTE, INSTALLATION_LIMITS, type InstallationAreas, type InstallationMode } from '@zell/core'
+import { DEFAULT_INSPECTION_NOTE, DEFAULT_WHATSAPP_MESSAGE, INSTALLATION_LIMITS, type InstallationAreas, type InstallationMode } from '@zell/core'
 import { saveInstallationAction } from '../../lib/actions'
 import { useSaveAction } from '../../lib/client/useSaveAction'
 import { formatPiastres, piastresToPounds } from '../../lib/format'
@@ -21,6 +21,7 @@ type Draft = {
   enabled: boolean
   note: string
   inspectionNote: string
+  whatsappMessage: string
   fee: string
   areas: Record<string, Record<string, string>>
   /** INSTALLER-ONLY */
@@ -66,6 +67,7 @@ function toDraft(record: InstallationRecord, groups: ShippingAreaGroup[]): Draft
     enabled: record.config.enabled,
     note: record.config.note,
     inspectionNote: record.config.inspectionNote ?? DEFAULT_INSPECTION_NOTE,
+    whatsappMessage: record.config.whatsappMessage ?? DEFAULT_WHATSAPP_MESSAGE,
     fee: fee === null ? '' : piastresToPounds(fee),
     areas,
     mode: record.config.mode ?? 'choice',
@@ -111,7 +113,7 @@ function validate(draft: Draft): Checked {
   }
   return {
     ok: true,
-    input: { enabled: draft.enabled, note: draft.note, inspectionNote: draft.inspectionNote, feePerMeterPiastres: fee, areas, mode: draft.mode, installerOnlyProductIds: draft.productIds },
+    input: { enabled: draft.enabled, note: draft.note, inspectionNote: draft.inspectionNote, whatsappMessage: draft.whatsappMessage, feePerMeterPiastres: fee, areas, mode: draft.mode, installerOnlyProductIds: draft.productIds },
   }
 }
 
@@ -290,7 +292,7 @@ export function InstallationEditor({
             />
           </Field>
 
-          <Field htmlFor="installation-inspection-note" label="رسالة المعاينة" hint="بتظهر للعميل في صفحة المنتج لما يختار التركيب الفني، وبتتبعت مع طلب المعاينة على واتساب.">
+          <Field htmlFor="installation-inspection-note" label="شرح المعاينة" hint="النص ده بيظهر للعميل في صندوق المعاينة في صفحة المنتج، ومش بيتبعت في رسالة الواتساب.">
             <textarea
               id="installation-inspection-note"
               value={draft.inspectionNote}
@@ -299,6 +301,19 @@ export function InstallationEditor({
               rows={3}
               maxLength={INSTALLATION_LIMITS.inspectionNote}
               placeholder="اكتب رسالة المعاينة"
+              disabled={locked}
+            />
+          </Field>
+
+          <Field htmlFor="installation-whatsapp-message" label="رسالة الواتساب" hint="القالب اللي هيتبعت فعليًا للواتساب. تقدر تستخدم {product} لاسم المنتج و{measurements} للمقاسات و{link} لرابط المنتج. جملة المقاسات لازم تفضل بالشكل ده بالظبط: المقاسات: {measurements}. ولو العميل مدخلش مقاسات هتتشال الجملة دي تلقائيًا من الرسالة.">
+            <textarea
+              id="installation-whatsapp-message"
+              value={draft.whatsappMessage}
+              onChange={(event) => update((current) => ({ ...current, whatsappMessage: event.target.value }))}
+              className={textareaClasses}
+              rows={3}
+              maxLength={INSTALLATION_LIMITS.whatsappMessage}
+              placeholder="اكتب قالب الواتساب"
               disabled={locked}
             />
           </Field>
