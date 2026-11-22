@@ -9,7 +9,7 @@
  *    لسه بتقراه تفضل شغالة. مابيتكتبش بإيد.
  */
 
-export const INSTALLATION_LIMITS = { note: 300, area: 40, maxPiastres: 1_000_000 } as const
+export const INSTALLATION_LIMITS = { note: 300, inspectionNote: 600, area: 40, maxPiastres: 1_000_000 } as const
 
 /**
  * INSTALLER-ONLY (قرار المالك 2026-11-05) — طريقة التركيب من صفحة «فني التركيب» في اللوحة:
@@ -50,6 +50,8 @@ export type InstallationConfig = {
   mode?: InstallationMode
   /** INSTALLER-ONLY — أفلام «فني فقط» لما mode = 'installer_products'. */
   installerOnlyProductIds?: number[]
+  /** رسالة المعاينة (بتظهر للعميل عند اختيار المعاينة). */
+  inspectionNote?: string
 }
 
 /** رقم صحيح بالقرش من min لحد الأقصى — نفس حدود zell_create_order. */
