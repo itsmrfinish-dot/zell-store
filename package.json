@@ -8,8 +8,8 @@
   },
   "scripts": {
     "dev": "pnpm --filter @zell/storefront dev",
-    "build": "pnpm --filter @zell/storefront build",
-    "start": "pnpm --filter @zell/storefront start",
+    "build": "pnpm --filter @zell/admin build",
+    "start": "pnpm --filter @zell/admin exec next start --port $PORT",
     "typecheck": "pnpm -r --if-present typecheck"
   }
 }
