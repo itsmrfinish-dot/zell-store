@@ -1,6 +1,7 @@
 import 'server-only'
 
 import {
+  DEFAULT_INSPECTION_NOTE,
   INSTALLATION_LIMITS,
   installationGovernorates,
   isInstallationMoney,
@@ -93,6 +94,7 @@ export async function saveInstallation(raw: unknown, rawExpected: unknown): Prom
     return { ok: false, code: 'VALIDATION', message: 'سطر التوضيح أطول من ' + String(INSTALLATION_LIMITS.note) + ' حرف' }
   }
   const inspectionNote = typeof input['inspectionNote'] === 'string' ? input['inspectionNote'].trim() : ''
+  const normalizedInspectionNote = inspectionNote === '' ? DEFAULT_INSPECTION_NOTE : inspectionNote
   if (inspectionNote.length > INSTALLATION_LIMITS.inspectionNote) {
     return { ok: false, code: 'VALIDATION', message: 'رسالة المعاينة أطول من ' + String(INSTALLATION_LIMITS.inspectionNote) + ' حرف' }
   }
@@ -165,7 +167,7 @@ export async function saveInstallation(raw: unknown, rawExpected: unknown): Prom
     const value: Record<string, unknown> = {
       enabled,
       note,
-      inspectionNote,
+      inspectionNote: normalizedInspectionNote,
       areas,
       governorates: installationGovernorates(areas),
       mode,
@@ -197,7 +199,7 @@ export async function saveInstallation(raw: unknown, rawExpected: unknown): Prom
     }
 
     const stored = await readInstallationRecord()
-    const expected: InstallationConfig = { enabled, note, inspectionNote, feePerMeterPiastres: fee, areas, mode, installerOnlyProductIds }
+    const expected: InstallationConfig = { enabled, note, inspectionNote: normalizedInspectionNote, feePerMeterPiastres: fee, areas, mode, installerOnlyProductIds }
     if (stored.updatedAt === null || !sameConfig(stored.config, expected)) return toInternalFailure(null)
     return { ok: true, data: stored }
   } catch (error) {
