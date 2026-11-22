@@ -20,6 +20,7 @@ import { Switch } from '../ui/Switch'
 type Draft = {
   enabled: boolean
   note: string
+  inspectionNote: string
   fee: string
   areas: Record<string, Record<string, string>>
   /** INSTALLER-ONLY */
