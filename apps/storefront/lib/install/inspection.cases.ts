@@ -1,10 +1,10 @@
 /**
- * حالات اختبار ميزة المعاينة.
+ * حالات اختبار نسخة الرسالتين.
  *
  * التشغيل: pnpm --filter @zell/storefront cases suite inspection
  */
 
-import { buildInspectionMessage, buildWhatsAppUrl } from './inspection'
+import { buildInspectionMessage, buildWhatsAppUrl, DEFAULT_WHATSAPP_MESSAGE } from './inspection'
 
 export type InspectionCaseFailure = { name: string; expected: string; actual: string }
 
@@ -19,36 +19,75 @@ export function runInspectionCases(): { passed: number; failures: InspectionCase
     else failures.push({ name, expected: e, actual: a })
   }
 
-  // حالات اختبار بناء الرسالة
+  // حالات اختبار القالب الافتراضي
 
   check(
-    'buildInspectionMessage: بدون مقاسات وبدون note',
-    buildInspectionMessage('عازل حرارة', undefined, 1),
-    'محتاج معاينة قبل التركيب\nالمنتج: عازل حرارة\nالرابط: https://myzill.com/product/1'
+    'buildInspectionMessage: default template with measurements',
+    buildInspectionMessage('شاشة', { length: 100, width: 50 }, 1, undefined),
+    'مرحبًا، محتاج معاينة قبل التركيب للمنتج شاشة. المقاسات: 100×50 عارف إن تكلفة التركيب بتتحسب بالمتر المربع بعد القياس الفعلي، وعايز أعرف التكلفة النهائية ونتفق عليها قبل ما يبدأ الشغل. سعر الفيلم نفسه بالمتر الطولي حسب الصفحة. https://myzill.com/product/1'
   )
 
   check(
-    'buildInspectionMessage: مع مقاسات وبدون note',
-    buildInspectionMessage('مصنفر', { length: 100, width: 50 }, 2),
-    'محتاج معاينة قبل التركيب\nالمنتج: مصنفر\nالمقاسات: 100×50\nالرابط: https://myzill.com/product/2'
+    'buildInspectionMessage: default template without measurements',
+    buildInspectionMessage('عازل حرارة', undefined, 2, undefined),
+    'مرحبًا، محتاج معاينة قبل التركيب للمنتج عازل حرارة. عارف إن تكلفة التركيب بتتحسب بالمتر المربع بعد القياس الفعلي، وعايز أعرف التكلفة النهائية ونتفق عليها قبل ما يبدأ الشغل. سعر الفيلم نفسه بالمتر الطولي حسب الصفحة. https://myzill.com/product/2'
+  )
+
+  // حالات اختبار القالب المخصص
+
+  check(
+    'buildInspectionMessage: custom template replaces placeholders',
+    buildInspectionMessage('منتج', { length: 100, width: 50 }, 1, 'عايز معاينة للمنتج {product} بـ {measurements} والرابط {link}'),
+    'عايز معاينة للمنتج منتج بـ المقاسات: 100×50 والرابط https://myzill.com/product/1'
   )
 
   check(
-    'buildInspectionMessage: مع note',
-    buildInspectionMessage('عازل حرارة', undefined, 1, 'رسالة المعاينة'),
-    'محتاج معاينة قبل التركيب\nرسالة المعاينة\nالمنتج: عازل حرارة\nالرابط: https://myzill.com/product/1'
+    'buildInspectionMessage: custom template without measurements',
+    buildInspectionMessage('منتج', undefined, 1, 'المنتج: {product} - الرابط: {link}'),
+    'المنتج: منتج - الرابط: https://myzill.com/product/1'
   )
 
-  check(
-    'buildInspectionMessage: مع note ومقاسات',
-    buildInspectionMessage('مصنفر', { length: 100, width: 50 }, 2, 'التركيب بيبدأ بمعاينة'),
-    'محتاج معاينة قبل التركيب\nالتركيب بيبدأ بمعاينة\nالمنتج: مصنفر\nالمقاسات: 100×50\nالرابط: https://myzill.com/product/2'
-  )
+  // اختبار العنصر النائب غير المعروف
 
   check(
-    'buildWhatsAppUrl: بناء الرابط',
-    buildWhatsAppUrl('201001234567', 'محتاج معاينة قبل التركيب'),
-    'https://wa.me/201001234567?text=%D9%85%D8%AD%D8%AA%D8%A7%D8%AC%20%D9%85%D8%B9%D8%A7%D9%8A%D9%86%D8%A9%20%D9%82%D8%A8%D9%84%20%D8%A7%D9%84%D8%AA%D8%B1%D9%83%D9%8A%D8%A8'
+    'buildInspectionMessage: unknown placeholder stays literal',
+    buildInspectionMessage('منتج', undefined, 1, 'المنتج: {product} والسعر: {price}'),
+    'المنتج: منتج والسعر: {price}'
+  )
+
+  // اختبار تنظيف المسافات الزائدة
+
+  check(
+    'buildInspectionMessage: cleanup double spaces',
+    buildInspectionMessage('منتج', undefined, 1, 'المنتج:  {product}   والرابط:   {link}'),
+    'المنتج: منتج والرابط: https://myzill.com/product/1'
+  )
+
+  // اختبار الافتراضي عند غياب القالب
+
+  check(
+    'buildInspectionMessage: uses DEFAULT_WHATSAPP_MESSAGE when no template provided',
+    buildInspectionMessage('منتج اختبار', { length: 50, width: 25 }, 123, undefined).includes('مرحبًا'),
+    true
+  )
+
+  // اختبار بناء رابط الواتساب
+
+  check(
+    'buildWhatsAppUrl: builds correct wa.me URL',
+    buildWhatsAppUrl('201001234567', 'مرحبًا'),
+    'https://wa.me/201001234567?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7'
+  )
+
+  // اختبار أن رسالة الواتساب المعروضة تطابق رابط الواتساب
+
+  const msg = buildInspectionMessage('منتج', undefined, 1, undefined);
+  const url = buildWhatsAppUrl('201000000000', msg);
+  const decodedUrl = decodeURIComponent(url);
+  check(
+    'buildInspectionMessage & buildWhatsAppUrl: message in URL matches displayed message',
+    msg,
+    new URL(url).searchParams.get('text') || ''
   )
 
   return { passed, failures }
