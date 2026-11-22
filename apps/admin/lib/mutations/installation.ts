@@ -2,6 +2,7 @@ import 'server-only'
 
 import {
   DEFAULT_INSPECTION_NOTE,
+  DEFAULT_WHATSAPP_MESSAGE,
   INSTALLATION_LIMITS,
   installationGovernorates,
   isInstallationMoney,
@@ -39,6 +40,7 @@ export type InstallationInput = {
   enabled: boolean
   note: string
   inspectionNote: string
+  whatsappMessage: string
   feePerMeterPiastres: number | null
   areas: InstallationAreas
   /** INSTALLER-ONLY — طريقة التركيب (الغايب = 'choice'). */
@@ -68,7 +70,7 @@ export async function installerAreasMissingFromShipping(): Promise<OrphanArea[]>
 }
 
 function sameConfig(a: InstallationConfig, b: InstallationConfig): boolean {
-  if (a.enabled !== b.enabled || a.note !== b.note || a.inspectionNote !== b.inspectionNote || a.feePerMeterPiastres !== b.feePerMeterPiastres) return false
+  if (a.enabled !== b.enabled || a.note !== b.note || a.inspectionNote !== b.inspectionNote || a.whatsappMessage !== b.whatsappMessage || a.feePerMeterPiastres !== b.feePerMeterPiastres) return false
   if ((a.mode ?? 'choice') !== (b.mode ?? 'choice')) return false
   if ((a.installerOnlyProductIds ?? []).join(',') !== (b.installerOnlyProductIds ?? []).join(',')) return false
   const flat = (areas: InstallationAreas): string =>
@@ -97,6 +99,11 @@ export async function saveInstallation(raw: unknown, rawExpected: unknown): Prom
   const normalizedInspectionNote = inspectionNote === '' ? DEFAULT_INSPECTION_NOTE : inspectionNote
   if (inspectionNote.length > INSTALLATION_LIMITS.inspectionNote) {
     return { ok: false, code: 'VALIDATION', message: 'رسالة المعاينة أطول من ' + String(INSTALLATION_LIMITS.inspectionNote) + ' حرف' }
+  }
+  const whatsappMessage = typeof input['whatsappMessage'] === 'string' ? input['whatsappMessage'].trim() : ''
+  const normalizedWhatsappMessage = whatsappMessage === '' ? DEFAULT_WHATSAPP_MESSAGE : whatsappMessage
+  if (whatsappMessage.length > INSTALLATION_LIMITS.whatsappMessage) {
+    return { ok: false, code: 'VALIDATION', message: 'رسالة الواتساب أطول من ' + String(INSTALLATION_LIMITS.whatsappMessage) + ' حرف' }
   }
 
   // INSTALLER-ONLY — الغايب = 'choice' (نسخة لوحة قديمة)
@@ -168,6 +175,7 @@ export async function saveInstallation(raw: unknown, rawExpected: unknown): Prom
       enabled,
       note,
       inspectionNote: normalizedInspectionNote,
+      whatsappMessage: normalizedWhatsappMessage,
       areas,
       governorates: installationGovernorates(areas),
       mode,
@@ -199,7 +207,7 @@ export async function saveInstallation(raw: unknown, rawExpected: unknown): Prom
     }
 
     const stored = await readInstallationRecord()
-    const expected: InstallationConfig = { enabled, note, inspectionNote: normalizedInspectionNote, feePerMeterPiastres: fee, areas, mode, installerOnlyProductIds }
+    const expected: InstallationConfig = { enabled, note, inspectionNote: normalizedInspectionNote, whatsappMessage: normalizedWhatsappMessage, feePerMeterPiastres: fee, areas, mode, installerOnlyProductIds }
     if (stored.updatedAt === null || !sameConfig(stored.config, expected)) return toInternalFailure(null)
     return { ok: true, data: stored }
   } catch (error) {
