@@ -165,6 +165,7 @@ export async function saveInstallation(raw: unknown, rawExpected: unknown): Prom
     const value: Record<string, unknown> = {
       enabled,
       note,
+      inspectionNote,
       areas,
       governorates: installationGovernorates(areas),
       mode,
