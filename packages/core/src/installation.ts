@@ -11,6 +11,8 @@
 
 export const INSTALLATION_LIMITS = { note: 300, inspectionNote: 600, area: 40, maxPiastres: 1_000_000 } as const
 
+export const DEFAULT_INSPECTION_NOTE = 'التركيب بيبدأ بمعاينة: الفني بييجي يقيس الإزاز على الطبيعة، وتكلفة التركيب بتتحسب بالمتر المربع حسب المقاس الفعلي، وبتعرف التكلفة النهائية وتوافق عليها قبل ما يبدأ الشغل. سعر الفيلم نفسه بالمتر الطولي زي ما هو مكتوب في الصفحة.' as const
+
 /**
  * INSTALLER-ONLY (قرار المالك 2026-11-05) — طريقة التركيب من صفحة «فني التركيب» في اللوحة:
  *   choice              العميل يختار (زي ما هو — الافتراضي، والإعداد القديم من غير mode)
@@ -82,9 +84,14 @@ export function parseInstallationConfig(value: unknown): InstallationConfig {
   }
   const fee = raw['feePerMeterPiastres']
   const mode = raw['mode']
+  const inspectionNote = typeof raw['inspectionNote'] === 'string' 
+    ? raw['inspectionNote'].trim().substring(0, INSTALLATION_LIMITS.inspectionNote)
+    : DEFAULT_INSPECTION_NOTE
+  
   return {
     enabled: raw['enabled'] === true,
     note: typeof raw['note'] === 'string' ? raw['note'] : '',
+    inspectionNote: inspectionNote || DEFAULT_INSPECTION_NOTE,
     feePerMeterPiastres: isInstallationMoney(fee, 1) ? fee : null,
     areas,
     mode: isInstallationMode(mode) ? mode : 'choice',
