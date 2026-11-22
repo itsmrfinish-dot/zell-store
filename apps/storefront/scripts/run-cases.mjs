@@ -29,7 +29,7 @@ const coreSrc = join(appRoot, '..', '..', 'packages', 'core', 'src')
 const SUITES = [
   { name: 'delivery', dir: 'lib/orders', entry: 'deliverySettings.cases.ts', run: 'runDeliverySettingsCases' },
   { name: 'install', dir: 'lib/install', entry: 'installChoice.cases.ts', run: 'runInstallChoiceCases' },
-  { name: 'inspection', dir: 'lib/install', entry: 'inspection.cases.ts', run: 'runInspectionCases' },
+  { name: 'inspection', dir: 'lib/install', entry: 'inspection.cases.ts', run: 'runInspectionCases', also: ['lib'] },
   { name: 'home', dir: 'lib/home', entry: 'homeLayout.cases.ts', run: 'runHomeLayoutCases' },
   { name: 'track', dir: 'lib/orders', entry: 'trackOrder.cases.ts', run: 'runTrackOrderCases' },
   { name: 'shipping', dir: 'lib/orders', entry: 'shipping.cases.ts', run: 'runShippingCases' },
