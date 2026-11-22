@@ -37,6 +37,7 @@ import type { ShippingAreaGroup, InstallationRecord } from '../data/installation
 export type InstallationInput = {
   enabled: boolean
   note: string
+  inspectionNote: string
   feePerMeterPiastres: number | null
   areas: InstallationAreas
   /** INSTALLER-ONLY — طريقة التركيب (الغايب = 'choice'). */
