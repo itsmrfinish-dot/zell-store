@@ -11,7 +11,7 @@
 -- * DROP 4 erp_* tables in safe order (FK-safe: alter first, no CASCADE)
 -- * DROP zell_order_writer role (verified: no object ownership)
 
--- Step 1: Soft disable (REVOKE, not DROP) --" recoverable if needed later
+-- Step 1: Soft disable (REVOKE, not DROP) - recoverable if needed later
 REVOKE EXECUTE ON FUNCTION zell_order_save_delivery_periods(timestamp with time zone, jsonb) FROM authenticated;
 REVOKE EXECUTE ON FUNCTION zell_order_set_gate(boolean, text) FROM authenticated;
 
