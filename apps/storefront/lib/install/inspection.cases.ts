@@ -4,7 +4,7 @@
  * التشغيل: pnpm --filter @zell/storefront cases suite inspection
  */
 
-import { DEFAULT_WHATSAPP_MESSAGE } from '@zell/core'
+import { DEFAULT_INSPECTION_NOTE, DEFAULT_WHATSAPP_MESSAGE, parseInstallationConfig } from '@zell/core'
 import { buildInspectionMessage, buildWhatsAppUrl } from './inspection'
 import { SITE_URL } from '../site'
 
@@ -41,6 +41,9 @@ export function runInspectionCases(): { passed: number; failures: InspectionCase
     true
   )
 
+  const duplicatedWithoutDimensions = buildInspectionMessage('فيلم مصنفر', undefined, 2, 'أهلًا {product}. المقاسات: {measurements}. المقاسات: {measurements}. {link}')
+  check('buildInspectionMessage: بدون مقاسات — جملة المقاسات المكررة بتتشال كلها', duplicatedWithoutDimensions.includes('المقاسات'), false)
+
   check(
     'buildInspectionMessage: قالب مخصص مع مقاسات',
     buildInspectionMessage('فيلم مصنفر', { length: 300, width: 100 }, 2, 'أهلًا، عايز معاينة لـ{product} ({measurements}) {link}'),
@@ -60,6 +63,11 @@ export function runInspectionCases(): { passed: number; failures: InspectionCase
   const waUrl = buildWhatsAppUrl('201099137788', withDimensions)
   check('buildWhatsAppUrl: بيبدأ بـ wa.me', waUrl.startsWith('https://wa.me/201099137788?text='), true)
   check('buildWhatsAppUrl: النص بيتفك زي ما هو', decodeURIComponent(waUrl.replace('https://wa.me/201099137788?text=', '')), withDimensions)
+
+  // حالات اختبار إعدادات التركيب الافتراضية
+
+  check('parseInstallationConfig: الإعدادات الافتراضية — inspectionNote', parseInstallationConfig({}).inspectionNote, DEFAULT_INSPECTION_NOTE)
+  check('parseInstallationConfig: الإعدادات الافتراضية — whatsappMessage', parseInstallationConfig({}).whatsappMessage, DEFAULT_WHATSAPP_MESSAGE)
 
   return { passed, failures }
 }
