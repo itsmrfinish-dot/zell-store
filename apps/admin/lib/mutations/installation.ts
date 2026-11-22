@@ -92,6 +92,10 @@ export async function saveInstallation(raw: unknown, rawExpected: unknown): Prom
   if (note.length > INSTALLATION_LIMITS.note) {
     return { ok: false, code: 'VALIDATION', message: 'سطر التوضيح أطول من ' + String(INSTALLATION_LIMITS.note) + ' حرف' }
   }
+  const inspectionNote = typeof input['inspectionNote'] === 'string' ? input['inspectionNote'].trim() : ''
+  if (inspectionNote.length > INSTALLATION_LIMITS.inspectionNote) {
+    return { ok: false, code: 'VALIDATION', message: 'رسالة المعاينة أطول من ' + String(INSTALLATION_LIMITS.inspectionNote) + ' حرف' }
+  }
 
   // INSTALLER-ONLY — الغايب = 'choice' (نسخة لوحة قديمة)
   const modeRaw = input['mode'] === undefined ? 'choice' : input['mode']
