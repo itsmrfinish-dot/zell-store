@@ -65,6 +65,7 @@ function toDraft(record: InstallationRecord, groups: ShippingAreaGroup[]): Draft
   return {
     enabled: record.config.enabled,
     note: record.config.note,
+    inspectionNote: record.config.inspectionNote ?? DEFAULT_INSPECTION_NOTE,
     fee: fee === null ? '' : piastresToPounds(fee),
     areas,
     mode: record.config.mode ?? 'choice',
@@ -110,7 +111,7 @@ function validate(draft: Draft): Checked {
   }
   return {
     ok: true,
-    input: { enabled: draft.enabled, note: draft.note, feePerMeterPiastres: fee, areas, mode: draft.mode, installerOnlyProductIds: draft.productIds },
+    input: { enabled: draft.enabled, note: draft.note, inspectionNote: draft.inspectionNote, feePerMeterPiastres: fee, areas, mode: draft.mode, installerOnlyProductIds: draft.productIds },
   }
 }
 
@@ -285,6 +286,19 @@ export function InstallationEditor({
               rows={2}
               maxLength={INSTALLATION_LIMITS.note}
               placeholder="اكتب سطر التوضيح"
+              disabled={locked}
+            />
+          </Field>
+
+          <Field htmlFor="installation-inspection-note" label="رسالة المعاينة" hint="بتظهر للعميل في صفحة المنتج لما يختار التركيب الفني، وبتتبعت مع طلب المعاينة على واتساب.">
+            <textarea
+              id="installation-inspection-note"
+              value={draft.inspectionNote}
+              onChange={(event) => update((current) => ({ ...current, inspectionNote: event.target.value }))}
+              className={textareaClasses}
+              rows={3}
+              maxLength={INSTALLATION_LIMITS.inspectionNote}
+              placeholder="اكتب رسالة المعاينة"
               disabled={locked}
             />
           </Field>
