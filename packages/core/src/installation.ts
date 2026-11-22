@@ -1,23 +1,23 @@
 /**
- * settings.installation — فني التركيب (0018).
+ * settings.installation â ÙÙÙ Ø§ÙØªØ±ÙÙØ¨ (0018).
  *
- *   { enabled, note, feePerMeterPiastres, areas: { محافظة: { منطقة: انتقال بالقرش } }, governorates }
+ *   { enabled, note, feePerMeterPiastres, areas: { ÙØ­Ø§ÙØ¸Ø©: { ÙÙØ·ÙØ©: Ø§ÙØªÙØ§Ù Ø¨Ø§ÙÙØ±Ø´ } }, governorates }
  *
- * ⚠️ الحَكَم هو zell_create_order: سعر المتر عدد صحيح 1..1,000,000 قرش، والانتقال 0..1,000,000.
- *    أي قيمة بره الحدود دي الداتابيز بترفضها، فالقراءة هنا بتسقطها بنفس الحدود.
- * ⚠️ governorates مشتق من areas (المحافظات اللي فيها منطقة مفعّلة) عشان نسخة المتجر اللي
- *    لسه بتقراه تفضل شغالة. مابيتكتبش بإيد.
+ * â ï¸ Ø§ÙØ­ÙÙÙÙ ÙÙ zell_create_order: Ø³Ø¹Ø± Ø§ÙÙØªØ± Ø¹Ø¯Ø¯ ØµØ­ÙØ­ 1..1,000,000 ÙØ±Ø´Ø ÙØ§ÙØ§ÙØªÙØ§Ù 0..1,000,000.
+ *    Ø£Ù ÙÙÙØ© Ø¨Ø±Ù Ø§ÙØ­Ø¯ÙØ¯ Ø¯Ù Ø§ÙØ¯Ø§ØªØ§Ø¨ÙØ² Ø¨ØªØ±ÙØ¶ÙØ§Ø ÙØ§ÙÙØ±Ø§Ø¡Ø© ÙÙØ§ Ø¨ØªØ³ÙØ·ÙØ§ Ø¨ÙÙØ³ Ø§ÙØ­Ø¯ÙØ¯.
+ * â ï¸ governorates ÙØ´ØªÙ ÙÙ areas (Ø§ÙÙØ­Ø§ÙØ¸Ø§Øª Ø§ÙÙÙ ÙÙÙØ§ ÙÙØ·ÙØ© ÙÙØ¹ÙÙØ©) Ø¹Ø´Ø§Ù ÙØ³Ø®Ø© Ø§ÙÙØªØ¬Ø± Ø§ÙÙÙ
+ *    ÙØ³Ù Ø¨ØªÙØ±Ø§Ù ØªÙØ¶Ù Ø´ØºØ§ÙØ©. ÙØ§Ø¨ÙØªÙØªØ¨Ø´ Ø¨Ø¥ÙØ¯.
  */
 
-export const INSTALLATION_LIMITS = { note: 300, inspectionNote: 600, area: 40, maxPiastres: 1_000_000 } as const
+export const INSTALLATION_LIMITS = { note: 300, inspectionNote: 600, whatsappMessage: 600, area: 40, maxPiastres: 1_000_000 } as const
 
-export const DEFAULT_INSPECTION_NOTE = 'التركيب بيبدأ بمعاينة: الفني بييجي يقيس الإزاز على الطبيعة، وتكلفة التركيب بتتحسب بالمتر المربع حسب المقاس الفعلي، وبتعرف التكلفة النهائية وتوافق عليها قبل ما يبدأ الشغل. سعر الفيلم نفسه بالمتر الطولي زي ما هو مكتوب في الصفحة.' as const
+export const DEFAULT_INSPECTION_NOTE = 'Ø§ÙØªØ±ÙÙØ¨ Ø¨ÙØ¨Ø¯Ø£ Ø¨ÙØ¹Ø§ÙÙØ©: Ø§ÙÙÙÙ Ø¨ÙÙØ¬Ù ÙÙÙØ³ Ø§ÙØ¥Ø²Ø§Ø² Ø¹ÙÙ Ø§ÙØ·Ø¨ÙØ¹Ø©Ø ÙØªÙÙÙØ© Ø§ÙØªØ±ÙÙØ¨ Ø¨ØªØªØ­Ø³Ø¨ Ø¨Ø§ÙÙØªØ± Ø§ÙÙØ±Ø¨Ø¹ Ø­Ø³Ø¨ Ø§ÙÙÙØ§Ø³ Ø§ÙÙØ¹ÙÙØ ÙØ¨ØªØ¹Ø±Ù Ø§ÙØªÙÙÙØ© Ø§ÙÙÙØ§Ø¦ÙØ© ÙØªÙØ§ÙÙ Ø¹ÙÙÙØ§ ÙØ¨Ù ÙØ§ ÙØ¨Ø¯Ø£ Ø§ÙØ´ØºÙ. Ø³Ø¹Ø± Ø§ÙÙÙÙÙ ÙÙØ³Ù Ø¨Ø§ÙÙØªØ± Ø§ÙØ·ÙÙÙ Ø²Ù ÙØ§ ÙÙ ÙÙØªÙØ¨ ÙÙ Ø§ÙØµÙØ­Ø©.' as const
 
 /**
- * INSTALLER-ONLY (قرار المالك 2026-11-05) — طريقة التركيب من صفحة «فني التركيب» في اللوحة:
- *   choice              العميل يختار (زي ما هو — الافتراضي، والإعداد القديم من غير mode)
- *   installer_all       فني فقط لكل أفلام المقاس
- *   installer_products  فني فقط للمنتجات في installerOnlyProductIds
+ * INSTALLER-ONLY (ÙØ±Ø§Ø± Ø§ÙÙØ§ÙÙ 2026-11-05) â Ø·Ø±ÙÙØ© Ø§ÙØªØ±ÙÙØ¨ ÙÙ ØµÙØ­Ø© Â«ÙÙÙ Ø§ÙØªØ±ÙÙØ¨Â» ÙÙ Ø§ÙÙÙØ­Ø©:
+ *   choice              Ø§ÙØ¹ÙÙÙ ÙØ®ØªØ§Ø± (Ø²Ù ÙØ§ ÙÙ â Ø§ÙØ§ÙØªØ±Ø§Ø¶ÙØ ÙØ§ÙØ¥Ø¹Ø¯Ø§Ø¯ Ø§ÙÙØ¯ÙÙ ÙÙ ØºÙØ± mode)
+ *   installer_all       ÙÙÙ ÙÙØ· ÙÙÙ Ø£ÙÙØ§Ù Ø§ÙÙÙØ§Ø³
+ *   installer_products  ÙÙÙ ÙÙØ· ÙÙÙÙØªØ¬Ø§Øª ÙÙ installerOnlyProductIds
  */
 export const INSTALLATION_MODES = ['choice', 'installer_all', 'installer_products'] as const
 export type InstallationMode = (typeof INSTALLATION_MODES)[number]
@@ -27,7 +27,7 @@ export function isInstallationMode(value: unknown): value is InstallationMode {
   return typeof value === 'string' && (INSTALLATION_MODES as readonly string[]).includes(value)
 }
 
-/** معرّفات منتجات: أرقام صحيحة موجبة من غير تكرار، بالترتيب، لحد الأقصى. أي قيمة غلط بتتشال. */
+/** ÙØ¹Ø±ÙÙØ§Øª ÙÙØªØ¬Ø§Øª: Ø£Ø±ÙØ§Ù ØµØ­ÙØ­Ø© ÙÙØ¬Ø¨Ø© ÙÙ ØºÙØ± ØªÙØ±Ø§Ø±Ø Ø¨Ø§ÙØªØ±ØªÙØ¨Ø ÙØ­Ø¯ Ø§ÙØ£ÙØµÙ. Ø£Ù ÙÙÙØ© ØºÙØ· Ø¨ØªØªØ´Ø§Ù. */
 export function parseInstallerOnlyIds(value: unknown): number[] {
   if (!Array.isArray(value)) return []
   const out: number[] = []
@@ -39,24 +39,24 @@ export function parseInstallerOnlyIds(value: unknown): number[] {
   return out
 }
 
-/** { محافظة: { منطقة: انتقال الفني بالقرش } } — المنطقة الموجودة هنا = متاحة للفني. */
+/** { ÙØ­Ø§ÙØ¸Ø©: { ÙÙØ·ÙØ©: Ø§ÙØªÙØ§Ù Ø§ÙÙÙÙ Ø¨Ø§ÙÙØ±Ø´ } } â Ø§ÙÙÙØ·ÙØ© Ø§ÙÙÙØ¬ÙØ¯Ø© ÙÙØ§ = ÙØªØ§Ø­Ø© ÙÙÙÙÙ. */
 export type InstallationAreas = Record<string, Record<string, number>>
 
 export type InstallationConfig = {
   enabled: boolean
   note: string
-  /** null = لسه متحددش، والفني مش متاح لحد ما يتكتب. */
+  /** null = ÙØ³Ù ÙØªØ­Ø¯Ø¯Ø´Ø ÙØ§ÙÙÙÙ ÙØ´ ÙØªØ§Ø­ ÙØ­Ø¯ ÙØ§ ÙØªÙØªØ¨. */
   feePerMeterPiastres: number | null
   areas: InstallationAreas
-  /** INSTALLER-ONLY — ناقص = 'choice' (العميل يختار). */
+  /** INSTALLER-ONLY â ÙØ§ÙØµ = 'choice' (Ø§ÙØ¹ÙÙÙ ÙØ®ØªØ§Ø±). */
   mode?: InstallationMode
-  /** INSTALLER-ONLY — أفلام «فني فقط» لما mode = 'installer_products'. */
+  /** INSTALLER-ONLY â Ø£ÙÙØ§Ù Â«ÙÙÙ ÙÙØ·Â» ÙÙØ§ mode = 'installer_products'. */
   installerOnlyProductIds?: number[]
-  /** رسالة المعاينة (بتظهر للعميل عند اختيار المعاينة). */
+  /** Ø±Ø³Ø§ÙØ© Ø§ÙÙØ¹Ø§ÙÙØ© (Ø¨ØªØ¸ÙØ± ÙÙØ¹ÙÙÙ Ø¹ÙØ¯ Ø§Ø®ØªÙØ§Ø± Ø§ÙÙØ¹Ø§ÙÙØ©). */
   inspectionNote?: string
 }
 
-/** رقم صحيح بالقرش من min لحد الأقصى — نفس حدود zell_create_order. */
+/** Ø±ÙÙ ØµØ­ÙØ­ Ø¨Ø§ÙÙØ±Ø´ ÙÙ min ÙØ­Ø¯ Ø§ÙØ£ÙØµÙ â ÙÙØ³ Ø­Ø¯ÙØ¯ zell_create_order. */
 export function isInstallationMoney(value: unknown, min: 0 | 1): value is number {
   return typeof value === 'number' && Number.isInteger(value) && value >= min && value <= INSTALLATION_LIMITS.maxPiastres
 }
@@ -99,14 +99,14 @@ export function parseInstallationConfig(value: unknown): InstallationConfig {
   }
 }
 
-/** المحافظات اللي فيها منطقة مفعّلة واحدة على الأقل، بترتيب areas. */
+/** Ø§ÙÙØ­Ø§ÙØ¸Ø§Øª Ø§ÙÙÙ ÙÙÙØ§ ÙÙØ·ÙØ© ÙÙØ¹ÙÙØ© ÙØ§Ø­Ø¯Ø© Ø¹ÙÙ Ø§ÙØ£ÙÙØ Ø¨ØªØ±ØªÙØ¨ areas. */
 export function installationGovernorates(areas: InstallationAreas): string[] {
   return Object.keys(areas).filter((governorate) => Object.keys(areas[governorate] ?? {}).length > 0)
 }
 
 /**
- * طول التركيب = مجموع أطوال سطور المقاس بالسنتيمتر. المنتجات بالعدد مش داخلة —
- * نفس zell_create_order (sum(length_cm) filter (where sale_unit = 'meter')).
+ * Ø·ÙÙ Ø§ÙØªØ±ÙÙØ¨ = ÙØ¬ÙÙØ¹ Ø£Ø·ÙØ§Ù Ø³Ø·ÙØ± Ø§ÙÙÙØ§Ø³ Ø¨Ø§ÙØ³ÙØªÙÙØªØ±. Ø§ÙÙÙØªØ¬Ø§Øª Ø¨Ø§ÙØ¹Ø¯Ø¯ ÙØ´ Ø¯Ø§Ø®ÙØ© â
+ * ÙÙØ³ zell_create_order (sum(length_cm) filter (where sale_unit = 'meter')).
  */
 export function installationLengthCm(
   entries: ReadonlyArray<{ product: { sale_unit?: string }; line: { lengthCm: number } }>,
@@ -120,9 +120,9 @@ export function installationLengthCm(
 }
 
 /**
- * أجر التركيب بالقرش = round(سعر المتر × الطول ÷ ١٠٠) بأرقام صحيحة من غير float.
- * القيم موجبة، فالنص بيتقرب لفوق — نفس round(numeric) في zell_create_order بالحرف.
- * للعرض بس؛ الرقم المعتمد من الداتابيز.
+ * Ø£Ø¬Ø± Ø§ÙØªØ±ÙÙØ¨ Ø¨Ø§ÙÙØ±Ø´ = round(Ø³Ø¹Ø± Ø§ÙÙØªØ± Ã Ø§ÙØ·ÙÙ Ã· Ù¡Ù Ù ) Ø¨Ø£Ø±ÙØ§Ù ØµØ­ÙØ­Ø© ÙÙ ØºÙØ± float.
+ * Ø§ÙÙÙÙ ÙÙØ¬Ø¨Ø©Ø ÙØ§ÙÙØµ Ø¨ÙØªÙØ±Ø¨ ÙÙÙÙ â ÙÙØ³ round(numeric) ÙÙ zell_create_order Ø¨Ø§ÙØ­Ø±Ù.
+ * ÙÙØ¹Ø±Ø¶ Ø¨Ø³Ø Ø§ÙØ±ÙÙ Ø§ÙÙØ¹ØªÙØ¯ ÙÙ Ø§ÙØ¯Ø§ØªØ§Ø¨ÙØ².
  */
 export function installationFeePiastres(feePerMeterPiastres: number, lengthCm: number): number {
   if (!Number.isInteger(feePerMeterPiastres) || !Number.isInteger(lengthCm)) return 0
@@ -132,29 +132,29 @@ export function installationFeePiastres(feePerMeterPiastres: number, lengthCm: n
   return (product - rest) / 100 + (rest >= 50 ? 1 : 0)
 }
 
-/** المناطق المتاحة للفني في محافظة — فاضية لو الفني مقفول أو سعر المتر ناقص. */
+/** Ø§ÙÙÙØ§Ø·Ù Ø§ÙÙØªØ§Ø­Ø© ÙÙÙÙÙ ÙÙ ÙØ­Ø§ÙØ¸Ø© â ÙØ§Ø¶ÙØ© ÙÙ Ø§ÙÙÙÙ ÙÙÙÙÙ Ø£Ù Ø³Ø¹Ø± Ø§ÙÙØªØ± ÙØ§ÙØµ. */
 export function installationAreasIn(config: InstallationConfig, governorate: string): string[] {
   if (!config.enabled || config.feePerMeterPiastres === null) return []
   return Object.keys(config.areas[governorate] ?? {})
 }
 
-/** انتقال الفني لمنطقة بالقرش — null = الفني مش متاح هناك. */
+/** Ø§ÙØªÙØ§Ù Ø§ÙÙÙÙ ÙÙÙØ·ÙØ© Ø¨Ø§ÙÙØ±Ø´ â null = Ø§ÙÙÙÙ ÙØ´ ÙØªØ§Ø­ ÙÙØ§Ù. */
 export function installationTravelPiastres(config: InstallationConfig, governorate: string, area: string): number | null {
   if (!config.enabled || config.feePerMeterPiastres === null) return null
   const travel = config.areas[governorate]?.[area]
   return travel === undefined ? null : travel
 }
 
-/** المحافظات اللي فيها منطقة متاحة للفني — فاضية لو الفني مقفول أو سعر المتر ناقص. */
+/** Ø§ÙÙØ­Ø§ÙØ¸Ø§Øª Ø§ÙÙÙ ÙÙÙØ§ ÙÙØ·ÙØ© ÙØªØ§Ø­Ø© ÙÙÙÙÙ â ÙØ§Ø¶ÙØ© ÙÙ Ø§ÙÙÙÙ ÙÙÙÙÙ Ø£Ù Ø³Ø¹Ø± Ø§ÙÙØªØ± ÙØ§ÙØµ. */
 export function installationReadyGovernorates(config: InstallationConfig): string[] {
   if (!config.enabled || config.feePerMeterPiastres === null) return []
   return installationGovernorates(config.areas)
 }
 
 /**
- * INSTALLER-ONLY (قرار المالك 2026-11-05) — المنتج ده «فني فقط»؟ عرض بس: zell_create_order مالهاش دعوة بيه.
- * بس لما الفني متاح فعلًا (installationReadyGovernorates مش فاضية) — لو الخدمة مقفولة أو مالهاش سعر أو مناطق،
- * كل حاجة شغالة زي ما هي والعميل بيختار عادي.
+ * INSTALLER-ONLY (ÙØ±Ø§Ø± Ø§ÙÙØ§ÙÙ 2026-11-05) â Ø§ÙÙÙØªØ¬ Ø¯Ù Â«ÙÙÙ ÙÙØ·Â»Ø Ø¹Ø±Ø¶ Ø¨Ø³: zell_create_order ÙØ§ÙÙØ§Ø´ Ø¯Ø¹ÙØ© Ø¨ÙÙ.
+ * Ø¨Ø³ ÙÙØ§ Ø§ÙÙÙÙ ÙØªØ§Ø­ ÙØ¹ÙÙØ§ (installationReadyGovernorates ÙØ´ ÙØ§Ø¶ÙØ©) â ÙÙ Ø§ÙØ®Ø¯ÙØ© ÙÙÙÙÙØ© Ø£Ù ÙØ§ÙÙØ§Ø´ Ø³Ø¹Ø± Ø£Ù ÙÙØ§Ø·ÙØ
+ * ÙÙ Ø­Ø§Ø¬Ø© Ø´ØºØ§ÙØ© Ø²Ù ÙØ§ ÙÙ ÙØ§ÙØ¹ÙÙÙ Ø¨ÙØ®ØªØ§Ø± Ø¹Ø§Ø¯Ù.
  */
 export function installerRequiredFor(config: InstallationConfig, productId: number): boolean {
   if (installationReadyGovernorates(config).length === 0) return false
@@ -164,8 +164,8 @@ export function installerRequiredFor(config: InstallationConfig, productId: numb
 }
 
 /**
- * INSTALLER-ONLY — الطلب كله «فني فقط» لو فيه منتج بالمقاس واحد «فني فقط» (الاختيار واحد للطلب كله).
- * منتجات القطعة (الأدوات) مش داخلة.
+ * INSTALLER-ONLY â Ø§ÙØ·ÙØ¨ ÙÙÙ Â«ÙÙÙ ÙÙØ·Â» ÙÙ ÙÙÙ ÙÙØªØ¬ Ø¨Ø§ÙÙÙØ§Ø³ ÙØ§Ø­Ø¯ Â«ÙÙÙ ÙÙØ·Â» (Ø§ÙØ§Ø®ØªÙØ§Ø± ÙØ§Ø­Ø¯ ÙÙØ·ÙØ¨ ÙÙÙ).
+ * ÙÙØªØ¬Ø§Øª Ø§ÙÙØ·Ø¹Ø© (Ø§ÙØ£Ø¯ÙØ§Øª) ÙØ´ Ø¯Ø§Ø®ÙØ©.
  */
 export function orderRequiresInstaller(
   config: InstallationConfig,
