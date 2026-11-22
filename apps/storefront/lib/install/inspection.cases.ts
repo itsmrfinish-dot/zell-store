@@ -1,10 +1,12 @@
 /**
- * Ø­Ø§ÙØ§Øª Ø§Ø®ØªØ¨Ø§Ø± ÙÙØ²Ø© Ø§ÙÙØ¹Ø§ÙÙØ©.
+ * حالات اختبار ميزة المعاينة.
  *
- * Ø§ÙØªØ´ØºÙÙ: pnpm --filter @zell/storefront cases suite inspection
+ * التشغيل: pnpm --filter @zell/storefront cases suite inspection
  */
 
+import { DEFAULT_WHATSAPP_MESSAGE } from '@zell/core'
 import { buildInspectionMessage, buildWhatsAppUrl } from './inspection'
+import { SITE_URL } from '../site'
 
 export type InspectionCaseFailure = { name: string; expected: string; actual: string }
 
@@ -19,37 +21,45 @@ export function runInspectionCases(): { passed: number; failures: InspectionCase
     else failures.push({ name, expected: e, actual: a })
   }
 
-  // Ø­Ø§ÙØ§Øª Ø§Ø®ØªØ¨Ø§Ø± Ø¨ÙØ§Ø¡ Ø§ÙØ±Ø³Ø§ÙØ©
+  // حالات اختبار بناء الرسالة
 
+  const withDimensions = buildInspectionMessage('فيلم مصنفر', { length: 300, width: 100 }, 2)
   check(
-    'buildInspectionMessage: Ø¨Ø¯ÙÙ ÙÙØ§Ø³Ø§Øª ÙØ¨Ø¯ÙÙ note',
-    buildInspectionMessage('Ø¹Ø§Ø²Ù Ø­Ø±Ø§Ø±Ø©', undefined, 1),
-    'ÙØ­ØªØ§Ø¬ ÙØ¹Ø§ÙÙØ© ÙØ¨Ù Ø§ÙØªØ±ÙÙØ¨\nØ§ÙÙÙØªØ¬: Ø¹Ø§Ø²Ù Ø­Ø±Ø§Ø±Ø©\nØ§ÙØ±Ø§Ø¨Ø·: https://myzill.com/product/1'
+    'buildInspectionMessage: القالب الافتراضي مع مقاسات',
+    withDimensions,
+    DEFAULT_WHATSAPP_MESSAGE.replaceAll('{product}', 'فيلم مصنفر').replaceAll('{measurements}', '300×100').replaceAll('{link}', SITE_URL + '/product/2')
+  )
+  check('buildInspectionMessage: المقاسات مرة واحدة', withDimensions.split('المقاسات: 300×100.').length - 1, 1)
+  check('buildInspectionMessage: مفيش أقواس متبقية', withDimensions.includes('{'), false)
+
+  const withoutDimensions = buildInspectionMessage('فيلم مصنفر', undefined, 2)
+  check('buildInspectionMessage: بدون مقاسات — مفيش «المقاسات»', withoutDimensions.includes('المقاسات'), false)
+  check('buildInspectionMessage: بدون مقاسات — مفيش مسافتين ورا بعض', withoutDimensions.includes('  '), false)
+  check(
+    'buildInspectionMessage: بدون مقاسات — فيه المنتج والرابط',
+    withoutDimensions.includes('فيلم مصنفر') && withoutDimensions.includes(SITE_URL + '/product/2'),
+    true
   )
 
   check(
-    'buildInspectionMessage: ÙØ¹ ÙÙØ§Ø³Ø§Øª ÙØ¨Ø¯ÙÙ note',
-    buildInspectionMessage('ÙØµÙÙØ±', { length: 100, width: 50 }, 2),
-    'ÙØ­ØªØ§Ø¬ ÙØ¹Ø§ÙÙØ© ÙØ¨Ù Ø§ÙØªØ±ÙÙØ¨\nØ§ÙÙÙØªØ¬: ÙØµÙÙØ±\nØ§ÙÙÙØ§Ø³Ø§Øª: 100Ã50\nØ§ÙØ±Ø§Ø¨Ø·: https://myzill.com/product/2'
+    'buildInspectionMessage: قالب مخصص مع مقاسات',
+    buildInspectionMessage('فيلم مصنفر', { length: 300, width: 100 }, 2, 'أهلًا، عايز معاينة لـ{product} ({measurements}) {link}'),
+    'أهلًا، عايز معاينة لـفيلم مصنفر (300×100) ' + SITE_URL + '/product/2'
   )
 
-  check(
-    'buildInspectionMessage: ÙØ¹ note',
-    buildInspectionMessage('Ø¹Ø§Ø²Ù Ø­Ø±Ø§Ø±Ø©', undefined, 1, 'Ø±Ø³Ø§ÙØ© Ø§ÙÙØ¹Ø§ÙÙØ©'),
-    'ÙØ­ØªØ§Ø¬ ÙØ¹Ø§ÙÙØ© ÙØ¨Ù Ø§ÙØªØ±ÙÙØ¨\nØ±Ø³Ø§ÙØ© Ø§ÙÙØ¹Ø§ÙÙØ©\nØ§ÙÙÙØªØ¬: Ø¹Ø§Ø²Ù Ø­Ø±Ø§Ø±Ø©\nØ§ÙØ±Ø§Ø¨Ø·: https://myzill.com/product/1'
-  )
+  let unknownPlaceholder = ''
+  try {
+    unknownPlaceholder = buildInspectionMessage('فيلم مصنفر', { length: 300, width: 100 }, 2, 'أهلًا، عايز معاينة لـ{product} {foo} {link}')
+  } catch {
+    unknownPlaceholder = ''
+  }
+  check('buildInspectionMessage: قالب فيه {foo} مجهول — {foo} بتفضل زي ما هي', unknownPlaceholder.includes('{foo}'), true)
 
-  check(
-    'buildInspectionMessage: ÙØ¹ note ÙÙÙØ§Ø³Ø§Øª',
-    buildInspectionMessage('ÙØµÙÙØ±', { length: 100, width: 50 }, 2, 'Ø§ÙØªØ±ÙÙØ¨ Ø¨ÙØ¨Ø¯Ø£ Ø¨ÙØ¹Ø§ÙÙØ©'),
-    'ÙØ­ØªØ§Ø¬ ÙØ¹Ø§ÙÙØ© ÙØ¨Ù Ø§ÙØªØ±ÙÙØ¨\nØ§ÙØªØ±ÙÙØ¨ Ø¨ÙØ¨Ø¯Ø£ Ø¨ÙØ¹Ø§ÙÙØ©\nØ§ÙÙÙØªØ¬: ÙØµÙÙØ±\nØ§ÙÙÙØ§Ø³Ø§Øª: 100Ã50\nØ§ÙØ±Ø§Ø¨Ø·: https://myzill.com/product/2'
-  )
+  // حالات اختبار بناء رابط الواتساب
 
-  check(
-    'buildWhatsAppUrl: Ø¨ÙØ§Ø¡ Ø§ÙØ±Ø§Ø¨Ø·',
-    buildWhatsAppUrl('201001234567', 'ÙØ­ØªØ§Ø¬ ÙØ¹Ø§ÙÙØ© ÙØ¨Ù Ø§ÙØªØ±ÙÙØ¨'),
-    'https://wa.me/201001234567?text=%D9%85%D8%AD%D8%AA%D8%A7%D8%AC%20%D9%85%D8%B9%D8%A7%D9%8A%D9%86%D8%A9%20%D9%82%D8%A8%D9%84%20%D8%A7%D9%84%D8%AA%D8%B1%D9%83%D9%8A%D8%A8'
-  )
+  const waUrl = buildWhatsAppUrl('201099137788', withDimensions)
+  check('buildWhatsAppUrl: بيبدأ بـ wa.me', waUrl.startsWith('https://wa.me/201099137788?text='), true)
+  check('buildWhatsAppUrl: النص بيتفك زي ما هو', decodeURIComponent(waUrl.replace('https://wa.me/201099137788?text=', '')), withDimensions)
 
   return { passed, failures }
 }
