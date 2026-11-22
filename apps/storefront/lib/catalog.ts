@@ -11,6 +11,7 @@
  * 🚫 **مفيش أي مسار صور من Production هنا.** المعارض فاضية عن قصد —
  * الروابط الحقيقية بتتبنى في طبقة القراءة المعتمدة على السيرفر.
  */
+import { DEFAULT_INSPECTION_NOTE } from '@zell/core'
 import type { StoreProduct, StoreCollection, StoreSettings } from '@zell/core'
 import { DEFAULT_INSTALLATION_TOOLS_PAGE, DEFAULT_STORE_CONTENT, NO_PUBLISHED_POLICIES } from '@zell/core'
 
