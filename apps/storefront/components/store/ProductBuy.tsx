@@ -209,7 +209,7 @@ export function ProductBuy({
           <a
             href={buildWhatsAppUrl(
               whatsappNumber,
-              buildInspectionMessage(product.name_ar, decisionRef.current?.()?.lengthCm !== undefined ? { length: decisionRef.current().lengthCm, width: chosenWidth } : undefined, product.id, installation.inspectionNote)
+              buildInspectionMessage(product.name_ar, (() => { const d = decide(); return d.kind === 'add' ? { length: d.lengthCm, width: chosenWidth } : undefined })(), product.id, installation.inspectionNote)
             )}
             target="_blank"
             rel="noopener noreferrer"
