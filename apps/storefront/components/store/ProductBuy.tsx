@@ -30,6 +30,7 @@ import { SizePanel } from './SizePanel'
 import { AddonsPicker } from './AddonsPicker'
 import { currentInstallModeLine, installChoiceRequired, revealToolsOnChange, showToolSuggestions } from '../../lib/install/installChoice'
 import { InstallChoice } from './InstallChoice'
+import { buildInspectionMessage, buildWhatsAppUrl } from '../../lib/install/inspection'
 import type { SizeDecision } from '../../lib/size/sizeEntry'
 
 /** gift: «نص العرض» لو ظاهر — بيظهر كهدية فوق زرار الإضافة. */
@@ -39,6 +40,7 @@ export function ProductBuy({
   addons = [],
   addonsTitle = '',
   installation = null,
+  whatsappNumber = '',
   sizeEntry = 'cm',
   sizeTexts,
 }: {
