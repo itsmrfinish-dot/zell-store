@@ -17,9 +17,16 @@ import { SITE_URL } from '../site'
 export function buildInspectionMessage(
   productName: string,
   dimensions: { length?: number; width?: number } | undefined,
-  productId: number
+  productId: number,
+  inspectionNote?: string
 ): string {
-  const lines: string[] = ['محتاج معاينة قبل التركيب', `المنتج: ${productName}`]
+  const lines: string[] = ['محتاج معاينة قبل التركيب']
+  
+  if (inspectionNote) {
+    lines.push(inspectionNote)
+  }
+  
+  lines.push(`المنتج: ${productName}`)
 
   if (dimensions?.length !== undefined && dimensions?.width !== undefined) {
     lines.push(`المقاسات: ${dimensions.length}×${dimensions.width}`)
