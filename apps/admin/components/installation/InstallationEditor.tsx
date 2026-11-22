@@ -1,19 +1,4 @@
-'use clien
-
-      <div>
-        <label className="block text-sm font-medium mb-2">قالب واتساب المعاينة</label>
-        <textarea
-          value={current.whatsappMessage}
-          onChange={(event) => update((current) => ({ ...current, whatsappMessage: event.target.value }))}
-          placeholder="قالب الواتساب بـ {{product}} و{{measurements}} و{{link}} — جملة 'المقاسات: {{measurements}}.' تُحذف كاملة عند غياب القياسات"
-          className="w-full border rounded px-3 py-2 font-mono text-sm"
-          rows={6}
-          maxLength={INSTALLATION_LIMITS.whatsappMessage}
-        />
-        <div className="text-xs text-gray-500 mt-1">
-          ({current.whatsappMessage.length} / {INSTALLATION_LIMITS.whatsappMessage})
-        </div>
-      </div>t'
+'use client'
 
 import { useRef, useState } from 'react'
 import Link from 'next/link'
@@ -31,11 +16,12 @@ import { Card, Field, inputClasses, textareaClasses } from '../ui/Field'
 import { SaveBar } from '../ui/SaveBar'
 import { Switch } from '../ui/Switch'
 
-/** Ø§ÙÙØ³ÙØ¯Ø© Ø¨Ø§ÙØ¬ÙÙÙ ÙÙØµ Ø²Ù ÙØ§ Ø§ÙØ£Ø¯ÙÙ Ø¨ÙÙØªØ¨. Ø§ÙÙÙØ·ÙØ© Ø§ÙÙÙØ¹ÙÙØ© = ÙÙØ¬ÙØ¯Ø© ÙÙ areas. */
+/** المسودة بالجنيه كنص زي ما الأدمن بيكتب. المنطقة المفعّلة = موجودة في areas. */
 type Draft = {
   enabled: boolean
   note: string
   inspectionNote: string
+  whatsappMessage: string
   fee: string
   areas: Record<string, Record<string, string>>
   /** INSTALLER-ONLY */
@@ -45,14 +31,14 @@ type Draft = {
 
 const MAX_POUNDS = INSTALLATION_LIMITS.maxPiastres / 100
 
-/** INSTALLER-ONLY (ÙØ±Ø§Ø± Ø§ÙÙØ§ÙÙ 2026-11-05) â Ø·Ø±ÙÙØ© Ø§ÙØªØ±ÙÙØ¨. */
+/** INSTALLER-ONLY (قرار المالك 2026-11-05) — طريقة التركيب. */
 const MODE_OPTIONS: Array<{ value: InstallationMode; title: string; hint: string }> = [
-  { value: 'choice', title: 'Ø§ÙØ¹ÙÙÙ ÙØ®ØªØ§Ø±', hint: 'Ø§ÙÙØ¶Ø¹ Ø§ÙØ­Ø§ÙÙ: ÙØ®ØªØ§Ø± Ø§ÙØ¹ÙÙÙ Ø¨ÙÙ Â«ÙØ±ÙÙØ¨Ù Ø¨ÙÙØ³ÙÂ» ÙÂ«ÙØ­ØªØ§Ø¬ ÙÙÙ ØªØ±ÙÙØ¨Â».' },
-  { value: 'installer_all', title: 'ÙÙÙ ÙÙØ· â ÙÙ Ø§ÙÙÙØªØ¬Ø§Øª', hint: 'ØªÙØ±ÙÙÙØ¨ Ø¬ÙÙØ¹ Ø£ÙÙØ§Ù Ø§ÙÙÙØ§Ø³ Ø¨ÙØ§Ø³Ø·Ø© ÙÙÙ ÙÙØ·.' },
-  { value: 'installer_products', title: 'ÙÙÙ ÙÙØ· â ÙÙØªØ¬Ø§Øª ÙØ­Ø¯Ø¯Ø©', hint: 'Ø§Ø®ØªØ± Ø§ÙÙÙØªØ¬Ø§Øª ÙÙ Ø§ÙÙØ§Ø¦ÙØ© Ø£Ø¯ÙØ§Ù.' },
+  { value: 'choice', title: 'العميل يختار', hint: 'الوضع الحالي: يختار العميل بين «هركّبه بنفسي» و«محتاج فني تركيب».' },
+  { value: 'installer_all', title: 'فني فقط — كل المنتجات', hint: 'تُركَّب جميع أفلام المقاس بواسطة فني فقط.' },
+  { value: 'installer_products', title: 'فني فقط — منتجات محددة', hint: 'اختر المنتجات من القائمة أدناه.' },
 ]
 
-/** Â«100Â» Ø£Ù Â«99.5Â» â ÙØ±Ø´. ÙØ§Ø¶Ù Â· Ø³Ø§ÙØ¨ Â· Ø£ÙØªØ± ÙÙ Ø±ÙÙÙÙ Ø¹Ø´Ø±ÙÙÙ Â· ÙÙÙ Ø§ÙØ­Ø¯ = null. */
+/** «100» أو «99.5» → قرش. فاضي · سالب · أكتر من رقمين عشريين · فوق الحد = null. */
 function toPiastres(text: string, min: 0 | 1): number | null {
   const trimmed = text.trim()
   if (trimmed === '') return null
@@ -64,7 +50,7 @@ function toPiastres(text: string, min: 0 | 1): number | null {
   return piastres
 }
 
-/** Ø§ÙÙÙØ§Ø·Ù Ø§ÙÙÙ Ø§ØªØ´Ø§ÙØª ÙÙ Ø§ÙØ´Ø­Ù ÙØ§Ø¨ØªØ¯Ø®ÙØ´ Ø§ÙÙØ³ÙØ¯Ø© â Ø¨ØªØªØ´Ø§Ù ÙÙ Ø§ÙØ¥Ø¹Ø¯Ø§Ø¯ ÙØ¹ Ø£ÙÙ Ø­ÙØ¸. */
+/** المناطق اللي اتشالت من الشحن مابتدخلش المسودة — بتتشال من الإعداد مع أول حفظ. */
 function toDraft(record: InstallationRecord, groups: ShippingAreaGroup[]): Draft {
   const areas: Draft['areas'] = {}
   for (const group of groups) {
@@ -105,7 +91,7 @@ function validate(draft: Draft): Checked {
   const feeText = draft.fee.trim()
   const fee = feeText === '' ? null : toPiastres(feeText, 1)
   if (feeText !== '' && fee === null) {
-    return { ok: false, error: 'Ø³Ø¹Ø± ØªØ±ÙÙØ¨ Ø§ÙÙØªØ± ÙØ§Ø²Ù ÙÙÙÙ Ø±ÙÙ ÙÙ 0.01 ÙÙ ' + String(MAX_POUNDS) + ' Ø¬ÙÙÙ' }
+    return { ok: false, error: 'سعر تركيب المتر لازم يكون رقم من 0.01 لـ ' + String(MAX_POUNDS) + ' جنيه' }
   }
   const areas: InstallationAreas = {}
   let count = 0
@@ -114,31 +100,30 @@ function validate(draft: Draft): Checked {
     for (const [area, text] of Object.entries(list)) {
       const travel = toPiastres(text, 0)
       if (travel === null) {
-        return { ok: false, error: 'Ø§ÙØªØ¨ Ø§ÙØªÙØ§Ù Ø§ÙÙÙÙ ÙÙÂ«' + area + 'Â» (' + governorate + ') â ØµÙØ± = Ø§ÙØªÙØ§Ù ÙØ¬Ø§ÙÙ' }
+        return { ok: false, error: 'اكتب انتقال الفني لـ«' + area + '» (' + governorate + ') — صفر = انتقال مجاني' }
       }
       out[area] = travel
       count += 1
     }
     if (Object.keys(out).length > 0) areas[governorate] = out
   }
-  if (fee === null && (draft.enabled || count > 0)) return { ok: false, error: 'Ø§ÙØªØ¨ Ø³Ø¹Ø± ØªØ±ÙÙØ¨ Ø§ÙÙØªØ±' }
+  if (fee === null && (draft.enabled || count > 0)) return { ok: false, error: 'اكتب سعر تركيب المتر' }
   if (draft.mode === 'installer_products' && draft.productIds.length === 0) {
-    return { ok: false, error: 'ÙÙØ±Ø¬Ù Ø§Ø®ØªÙØ§Ø± ÙÙØªØ¬ ÙØ§Ø­Ø¯ Ø¹ÙÙ Ø§ÙØ£ÙÙ ÙØ®ÙØ§Ø± Â«ÙÙÙ ÙÙØ· â ÙÙØªØ¬Ø§Øª ÙØ­Ø¯Ø¯Ø©Â».' }
+    return { ok: false, error: 'يُرجى اختيار منتج واحد على الأقل لخيار «فني فقط — منتجات محددة».' }
   }
   return {
     ok: true,
-    input: { enabled: draft.enabled, note: draft.note, inspectionNote: draft.inspectionNote,
-      whatsappMessage: draft.whatsappMessage, feePerMeterPiastres: fee, areas, mode: draft.mode, installerOnlyProductIds: draft.productIds },
+    input: { enabled: draft.enabled, note: draft.note, inspectionNote: draft.inspectionNote, whatsappMessage: draft.whatsappMessage, feePerMeterPiastres: fee, areas, mode: draft.mode, installerOnlyProductIds: draft.productIds },
   }
 }
 
 /**
- * ÙÙÙ Ø§ÙØªØ±ÙÙØ¨: Ø§ÙØªØ´ØºÙÙ Â· Ø³Ø¹Ø± ØªØ±ÙÙØ¨ Ø§ÙÙØªØ± Â· Ø§ÙÙÙØ§Ø·Ù Ø§ÙÙØªØ§Ø­Ø© ÙØ§ÙØªÙØ§Ù ÙÙ ÙÙØ·ÙØ©.
+ * فني التركيب: التشغيل · سعر تركيب المتر · المناطق المتاحة وانتقال كل منطقة.
  *
- * â ï¸ Ø£Ø³ÙØ§Ø¡ Ø§ÙÙÙØ§Ø·Ù Ø¬Ø§ÙØ© ÙÙ ØµÙØ­Ø© Ø§ÙØ´Ø­Ù Ø¨Ø³ â ÙÙÙØ´ Ø®Ø§ÙØ© ÙÙØªØ§Ø¨Ø© Ø§Ø³Ù.
- * â ï¸ Ø§ÙØ·Ø§Ø¨Ø¹ (updated_at) Ø¨ÙØªØ­Ø¯ÙØ« ÙÙ Ø±Ø¯ Ø§ÙØ­ÙØ¸. Â«ØªØ¬Ø§ÙÙ ÙØ­Ø¯ÙØ«Â» Ø¨ÙØ¹ÙÙ refreshØ
- *    ÙØ§ÙØµÙØ­Ø© Ø¨ØªØ±ÙÙØ¨ Ø§ÙÙØ­Ø±Ø± ÙÙ Ø¬Ø¯ÙØ¯ Ø¨Ù key = Ø§ÙØ·Ø§Ø¨Ø¹.
- * â ï¸ Ø§ÙØ­Ø³Ø§Ø¨ ÙÙØ³Ù ÙÙ Ø§ÙØ¯Ø§ØªØ§Ø¨ÙØ² (zell_create_order) â ÙÙØ§ Ø¥Ø¹Ø¯Ø§Ø¯ Ø¨Ø³.
+ * ⚠️ أسماء المناطق جاية من صفحة الشحن بس — مفيش خانة لكتابة اسم.
+ * ⚠️ الطابع (updated_at) بيتحدّث من رد الحفظ. «تجاهل وحدّث» بيعمل refresh،
+ *    والصفحة بتركّب المحرر من جديد بـ key = الطابع.
+ * ⚠️ الحساب نفسه في الداتابيز (zell_create_order) — هنا إعداد بس.
  */
 export function InstallationEditor({
   initial,
@@ -191,7 +176,7 @@ export function InstallationEditor({
   function enableAll(governorate: string, areas: string[]) {
     const text = (bulk[governorate] ?? '').trim()
     if (toPiastres(text, 0) === null) {
-      setLocalError('Ø§ÙØªØ¨ Ø³Ø¹Ø± Ø§ÙØªÙØ§Ù ØµØ­ÙØ­ ÙÙ' + governorate + ' ÙØ¨Ù Â«ÙØ¹ÙÙ Ø§ÙÙÙÂ» â ØµÙØ± = ÙØ¬Ø§ÙÙ')
+      setLocalError('اكتب سعر انتقال صحيح لـ' + governorate + ' قبل «فعّل الكل» — صفر = مجاني')
       return
     }
     update((current) => ({ ...current, areas: { ...current.areas, [governorate]: Object.fromEntries(areas.map((area) => [area, text])) } }))
@@ -242,31 +227,31 @@ export function InstallationEditor({
   const fee = toPiastres(draft.fee, 1)
 
   const status = !draft.enabled
-    ? { tone: 'text-muted', text: 'ÙØªÙÙÙ â Ø®ÙØ§Ø± Ø§ÙÙÙÙ ÙØ´ Ø¸Ø§ÙØ± ÙÙØ²Ø¨ÙÙ.' }
+    ? { tone: 'text-muted', text: 'متقفل — خيار الفني مش ظاهر للزبون.' }
     : fee === null
-      ? { tone: 'text-gold', text: 'ÙÙØ±Ø¬Ù Ø¥Ø¯Ø®Ø§Ù Ø³Ø¹Ø± ØªØ±ÙÙØ¨ Ø§ÙÙØªØ±Ø Ø¨Ø¯ÙÙÙ ÙØ§ ØªØªÙÙØ± Ø®Ø¯ÙØ© Ø§ÙØªØ±ÙÙØ¨ ÙÙ Ø£Ù ÙÙØ·ÙØ©.' }
+      ? { tone: 'text-gold', text: 'يُرجى إدخال سعر تركيب المتر؛ بدونه لا تتوفر خدمة التركيب في أي منطقة.' }
       : enabledAreas === 0
-        ? { tone: 'text-gold', text: 'ÙØ§ ØªÙØ¬Ø¯ ÙÙØ·ÙØ© ÙÙØ¹ÙÙØ©Ø ÙØ°ÙÙ ÙØ§ ØªØªÙÙØ± Ø®Ø¯ÙØ© Ø§ÙØªØ±ÙÙØ¨ ÙÙ Ø£Ù ÙÙØ·ÙØ©.' }
+        ? { tone: 'text-gold', text: 'لا توجد منطقة مفعّلة، لذلك لا تتوفر خدمة التركيب في أي منطقة.' }
         : {
             tone: 'text-ok',
             text:
-              'ÙØªØ§Ø­ ÙÙ ' + String(enabledAreas) + ' ÙÙØ·ÙØ© ÙÙ ' + String(enabledGovernorates) + ' ÙØ­Ø§ÙØ¸Ø© â ' +
-              formatPiastres(fee) + ' ÙÙÙØªØ± + Ø§ÙØªÙØ§Ù Ø­Ø³Ø¨ Ø§ÙÙÙØ·ÙØ©.',
+              'متاح في ' + String(enabledAreas) + ' منطقة في ' + String(enabledGovernorates) + ' محافظة — ' +
+              formatPiastres(fee) + ' للمتر + انتقال حسب المنطقة.',
           }
 
   return (
     <div className="space-y-4">
-      <Card title="Ø§ÙØ®Ø¯ÙØ©">
+      <Card title="الخدمة">
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-fg">ØªØ´ØºÙÙ ÙÙÙ Ø§ÙØªØ±ÙÙØ¨</p>
-              <p className="text-xs text-muted">ÙØ¸ÙØ± ÙÙØ¹ÙÙÙ ÙÙ Ø§ÙÙÙØ§Ø·Ù Ø§ÙÙÙØ¹ÙÙØ© Ø£Ø¯ÙØ§Ù ÙÙØ·.</p>
+              <p className="text-sm font-semibold text-fg">تشغيل فني التركيب</p>
+              <p className="text-xs text-muted">يظهر للعميل في المناطق المفعّلة أدناه فقط.</p>
             </div>
             <Switch
               checked={draft.enabled}
               onChange={(next) => update((current) => ({ ...current, enabled: next }))}
-              label="ØªØ´ØºÙÙ ÙÙÙ Ø§ÙØªØ±ÙÙØ¨"
+              label="تشغيل فني التركيب"
               disabled={locked}
             />
           </div>
@@ -274,10 +259,10 @@ export function InstallationEditor({
 
           <Field
             htmlFor="installation-fee"
-            label="Ø³Ø¹Ø± ØªØ±ÙÙØ¨ Ø§ÙÙØªØ± Ø§ÙØ·ÙÙÙ (Ø¬.Ù)"
+            label="سعر تركيب المتر الطولي (ج.م)"
             hint={
-              'ÙÙØ­Ø³Ø¨ Ø¹ÙÙ ÙØ¬ÙÙØ¹ Ø£Ø·ÙØ§Ù Ø§ÙÙÙØªØ¬Ø§Øª Ø§ÙÙØ¨ÙØ¹Ø© Ø¨Ø§ÙÙÙØ§Ø³ ÙÙ Ø§ÙØ·ÙØ¨Ø ÙÙØ§ ØªØ¯Ø®Ù ÙÙÙ Ø§ÙÙÙØªØ¬Ø§Øª Ø§ÙÙØ¨ÙØ¹Ø© Ø¨Ø§ÙØ¹Ø¯Ø¯.' +
-              (fee === null ? '' : ' ÙØ«Ø§Ù: ÙÙÙÙ 5 ÙØªØ± = ' + formatPiastres(fee * 5) + ' ØªØ±ÙÙØ¨.')
+              'يُحسب على مجموع أطوال المنتجات المبيعة بالمقاس في الطلب، ولا تدخل فيه المنتجات المبيعة بالعدد.' +
+              (fee === null ? '' : ' مثال: فيلم 5 متر = ' + formatPiastres(fee * 5) + ' تركيب.')
             }
           >
             <input
@@ -294,7 +279,7 @@ export function InstallationEditor({
             />
           </Field>
 
-          <Field htmlFor="installation-note" label="Ø³Ø·Ø± Ø§ÙØªÙØ¶ÙØ­ (Ø§Ø®ØªÙØ§Ø±Ù)" hint="Ø¨ÙØ¸ÙØ± ØªØ­Øª Ø®ÙØ§Ø± Ø§ÙÙÙÙ ÙÙ ØµÙØ­Ø© Ø§ÙØ·ÙØ¨.">
+          <Field htmlFor="installation-note" label="سطر التوضيح (اختياري)" hint="بيظهر تحت خيار الفني في صفحة الطلب.">
             <textarea
               id="installation-note"
               value={draft.note}
@@ -302,12 +287,12 @@ export function InstallationEditor({
               className={textareaClasses}
               rows={2}
               maxLength={INSTALLATION_LIMITS.note}
-              placeholder="Ø§ÙØªØ¨ Ø³Ø·Ø± Ø§ÙØªÙØ¶ÙØ­"
+              placeholder="اكتب سطر التوضيح"
               disabled={locked}
             />
           </Field>
 
-          <Field htmlFor="installation-inspection-note" label="Ø±Ø³Ø§ÙØ© Ø§ÙÙØ¹Ø§ÙÙØ©" hint="Ø¨ØªØ¸ÙØ± ÙÙØ¹ÙÙÙ ÙÙ ØµÙØ­Ø© Ø§ÙÙÙØªØ¬ ÙÙØ§ ÙØ®ØªØ§Ø± Ø§ÙØªØ±ÙÙØ¨ Ø§ÙÙÙÙØ ÙØ¨ØªØªØ¨Ø¹Øª ÙØ¹ Ø·ÙØ¨ Ø§ÙÙØ¹Ø§ÙÙØ© Ø¹ÙÙ ÙØ§ØªØ³Ø§Ø¨.">
+          <Field htmlFor="installation-inspection-note" label="شرح المعاينة" hint="النص ده بيظهر للعميل في صندوق المعاينة في صفحة المنتج، ومش بيتبعت في رسالة الواتساب.">
             <textarea
               id="installation-inspection-note"
               value={draft.inspectionNote}
@@ -315,21 +300,34 @@ export function InstallationEditor({
               className={textareaClasses}
               rows={3}
               maxLength={INSTALLATION_LIMITS.inspectionNote}
-              placeholder="Ø§ÙØªØ¨ Ø±Ø³Ø§ÙØ© Ø§ÙÙØ¹Ø§ÙÙØ©"
+              placeholder="اكتب رسالة المعاينة"
+              disabled={locked}
+            />
+          </Field>
+
+          <Field htmlFor="installation-whatsapp-message" label="رسالة الواتساب" hint="القالب اللي هيتبعت فعليًا للواتساب. تقدر تستخدم {product} لاسم المنتج و{measurements} للمقاسات و{link} لرابط المنتج. جملة المقاسات لازم تفضل بالشكل ده بالظبط: المقاسات: {measurements}. ولو العميل مدخلش مقاسات هتتشال الجملة دي تلقائيًا من الرسالة.">
+            <textarea
+              id="installation-whatsapp-message"
+              value={draft.whatsappMessage}
+              onChange={(event) => update((current) => ({ ...current, whatsappMessage: event.target.value }))}
+              className={textareaClasses}
+              rows={3}
+              maxLength={INSTALLATION_LIMITS.whatsappMessage}
+              placeholder="اكتب قالب الواتساب"
               disabled={locked}
             />
           </Field>
         </div>
       </Card>
 
-      {/* INSTALLER-ONLY (ÙØ±Ø§Ø± Ø§ÙÙØ§ÙÙ 2026-11-05) â Ø·Ø±ÙÙØ© Ø§ÙØªØ±ÙÙØ¨: Ø§ÙØ¹ÙÙÙ ÙØ®ØªØ§Ø± Â· ÙÙÙ ÙÙØ· ÙÙÙ Ø§ÙÙÙØªØ¬Ø§Øª Â· ÙÙÙØªØ¬Ø§Øª ÙØ¹ÙÙØ© */}
-      <Card title="Ø·Ø±ÙÙØ© Ø§ÙØªØ±ÙÙØ¨">
+      {/* INSTALLER-ONLY (قرار المالك 2026-11-05) — طريقة التركيب: العميل يختار · فني فقط لكل المنتجات · لمنتجات معينة */}
+      <Card title="طريقة التركيب">
         <div className="space-y-3">
           <p className="text-xs text-muted">
-            Ø¹ÙØ¯ Ø§Ø®ØªÙØ§Ø± Â«ÙÙÙ ÙÙØ·Â» ÙÙØ®ÙÙ Ø®ÙØ§Ø± Â«ÙØ±ÙÙØ¨Ù Ø¨ÙÙØ³ÙÂ» ÙØ§ÙØªØ±Ø§Ø­Ø§Øª Ø§ÙØ£Ø¯ÙØ§Øª ÙÙ ØµÙØ­Ø© Ø§ÙÙÙØªØ¬Ø ÙÙØµØ¨Ø­ Ø§ÙØ·ÙØ¨ ÙÙÙ Ø¨ÙÙÙ. Ø¥Ø°Ø§ ÙÙ ØªØªÙÙØ±
-            Ø®Ø¯ÙØ© Ø§ÙØªØ±ÙÙØ¨ ÙÙ ÙÙØ·ÙØ© Ø§ÙØ¹ÙÙÙØ ÙÙØ³ØªÙÙÙ Ø§ÙØ·ÙØ¨ Ø¯ÙÙ ÙÙÙ ÙÙØ§ ÙÙ Ø§ÙØ­Ø§Ù Ø§ÙØ¢Ù. ÙÙØ¹ÙØ¯Ø© Ø¥ÙÙ Ø§ÙÙØ¶Ø¹ Ø§ÙÙØ¹ØªØ§Ø¯ Ø§Ø®ØªØ± Â«Ø§ÙØ¹ÙÙÙ ÙØ®ØªØ§Ø±Â» Ø«Ù Ø§Ø­ÙØ¸.
+            عند اختيار «فني فقط» يُخفى خيار «هركّبه بنفسي» واقتراحات الأدوات في صفحة المنتج، ويصبح الطلب كله بفني. إذا لم تتوفر
+            خدمة التركيب في منطقة العميل، يُستكمل الطلب دون فني كما هو الحال الآن. للعودة إلى الوضع المعتاد اختر «العميل يختار» ثم احفظ.
           </p>
-          <div role="radiogroup" aria-label="Ø·Ø±ÙÙØ© Ø§ÙØªØ±ÙÙØ¨" className="grid gap-2">
+          <div role="radiogroup" aria-label="طريقة التركيب" className="grid gap-2">
             {MODE_OPTIONS.map((option) => (
               <label
                 key={option.value}
@@ -357,11 +355,11 @@ export function InstallationEditor({
 
           {draft.mode === 'installer_products' ? (
             films.length === 0 ? (
-              <p className="text-xs text-muted">ÙØ§ ØªÙØ¬Ø¯ Ø£ÙÙØ§Ù ØªÙØ¨Ø§Ø¹ Ø¨Ø§ÙÙÙØ§Ø³.</p>
+              <p className="text-xs text-muted">لا توجد أفلام تُباع بالمقاس.</p>
             ) : (
               <fieldset className="space-y-1 rounded-lg border border-border p-3">
                 <legend className="px-1 text-xs font-semibold text-fg">
-                  Ø§ÙÙÙØªØ¬Ø§Øª Ø§ÙØªÙ ØªÙØ±ÙÙÙØ¨ Ø¨ÙØ§Ø³Ø·Ø© ÙÙÙ ÙÙØ· ({String(draft.productIds.length)})
+                  المنتجات التي تُركَّب بواسطة فني فقط ({String(draft.productIds.length)})
                 </legend>
                 <ul className="max-h-72 space-y-1 overflow-y-auto">
                   {films.map((film) => (
@@ -375,7 +373,7 @@ export function InstallationEditor({
                           className="h-4 w-4 shrink-0 accent-brand"
                         />
                         <span>{film.name}</span>
-                        {film.isActive ? null : <span className="text-xs text-muted">(ÙØ®ÙÙ)</span>}
+                        {film.isActive ? null : <span className="text-xs text-muted">(مخفي)</span>}
                       </label>
                     </li>
                   ))}
@@ -386,7 +384,7 @@ export function InstallationEditor({
 
           {draft.mode !== 'choice' && (!draft.enabled || fee === null || enabledAreas === 0) ? (
             <p className="text-xs font-semibold text-gold">
-              ÙÙ ÙØ¹ÙÙ Â«ÙÙÙ ÙÙØ·Â» Ø¥ÙØ§ Ø¥Ø°Ø§ ÙØ§ÙØª Ø®Ø¯ÙØ© Ø§ÙØªØ±ÙÙØ¨ ÙÙØ¹ÙÙØ© ÙÙÙØ§ Ø³Ø¹Ø± ÙØªØ± ÙÙÙØ·ÙØ© ÙÙØ¹ÙÙØ© ÙØ§Ø­Ø¯Ø© Ø¹ÙÙ Ø§ÙØ£ÙÙØ ÙØ­ØªÙ Ø°ÙÙ Ø§ÙØ­ÙÙ ÙØ®ØªØ§Ø± Ø§ÙØ¹ÙÙÙ ÙØ§ÙÙØ¹ØªØ§Ø¯.
+              لن يعمل «فني فقط» إلا إذا كانت خدمة التركيب مفعّلة ولها سعر متر ومنطقة مفعّلة واحدة على الأقل، وحتى ذلك الحين يختار العميل كالمعتاد.
             </p>
           ) : null}
         </div>
@@ -394,22 +392,22 @@ export function InstallationEditor({
 
       {orphans.length > 0 ? (
         <div className="rounded-lg border-2 border-gold bg-gold/10 p-3 text-xs text-fg">
-          <p className="font-bold">ÙÙØ§Ø·Ù ÙØ§ÙØª ÙØªØ§Ø­Ø© ÙÙÙÙÙ ÙÙØ§Ø¨ÙØªØ´ ÙÙØ¬ÙØ¯Ø© ÙÙ Ø§ÙØ´Ø­Ù</p>
-          <p className="mt-1">{orphans.join('Ø ')}</p>
+          <p className="font-bold">مناطق كانت متاحة للفني ومابقتش موجودة في الشحن</p>
+          <p className="mt-1">{orphans.join('، ')}</p>
           <p className="mt-1 text-muted">
-            Ø­ÙØ°ÙØª Ø£Ù ØªØºÙÙØ± Ø§Ø³ÙÙØ§ ÙÙ ØµÙØ­Ø© Ø§ÙØ´Ø­ÙØ ÙØ°ÙÙ Ø®Ø¯ÙØ© Ø§ÙØªØ±ÙÙØ¨ ØºÙØ± ÙØªØ§Ø­Ø© ÙÙÙØ§ Ø­Ø§ÙÙÙØ§. Ø³ØªÙØ²Ø§Ù ÙÙ ÙÙØ§ Ø¹ÙØ¯ Ø§ÙØ­ÙØ¸ Ø§ÙØªØ§ÙÙØ ÙØ¥Ø°Ø§ ØªØºÙÙØ± Ø§ÙØ§Ø³Ù ÙÙØ±Ø¬Ù ØªÙØ¹ÙÙ Ø§ÙØ§Ø³Ù Ø§ÙØ¬Ø¯ÙØ¯ Ø£Ø¯ÙØ§Ù.
+            حُذفت أو تغيّر اسمها في صفحة الشحن، لذلك خدمة التركيب غير متاحة فيها حاليًا. ستُزال من هنا عند الحفظ التالي، وإذا تغيّر الاسم يُرجى تفعيل الاسم الجديد أدناه.
           </p>
         </div>
       ) : null}
 
       {withAreas.length === 0 ? (
-        <Card title="Ø§ÙÙÙØ§Ø·Ù">
+        <Card title="المناطق">
           <p className="text-xs text-muted">
-            ÙÙÙØ´ ÙÙØ§Ø·Ù ÙÙ Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§ÙØ´Ø­Ù. Ø¶ÙÙ ÙÙØ§Ø·Ù ÙÙ ÙØ­Ø§ÙØ¸Ø© ÙÙ{' '}
+            مفيش مناطق في إعدادات الشحن. ضيف مناطق كل محافظة من{' '}
             <Link href="/shipping" className="font-semibold text-accent">
-              ØµÙØ­Ø© Ø§ÙØ´Ø­Ù
+              صفحة الشحن
             </Link>{' '}
-            Ø§ÙØ£ÙÙØ ÙØ¨Ø¹Ø¯ÙÙ ÙØ¹ÙÙÙØ§ ÙÙØ§.
+            الأول، وبعدين فعّلها هنا.
           </p>
         </Card>
       ) : null}
@@ -422,11 +420,11 @@ export function InstallationEditor({
           <Card key={group.governorate} title={group.governorate + ' (' + String(active) + '/' + String(group.areas.length) + ')'}>
             {group.shippingDisabled ? (
               <p className="mb-2 text-xs font-semibold text-gold">
-                Ø§ÙØ´Ø­Ù ÙÙØ°Ù Ø§ÙÙØ­Ø§ÙØ¸Ø© ÙØªÙÙÙØ ÙØªÙØ±ÙØ¶ Ø§ÙØ·ÙØ¨Ø§Øª ÙÙÙØ§ Ø­ØªÙ ÙÙØ¹Ø§Ø¯ ØªØ´ØºÙÙÙ ÙÙ ØµÙØ­Ø© Ø§ÙØ´Ø­Ù.
+                الشحن لهذه المحافظة متوقف، وتُرفض الطلبات منها حتى يُعاد تشغيله من صفحة الشحن.
               </p>
             ) : null}
             <div className="mb-3 flex flex-wrap items-end gap-2">
-              <Field htmlFor={bulkId} label="ÙØ¹ÙÙ ÙÙ Ø§ÙÙÙØ§Ø·Ù Ø¨Ø§ÙØªÙØ§Ù (Ø¬.Ù)">
+              <Field htmlFor={bulkId} label="فعّل كل المناطق بانتقال (ج.م)">
                 <input
                   id={bulkId}
                   type="number"
@@ -441,10 +439,10 @@ export function InstallationEditor({
                 />
               </Field>
               <Button variant="secondary" size="sm" disabled={locked} onClick={() => enableAll(group.governorate, group.areas)}>
-                ÙØ¹ÙÙ Ø§ÙÙÙ
+                فعّل الكل
               </Button>
               <Button variant="ghost" size="sm" disabled={locked || active === 0} onClick={() => disableAll(group.governorate)}>
-                Ø§ÙÙÙ Ø§ÙÙÙ
+                اقفل الكل
               </Button>
             </div>
             <ul className="divide-y divide-border">
@@ -476,29 +474,29 @@ export function InstallationEditor({
                           onChange={(event) => setTravel(group.governorate, area, event.target.value)}
                           className={inputClasses + ' w-28'}
                           placeholder="0"
-                          aria-label={'Ø§ÙØªÙØ§Ù Ø§ÙÙÙÙ ÙÙ' + area}
+                          aria-label={'انتقال الفني لـ' + area}
                           disabled={locked}
                         />
-                        <span className="text-xs text-muted">Ø¬ Ø§ÙØªÙØ§Ù</span>
+                        <span className="text-xs text-muted">ج انتقال</span>
                       </div>
                     ) : (
-                      <span className="text-xs text-muted">ÙØ´ ÙØªØ§Ø­</span>
+                      <span className="text-xs text-muted">مش متاح</span>
                     )}
                   </li>
                 )
               })}
             </ul>
-            <p className="mt-2 text-xs text-muted">Ø§ÙØ§ÙØªÙØ§Ù Ø¨ÙØªØ­Ø³Ø¨ ÙØ±Ø© ÙØ§Ø­Ø¯Ø© ÙÙØ·ÙØ¨ ÙÙÙØ§ ÙØ§Ù Ø¹Ø¯Ø¯ Ø§ÙØ£ÙÙØ§Ù â ØµÙØ± = ÙØ¬Ø§ÙÙ.</p>
+            <p className="mt-2 text-xs text-muted">الانتقال بيتحسب مرة واحدة للطلب مهما كان عدد الأفلام — صفر = مجاني.</p>
           </Card>
         )
       })}
 
       {withoutAreas.length > 0 && withAreas.length > 0 ? (
         <p className="text-xs text-muted">
-          ÙØ­Ø§ÙØ¸Ø§Øª ÙÙ ØºÙØ± ÙÙØ§Ø·Ù ÙÙ Ø§ÙØ´Ø­Ù (Ø§ÙÙÙÙ ÙØ´ ÙØªØ§Ø­ ÙÙÙØ§): {withoutAreas.map((group) => group.governorate).join('Ø ')} â Ø¶ÙÙ
-          ÙÙØ§Ø·ÙÙØ§ ÙÙ{' '}
+          محافظات من غير مناطق في الشحن (الفني مش متاح فيها): {withoutAreas.map((group) => group.governorate).join('، ')} — ضيف
+          مناطقها من{' '}
           <Link href="/shipping" className="font-semibold text-accent">
-            ØµÙØ­Ø© Ø§ÙØ´Ø­Ù
+            صفحة الشحن
           </Link>
           .
         </p>
