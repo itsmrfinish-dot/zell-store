@@ -2,6 +2,7 @@ import 'server-only'
 
 import {
   DEFAULT_INSPECTION_NOTE,
+  DEFAULT_WHATSAPP_MESSAGE,
   INSTALLATION_LIMITS,
   installationGovernorates,
   isInstallationMoney,
@@ -21,37 +22,37 @@ import { readShippingAreaGroups, readInstallationRecord, KEY } from '../data/ins
 import type { ShippingAreaGroup, InstallationRecord } from '../data/installation'
 
 /**
- * ÙÙÙ Ø§ÙØªØ±ÙÙØ¨ â settings.installation (0018).
+ * فني التركيب — settings.installation (0018).
  *
- *   enabled              ØªØ´ØºÙÙ Ø§ÙØ®Ø¯ÙØ©
- *   note                 Ø³Ø·Ø± ØªÙØ¶ÙØ­ ØªØ­Øª Ø®ÙØ§Ø± Ø§ÙÙÙÙ ÙÙ ØµÙØ­Ø© Ø§ÙØ·ÙØ¨
- *   feePerMeterPiastres  Ø£Ø¬Ø± Ø§ÙØªØ±ÙÙØ¨ ÙÙÙ ÙØªØ± Ø·ÙÙÙ ÙÙ Ø£ÙÙØ§Ù Ø§ÙÙÙØ§Ø³ (1..1,000,000 ÙØ±Ø´)
- *   areas                { ÙØ­Ø§ÙØ¸Ø©: { ÙÙØ·ÙØ©: Ø§ÙØªÙØ§Ù Ø§ÙÙÙÙ Ø¨Ø§ÙÙØ±Ø´ (0..1,000,000) } }
- *   governorates         ÙØ´ØªÙ ÙÙ areas â ÙÙÙØ³Ø®Ø© Ø§ÙØ­Ø§ÙÙØ© ÙÙ Ø§ÙÙØªØ¬Ø± Ø¨Ø³
+ *   enabled              تشغيل الخدمة
+ *   note                 سطر توضيح تحت خيار الفني في صفحة الطلب
+ *   feePerMeterPiastres  أجر التركيب لكل متر طولي من أفلام المقاس (1..1,000,000 قرش)
+ *   areas                { محافظة: { منطقة: انتقال الفني بالقرش (0..1,000,000) } }
+ *   governorates         مشتق من areas — للنسخة الحالية من المتجر بس
  *
- * â ï¸ Ø£Ø³ÙØ§Ø¡ Ø§ÙÙØ­Ø§ÙØ¸Ø§Øª ÙØ§ÙÙÙØ§Ø·Ù ÙÙ Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§ÙØ´Ø­Ù Ø¨Ø³ (shipping_rates + shipping_areas).
- *    Ø§ÙØ³ÙØ±ÙØ± Ø¨ÙØ±ÙØ¶ Ø£Ù ÙÙØ·ÙØ© ÙØ´ ÙÙØ¬ÙØ¯Ø© ÙÙØ§Ù â ÙÙÙØ´ ÙØªØ§Ø¨Ø© Ø£Ø³ÙØ§Ø¡ Ø¨Ø¥ÙØ¯.
- * â ï¸ ØªØ²Ø§ÙÙ ØªÙØ§Ø¤ÙÙ Ø¨Ù settings.updated_at (patchGuarded) + ÙØ±Ø§Ø¡Ø© ØªØ£ÙÙØ¯.
- *    Ø§ÙØ­Ø³Ø§Ø¨ ÙÙØ³Ù ÙÙ zell_create_order â ÙÙØ§ Ø¥Ø¹Ø¯Ø§Ø¯ Ø¨Ø³.
+ * ⚠️ أسماء المحافظات والمناطق من إعدادات الشحن بس (shipping_rates + shipping_areas).
+ *    السيرفر بيرفض أي منطقة مش موجودة هناك — مفيش كتابة أسماء بإيد.
+ * ⚠️ تزامن تفاؤلي بـ settings.updated_at (patchGuarded) + قراءة تأكيد.
+ *    الحساب نفسه في zell_create_order — هنا إعداد بس.
  */
 
 export type InstallationInput = {
   enabled: boolean
   note: string
   inspectionNote: string
+  whatsappMessage: string
   feePerMeterPiastres: number | null
   areas: InstallationAreas
-  /** INSTALLER-ONLY â Ø·Ø±ÙÙØ© Ø§ÙØªØ±ÙÙØ¨ (Ø§ÙØºØ§ÙØ¨ = 'choice'). */
+  /** INSTALLER-ONLY — طريقة التركيب (الغايب = 'choice'). */
   mode?: InstallationMode
-  /** INSTALLER-ONLY â Ø£ÙÙØ§Ù Â«ÙÙÙ ÙÙØ·Â» ÙÙØ§ mode = 'installer_products'. */
+  /** INSTALLER-ONLY — أفلام «فني فقط» لما mode = 'installer_products'. */
   installerOnlyProductIds?: number[]
+}
 
-  whatsappMessage?: string}
-
-/** ÙÙØ·ÙØ© ÙØªØ­ÙØ¸Ø© ÙÙÙÙÙ ÙÙØ´ ÙÙØ¬ÙØ¯Ø© ÙÙ Ø§ÙØ´Ø­Ù (Ø§ØªØ´Ø§ÙØª Ø£Ù Ø§ØªØºÙØ± Ø§Ø³ÙÙØ§). */
+/** منطقة متحفظة للفني ومش موجودة في الشحن (اتشالت أو اتغير اسمها). */
 export type OrphanArea = { governorate: string; area: string }
 
-/** Ø§ÙÙÙØ§Ø·Ù Ø§ÙÙÙØ¹ÙÙØ© ÙÙÙÙÙ Ø§ÙÙÙ ÙØ´ ÙÙ ÙÙØ§Ø·Ù Ø§ÙØ´Ø­Ù. */
+/** المناطق المفعّلة للفني اللي مش في مناطق الشحن. */
 export function orphanAreas(areas: InstallationAreas, groups: ShippingAreaGroup[]): OrphanArea[] {
   const shipping = new Map(groups.map((group) => [group.governorate, group.areas]))
   const out: OrphanArea[] = []
@@ -62,14 +63,14 @@ export function orphanAreas(areas: InstallationAreas, groups: ShippingAreaGroup[
   return out
 }
 
-/** Ø¨Ø¹Ø¯ Ø­ÙØ¸ Ø§ÙØ´Ø­Ù: ÙÙØ§Ø·Ù Ø§ÙÙÙÙ Ø§ÙÙÙ ÙØ§Ø¨ÙØªØ´ ÙÙØ¬ÙØ¯Ø© ÙÙ Ø§ÙØ´Ø­Ù. */
+/** بعد حفظ الشحن: مناطق الفني اللي مابقتش موجودة في الشحن. */
 export async function installerAreasMissingFromShipping(): Promise<OrphanArea[]> {
   const [record, groups] = await Promise.all([readInstallationRecord(), readShippingAreaGroups()])
   return orphanAreas(record.config.areas, groups)
 }
 
 function sameConfig(a: InstallationConfig, b: InstallationConfig): boolean {
-  if (a.enabled !== b.enabled || a.note !== b.note || a.inspectionNote !== b.inspectionNote || a.feePerMeterPiastres !== b.feePerMeterPiastres) return false
+  if (a.enabled !== b.enabled || a.note !== b.note || a.inspectionNote !== b.inspectionNote || a.whatsappMessage !== b.whatsappMessage || a.feePerMeterPiastres !== b.feePerMeterPiastres) return false
   if ((a.mode ?? 'choice') !== (b.mode ?? 'choice')) return false
   if ((a.installerOnlyProductIds ?? []).join(',') !== (b.installerOnlyProductIds ?? []).join(',')) return false
   const flat = (areas: InstallationAreas): string =>
@@ -82,32 +83,32 @@ function sameConfig(a: InstallationConfig, b: InstallationConfig): boolean {
 
 const MAX_POUNDS = String(INSTALLATION_LIMITS.maxPiastres / 100)
 
-/** rawExpected: updated_at Ø§ÙÙÙ Ø§ÙÙÙØ­Ø© Ø´Ø§ÙØªÙØ Ø£Ù null ÙÙ Ø§ÙØµÙ ÙÙØ§ÙØ´ ÙÙØ¬ÙØ¯. */
+/** rawExpected: updated_at اللي اللوحة شافته، أو null لو الصف مكانش موجود. */
 export async function saveInstallation(raw: unknown, rawExpected: unknown): Promise<MutationResult<InstallationRecord>> {
   if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
-    return { ok: false, code: 'VALIDATION', message: 'Ø§ÙØ¨ÙØ§ÙØ§Øª ÙØ´ ØµØ­ÙØ­Ø©' }
+    return { ok: false, code: 'VALIDATION', message: 'البيانات مش صحيحة' }
   }
   const input = raw as Record<string, unknown>
   const enabled = input['enabled']
-  if (typeof enabled !== 'boolean') return { ok: false, code: 'VALIDATION', message: 'ÙÙØªØ§Ø­ Ø§ÙØªØ´ØºÙÙ ÙØ´ ØµØ­ÙØ­' }
+  if (typeof enabled !== 'boolean') return { ok: false, code: 'VALIDATION', message: 'مفتاح التشغيل مش صحيح' }
   const note = typeof input['note'] === 'string' ? input['note'].trim() : ''
   if (note.length > INSTALLATION_LIMITS.note) {
-    return { ok: false, code: 'VALIDATION', message: 'Ø³Ø·Ø± Ø§ÙØªÙØ¶ÙØ­ Ø£Ø·ÙÙ ÙÙ ' + String(INSTALLATION_LIMITS.note) + ' Ø­Ø±Ù' }
+    return { ok: false, code: 'VALIDATION', message: 'سطر التوضيح أطول من ' + String(INSTALLATION_LIMITS.note) + ' حرف' }
   }
   const inspectionNote = typeof input['inspectionNote'] === 'string' ? input['inspectionNote'].trim() : ''
   const normalizedInspectionNote = inspectionNote === '' ? DEFAULT_INSPECTION_NOTE : inspectionNote
   if (inspectionNote.length > INSTALLATION_LIMITS.inspectionNote) {
-    return { ok: false, code: 'VALIDATION', message: 'Ø±Ø³Ø§ÙØ© Ø§ÙÙØ¹Ø§ÙÙØ© Ø£Ø·ÙÙ ÙÙ ' + String(INSTALLATION_LIMITS.inspectionNote) + ' Ø­Ø±Ù' }
+    return { ok: false, code: 'VALIDATION', message: 'رسالة المعاينة أطول من ' + String(INSTALLATION_LIMITS.inspectionNote) + ' حرف' }
+  }
   const whatsappMessage = typeof input['whatsappMessage'] === 'string' ? input['whatsappMessage'].trim() : ''
   const normalizedWhatsappMessage = whatsappMessage === '' ? DEFAULT_WHATSAPP_MESSAGE : whatsappMessage
   if (whatsappMessage.length > INSTALLATION_LIMITS.whatsappMessage) {
-    return { ok: false, code: 'VALIDATION', message: 'قالب واتساب أطول من ' + String(INSTALLATION_LIMITS.whatsappMessage) + ' حرف' }
-  }
+    return { ok: false, code: 'VALIDATION', message: 'رسالة الواتساب أطول من ' + String(INSTALLATION_LIMITS.whatsappMessage) + ' حرف' }
   }
 
-  // INSTALLER-ONLY â Ø§ÙØºØ§ÙØ¨ = 'choice' (ÙØ³Ø®Ø© ÙÙØ­Ø© ÙØ¯ÙÙØ©)
+  // INSTALLER-ONLY — الغايب = 'choice' (نسخة لوحة قديمة)
   const modeRaw = input['mode'] === undefined ? 'choice' : input['mode']
-  if (!isInstallationMode(modeRaw)) return { ok: false, code: 'VALIDATION', message: 'Ø·Ø±ÙÙØ© Ø§ÙØªØ±ÙÙØ¨ ØºÙØ± ØµØ­ÙØ­Ø©.' }
+  if (!isInstallationMode(modeRaw)) return { ok: false, code: 'VALIDATION', message: 'طريقة التركيب غير صحيحة.' }
   const mode: InstallationMode = modeRaw
   const idsRaw = input['installerOnlyProductIds'] === undefined ? [] : input['installerOnlyProductIds']
   if (
@@ -115,25 +116,25 @@ export async function saveInstallation(raw: unknown, rawExpected: unknown): Prom
     idsRaw.length > INSTALLER_ONLY_MAX_PRODUCTS ||
     idsRaw.some((id) => typeof id !== 'number' || !Number.isInteger(id) || id <= 0)
   ) {
-    return { ok: false, code: 'VALIDATION', message: 'ÙØ§Ø¦ÙØ© ÙÙØªØ¬Ø§Øª Â«ÙÙÙ ÙÙØ·Â» ØºÙØ± ØµØ­ÙØ­Ø©.' }
+    return { ok: false, code: 'VALIDATION', message: 'قائمة منتجات «فني فقط» غير صحيحة.' }
   }
   const installerOnlyProductIds = parseInstallerOnlyIds(idsRaw)
   if (mode === 'installer_products' && installerOnlyProductIds.length === 0) {
-    return { ok: false, code: 'VALIDATION', message: 'ÙÙØ±Ø¬Ù Ø§Ø®ØªÙØ§Ø± ÙÙØªØ¬ ÙØ§Ø­Ø¯ Ø¹ÙÙ Ø§ÙØ£ÙÙ ÙØ®ÙØ§Ø± Â«ÙÙÙ ÙÙØ· â ÙÙØªØ¬Ø§Øª ÙØ­Ø¯Ø¯Ø©Â».' }
+    return { ok: false, code: 'VALIDATION', message: 'يُرجى اختيار منتج واحد على الأقل لخيار «فني فقط — منتجات محددة».' }
   }
 
   let fee: number | null = null
   const feeRaw = input['feePerMeterPiastres']
   if (feeRaw !== null && feeRaw !== undefined) {
     if (!isInstallationMoney(feeRaw, 1)) {
-      return { ok: false, code: 'VALIDATION', message: 'Ø³Ø¹Ø± ØªØ±ÙÙØ¨ Ø§ÙÙØªØ± ÙØ§Ø²Ù ÙÙÙÙ ÙÙ 0.01 ÙÙ ' + MAX_POUNDS + ' Ø¬ÙÙÙ' }
+      return { ok: false, code: 'VALIDATION', message: 'سعر تركيب المتر لازم يكون من 0.01 لـ ' + MAX_POUNDS + ' جنيه' }
     }
     fee = feeRaw
   }
 
   const areasRaw = input['areas']
   if (typeof areasRaw !== 'object' || areasRaw === null || Array.isArray(areasRaw)) {
-    return { ok: false, code: 'VALIDATION', message: 'Ø§ÙÙÙØ§Ø·Ù ÙØ´ ØµØ­ÙØ­Ø©' }
+    return { ok: false, code: 'VALIDATION', message: 'المناطق مش صحيحة' }
   }
 
   try {
@@ -144,10 +145,10 @@ export async function saveInstallation(raw: unknown, rawExpected: unknown): Prom
     for (const [governorate, list] of Object.entries(areasRaw as Record<string, unknown>)) {
       const known = shipping.get(governorate)
       if (known === undefined) {
-        return { ok: false, code: 'VALIDATION', message: 'ÙØ­Ø§ÙØ¸Ø© Â«' + governorate + 'Â» ÙØ´ ÙÙØ¬ÙØ¯Ø© ÙÙ Ø§ÙØ´Ø­Ù â Ø§Ø¹ÙÙ ØªØ­Ø¯ÙØ« ÙÙØµÙØ­Ø©.' }
+        return { ok: false, code: 'VALIDATION', message: 'محافظة «' + governorate + '» مش موجودة في الشحن — اعمل تحديث للصفحة.' }
       }
       if (typeof list !== 'object' || list === null || Array.isArray(list)) {
-        return { ok: false, code: 'VALIDATION', message: 'ÙÙØ§Ø·Ù ' + governorate + ' ÙØ´ ØµØ­ÙØ­Ø©' }
+        return { ok: false, code: 'VALIDATION', message: 'مناطق ' + governorate + ' مش صحيحة' }
       }
       const out: Record<string, number> = {}
       for (const [area, travel] of Object.entries(list as Record<string, unknown>)) {
@@ -155,11 +156,11 @@ export async function saveInstallation(raw: unknown, rawExpected: unknown): Prom
           return {
             ok: false,
             code: 'VALIDATION',
-            message: 'ÙÙØ·ÙØ© Â«' + area + 'Â» ÙØ´ ÙÙØ¬ÙØ¯Ø© ÙÙ ÙÙØ§Ø·Ù Ø§ÙØ´Ø­Ù ÙÙ' + governorate + ' â Ø§Ø¹ÙÙ ØªØ­Ø¯ÙØ« ÙÙØµÙØ­Ø©.',
+            message: 'منطقة «' + area + '» مش موجودة في مناطق الشحن لـ' + governorate + ' — اعمل تحديث للصفحة.',
           }
         }
         if (!isInstallationMoney(travel, 0)) {
-          return { ok: false, code: 'VALIDATION', message: 'Ø§ÙØªÙØ§Ù Ø§ÙÙÙÙ ÙÙÂ«' + area + 'Â» ÙØ§Ø²Ù ÙÙÙÙ ÙÙ 0 ÙÙ ' + MAX_POUNDS + ' Ø¬ÙÙÙ' }
+          return { ok: false, code: 'VALIDATION', message: 'انتقال الفني لـ«' + area + '» لازم يكون من 0 لـ ' + MAX_POUNDS + ' جنيه' }
         }
         out[area] = travel
         count += 1
@@ -167,13 +168,14 @@ export async function saveInstallation(raw: unknown, rawExpected: unknown): Prom
       if (Object.keys(out).length > 0) areas[governorate] = out
     }
     if (fee === null && (enabled || count > 0)) {
-      return { ok: false, code: 'VALIDATION', message: 'Ø§ÙØªØ¨ Ø³Ø¹Ø± ØªØ±ÙÙØ¨ Ø§ÙÙØªØ±' }
+      return { ok: false, code: 'VALIDATION', message: 'اكتب سعر تركيب المتر' }
     }
 
     const value: Record<string, unknown> = {
       enabled,
       note,
       inspectionNote: normalizedInspectionNote,
+      whatsappMessage: normalizedWhatsappMessage,
       areas,
       governorates: installationGovernorates(areas),
       mode,
@@ -185,13 +187,13 @@ export async function saveInstallation(raw: unknown, rawExpected: unknown): Prom
       try {
         await restInsert('settings', { key: KEY, value })
       } catch (error) {
-        // Ø­Ø¯ ØªØ§ÙÙ Ø¹ÙÙ Ø§ÙØµÙ ÙÙ ÙÙØ³ Ø§ÙÙØ­Ø¸Ø© â ØªØ¹Ø§Ø±Ø¶ Ø­ÙÙÙÙØ ÙØ´ ÙØªØ§Ø¨Ø© ÙÙÙÙ
+        // حد تاني عمل الصف في نفس اللحظة → تعارض حقيقي، مش كتابة فوقه
         const now = await readInstallationRecord()
         if (now.updatedAt !== null) return { ok: false, code: 'CONFLICT', message: CONFLICT_MESSAGE }
         return toInternalFailure(error)
       }
     } else {
-      const stamp = timestamp(rawExpected, 'Ø·Ø§Ø¨Ø¹ Ø¢Ø®Ø± ØªØ¹Ø¯ÙÙ')
+      const stamp = timestamp(rawExpected, 'طابع آخر تعديل')
       if (!stamp.ok) return stamp
       const result = await patchGuarded<{ key: string }>({
         table: 'settings',
@@ -205,7 +207,7 @@ export async function saveInstallation(raw: unknown, rawExpected: unknown): Prom
     }
 
     const stored = await readInstallationRecord()
-    const expected: InstallationConfig = { enabled, note, inspectionNote: normalizedInspectionNote, feePerMeterPiastres: fee, areas, mode, installerOnlyProductIds }
+    const expected: InstallationConfig = { enabled, note, inspectionNote: normalizedInspectionNote, whatsappMessage: normalizedWhatsappMessage, feePerMeterPiastres: fee, areas, mode, installerOnlyProductIds }
     if (stored.updatedAt === null || !sameConfig(stored.config, expected)) return toInternalFailure(null)
     return { ok: true, data: stored }
   } catch (error) {
