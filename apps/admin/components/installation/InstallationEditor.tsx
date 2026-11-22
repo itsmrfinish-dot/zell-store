@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { INSTALLATION_LIMITS, type InstallationAreas, type InstallationMode } from '@zell/core'
+import { DEFAULT_INSPECTION_NOTE, INSTALLATION_LIMITS, type InstallationAreas, type InstallationMode } from '@zell/core'
 import { saveInstallationAction } from '../../lib/actions'
 import { useSaveAction } from '../../lib/client/useSaveAction'
 import { formatPiastres, piastresToPounds } from '../../lib/format'
