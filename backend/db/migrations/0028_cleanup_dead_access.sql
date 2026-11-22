@@ -1,4 +1,4 @@
--- 0028 â Cleanup dead access-generation objects (erp_* and zell_erp_*)
+-- 0028 - Cleanup dead access-generation objects (erp_* and zell_erp_*)
 --
 -- This migration removes access control infrastructure that is no longer used
 -- or maintained. Removal is safe: no application code or active migrations
@@ -11,7 +11,7 @@
 -- * DROP 4 erp_* tables in safe order (FK-safe: alter first, no CASCADE)
 -- * DROP zell_order_writer role (verified: no object ownership)
 
--- Step 1: Soft disable (REVOKE, not DROP) â€" recoverable if needed later
+-- Step 1: Soft disable (REVOKE, not DROP) --" recoverable if needed later
 REVOKE EXECUTE ON FUNCTION zell_order_save_delivery_periods(timestamp with time zone, jsonb) FROM authenticated;
 REVOKE EXECUTE ON FUNCTION zell_order_set_gate(boolean, text) FROM authenticated;
 
