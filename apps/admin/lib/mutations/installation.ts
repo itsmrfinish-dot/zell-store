@@ -67,7 +67,7 @@ export async function installerAreasMissingFromShipping(): Promise<OrphanArea[]>
 }
 
 function sameConfig(a: InstallationConfig, b: InstallationConfig): boolean {
-  if (a.enabled !== b.enabled || a.note !== b.note || a.feePerMeterPiastres !== b.feePerMeterPiastres) return false
+  if (a.enabled !== b.enabled || a.note !== b.note || a.inspectionNote !== b.inspectionNote || a.feePerMeterPiastres !== b.feePerMeterPiastres) return false
   if ((a.mode ?? 'choice') !== (b.mode ?? 'choice')) return false
   if ((a.installerOnlyProductIds ?? []).join(',') !== (b.installerOnlyProductIds ?? []).join(',')) return false
   const flat = (areas: InstallationAreas): string =>
