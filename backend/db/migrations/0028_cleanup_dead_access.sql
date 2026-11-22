@@ -63,5 +63,9 @@ DROP TABLE erp_presets;
 DROP TABLE erp_commands;
 DROP TABLE erp_access_audit;
 
--- Step 4: Drop role (verified: no object ownership)
+-- Step 4: Drop role and its owned objects
+-- Note: zell_order_writer holds permissions (CONNECT public schema,
+-- EXECUTE zell_create_order, zell_get_order_receipt, zell_preview_coupon).
+-- Drop owned objects first to allow role deletion.
+DROP OWNED BY zell_order_writer;
 DROP ROLE zell_order_writer;
