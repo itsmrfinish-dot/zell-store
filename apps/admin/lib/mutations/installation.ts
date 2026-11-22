@@ -45,7 +45,8 @@ export type InstallationInput = {
   mode?: InstallationMode
   /** INSTALLER-ONLY â Ø£ÙÙØ§Ù Â«ÙÙÙ ÙÙØ·Â» ÙÙØ§ mode = 'installer_products'. */
   installerOnlyProductIds?: number[]
-}
+
+  whatsappMessage?: string}
 
 /** ÙÙØ·ÙØ© ÙØªØ­ÙØ¸Ø© ÙÙÙÙÙ ÙÙØ´ ÙÙØ¬ÙØ¯Ø© ÙÙ Ø§ÙØ´Ø­Ù (Ø§ØªØ´Ø§ÙØª Ø£Ù Ø§ØªØºÙØ± Ø§Ø³ÙÙØ§). */
 export type OrphanArea = { governorate: string; area: string }
@@ -97,6 +98,11 @@ export async function saveInstallation(raw: unknown, rawExpected: unknown): Prom
   const normalizedInspectionNote = inspectionNote === '' ? DEFAULT_INSPECTION_NOTE : inspectionNote
   if (inspectionNote.length > INSTALLATION_LIMITS.inspectionNote) {
     return { ok: false, code: 'VALIDATION', message: 'Ø±Ø³Ø§ÙØ© Ø§ÙÙØ¹Ø§ÙÙØ© Ø£Ø·ÙÙ ÙÙ ' + String(INSTALLATION_LIMITS.inspectionNote) + ' Ø­Ø±Ù' }
+  const whatsappMessage = typeof input['whatsappMessage'] === 'string' ? input['whatsappMessage'].trim() : ''
+  const normalizedWhatsappMessage = whatsappMessage === '' ? DEFAULT_WHATSAPP_MESSAGE : whatsappMessage
+  if (whatsappMessage.length > INSTALLATION_LIMITS.whatsappMessage) {
+    return { ok: false, code: 'VALIDATION', message: 'قالب واتساب أطول من ' + String(INSTALLATION_LIMITS.whatsappMessage) + ' حرف' }
+  }
   }
 
   // INSTALLER-ONLY â Ø§ÙØºØ§ÙØ¨ = 'choice' (ÙØ³Ø®Ø© ÙÙØ­Ø© ÙØ¯ÙÙØ©)
