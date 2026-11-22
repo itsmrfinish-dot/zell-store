@@ -30,6 +30,7 @@ import { SizePanel } from './SizePanel'
 import { AddonsPicker } from './AddonsPicker'
 import { currentInstallModeLine, installChoiceRequired, revealToolsOnChange, showToolSuggestions } from '../../lib/install/installChoice'
 import { InstallChoice } from './InstallChoice'
+import { buildInspectionMessage, buildWhatsAppUrl } from '../../lib/install/inspection'
 import type { SizeDecision } from '../../lib/size/sizeEntry'
 
 /** gift: «نص العرض» لو ظاهر — بيظهر كهدية فوق زرار الإضافة. */
@@ -39,6 +40,7 @@ export function ProductBuy({
   addons = [],
   addonsTitle = '',
   installation = null,
+  whatsappNumber = '',
   sizeEntry = 'cm',
   sizeTexts,
 }: {
@@ -53,6 +55,7 @@ export function ProductBuy({
   sizeEntry?: ProductSizeEntry
   /** SIZE-TEXTS — نصوص «حدد المقاس» من «المحتوى» (الغايب = النصوص الافتراضية). */
   sizeTexts?: ProductSizeTexts
+  whatsappNumber?: string
 }) {
   const cart = useCart()
   // BUY-NOW — «اطلب دلوقتي»: إضافة مرة واحدة + علامة تحميل فورية + منع الضغط المتكرر (lib/buy/buyNow.ts)
@@ -197,6 +200,25 @@ export function ProductBuy({
         decisionRef={decisionRef}
         attempt={attempt}
       />
+
+      {/* صندوق طلب المعاينة */}
+      {cart.installMode === 'installer' && installation?.inspectionNote && whatsappNumber ? (
+        <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+          <h3 className="font-semibold">محتاج معاينة</h3>
+          <p className="text-sm text-muted-foreground whitespace-pre-wrap">{installation.inspectionNote}</p>
+          <a
+            href={buildWhatsAppUrl(
+              whatsappNumber,
+              buildInspectionMessage(product.name_ar, (() => { const d = decide(); return d.kind === 'add' ? { length: d.lengthCm, width: chosenWidth } : undefined })(), product.id, installation.inspectionNote)
+            )}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+          >
+            💬 واتساب
+          </a>
+        </div>
+      ) : null}
 
       <GiftNote text={gift} />
 

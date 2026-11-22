@@ -1,6 +1,7 @@
 import 'server-only'
 
 import {
+  DEFAULT_INSPECTION_NOTE,
   INSTALLATION_LIMITS,
   installationGovernorates,
   isInstallationMoney,
@@ -37,6 +38,7 @@ import type { ShippingAreaGroup, InstallationRecord } from '../data/installation
 export type InstallationInput = {
   enabled: boolean
   note: string
+  inspectionNote: string
   feePerMeterPiastres: number | null
   areas: InstallationAreas
   /** INSTALLER-ONLY — طريقة التركيب (الغايب = 'choice'). */
@@ -66,7 +68,7 @@ export async function installerAreasMissingFromShipping(): Promise<OrphanArea[]>
 }
 
 function sameConfig(a: InstallationConfig, b: InstallationConfig): boolean {
-  if (a.enabled !== b.enabled || a.note !== b.note || a.feePerMeterPiastres !== b.feePerMeterPiastres) return false
+  if (a.enabled !== b.enabled || a.note !== b.note || a.inspectionNote !== b.inspectionNote || a.feePerMeterPiastres !== b.feePerMeterPiastres) return false
   if ((a.mode ?? 'choice') !== (b.mode ?? 'choice')) return false
   if ((a.installerOnlyProductIds ?? []).join(',') !== (b.installerOnlyProductIds ?? []).join(',')) return false
   const flat = (areas: InstallationAreas): string =>
@@ -90,6 +92,11 @@ export async function saveInstallation(raw: unknown, rawExpected: unknown): Prom
   const note = typeof input['note'] === 'string' ? input['note'].trim() : ''
   if (note.length > INSTALLATION_LIMITS.note) {
     return { ok: false, code: 'VALIDATION', message: 'سطر التوضيح أطول من ' + String(INSTALLATION_LIMITS.note) + ' حرف' }
+  }
+  const inspectionNote = typeof input['inspectionNote'] === 'string' ? input['inspectionNote'].trim() : ''
+  const normalizedInspectionNote = inspectionNote === '' ? DEFAULT_INSPECTION_NOTE : inspectionNote
+  if (inspectionNote.length > INSTALLATION_LIMITS.inspectionNote) {
+    return { ok: false, code: 'VALIDATION', message: 'رسالة المعاينة أطول من ' + String(INSTALLATION_LIMITS.inspectionNote) + ' حرف' }
   }
 
   // INSTALLER-ONLY — الغايب = 'choice' (نسخة لوحة قديمة)
@@ -160,6 +167,7 @@ export async function saveInstallation(raw: unknown, rawExpected: unknown): Prom
     const value: Record<string, unknown> = {
       enabled,
       note,
+      inspectionNote: normalizedInspectionNote,
       areas,
       governorates: installationGovernorates(areas),
       mode,
@@ -191,7 +199,7 @@ export async function saveInstallation(raw: unknown, rawExpected: unknown): Prom
     }
 
     const stored = await readInstallationRecord()
-    const expected: InstallationConfig = { enabled, note, feePerMeterPiastres: fee, areas, mode, installerOnlyProductIds }
+    const expected: InstallationConfig = { enabled, note, inspectionNote: normalizedInspectionNote, feePerMeterPiastres: fee, areas, mode, installerOnlyProductIds }
     if (stored.updatedAt === null || !sameConfig(stored.config, expected)) return toInternalFailure(null)
     return { ok: true, data: stored }
   } catch (error) {
