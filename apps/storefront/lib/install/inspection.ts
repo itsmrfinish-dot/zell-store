@@ -25,19 +25,22 @@ export function buildInspectionMessage(
   // بناء المقاسات
   let measurements = '';
   if (dimensions?.length !== undefined && dimensions?.width !== undefined) {
-    measurements = `المقاسات: ${dimensions.length}×${dimensions.width}`;
+    measurements = `${dimensions.length}×${dimensions.width}`;
   }
 
   // بناء الرابط
   const link = `${SITE_URL}/product/${productId}`;
 
   // بناء الرسالة من القالب
-  const template = whatsappTemplate || DEFAULT_WHATSAPP_MESSAGE;
+  let template = whatsappTemplate || DEFAULT_WHATSAPP_MESSAGE;
+  if (measurements === '') {
+    template = template.replace('المقاسات: {measurements}.', '');
+  }
   
   let message = template
-    .replace('{product}', productName)
-    .replace('{measurements}', measurements)
-    .replace('{link}', link);
+    .replaceAll('{product}', productName)
+    .replaceAll('{measurements}', measurements)
+    .replaceAll('{link}', link);
 
   // تنظيف المسافات الزائدة (فراغات مزدوجة أو مبتورة)
   message = message.replace(/\s+/g, ' ').trim();
