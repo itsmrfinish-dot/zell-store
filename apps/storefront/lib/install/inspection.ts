@@ -1,49 +1,57 @@
 /**
- * Ø±Ø³Ø§ÙØ© Ø§ÙÙØ¹Ø§ÙÙØ© ÙØ§ÙÙØ§ØªØ³Ø§Ø¨ â ÙÙØ²Ø© Â«Ø·ÙØ¨ ÙØ¹Ø§ÙÙØ© ÙØ¨Ù Ø§ÙØªØ±ÙÙØ¨Â» ÙÙ ØµÙØ­Ø© Ø§ÙÙÙØªØ¬.
+ * رسالة المعاينة والواتساب – نسخة «طلب معاينة قبل التركيب» في صفحة المنتج.
  *
- * Ø§ÙØ±Ø³Ø§ÙØ© = Ø§ÙØ³Ø·Ø± Ø§ÙØ«Ø§Ø¨Øª + Ø§Ø³Ù Ø§ÙÙÙØªØ¬ + Ø§ÙÙÙØ§Ø³Ø§Øª (ÙÙ ÙÙØ¬ÙØ¯Ø©) + Ø±Ø§Ø¨Ø· ØµÙØ­Ø© Ø§ÙÙÙØªØ¬.
+ * الرسالة = السطر الثابت + اسم المنتج + المقاسات (من موجودة) + رابط صفحة المنتج.
  */
 
+import { DEFAULT_WHATSAPP_MESSAGE } from '@zell/core'
 import { SITE_URL } from '../site'
 
 /**
- * Ø¨ÙØ§Ø¡ Ø±Ø³Ø§ÙØ© Ø§ÙÙØ§ØªØ³Ø§Ø¨ ÙØ·ÙØ¨ ÙØ¹Ø§ÙÙØ© Ø§ÙØªØ±ÙÙØ¨.
+ * بناء رسالة الواتساب لطلب معاينة التركيب.
  *
- * @param productName â Ø§Ø³Ù Ø§ÙÙÙØªØ¬
- * @param dimensions â Ø§ÙÙÙØ§Ø³Ø§Øª (Ø·ÙÙÃØ¹Ø±Ø¶) Ø£Ù undefined
- * @param productId â ÙØ¹Ø±ÙÙ Ø§ÙÙÙØªØ¬
- * @returns Ø§ÙØ±Ø³Ø§ÙØ© Ø§ÙÙØ§ÙÙØ© Ø§ÙØ¬Ø§ÙØ²Ø© ÙÙØ¥Ø±Ø³Ø§Ù
+ * @param productName – اسم المنتج
+ * @param dimensions – المقاسات (طول×عرض) أو undefined
+ * @param productId – معرّف المنتج
+ * @param whatsappTemplate – قالب الواتساب المخصص أو undefined (يستخدم الافتراضي)
+ * @returns الرسالة النهائية الجاهزة للإرسال
  */
 export function buildInspectionMessage(
   productName: string,
   dimensions: { length?: number; width?: number } | undefined,
   productId: number,
-  inspectionNote?: string
+  whatsappTemplate?: string
 ): string {
-  const lines: string[] = ['ÙØ­ØªØ§Ø¬ ÙØ¹Ø§ÙÙØ© ÙØ¨Ù Ø§ÙØªØ±ÙÙØ¨']
-  
-  if (inspectionNote) {
-    lines.push(inspectionNote)
-  }
-  
-  lines.push(`Ø§ÙÙÙØªØ¬: ${productName}`)
-
+  // بناء المقاسات
+  let measurements = '';
   if (dimensions?.length !== undefined && dimensions?.width !== undefined) {
-    lines.push(`Ø§ÙÙÙØ§Ø³Ø§Øª: ${dimensions.length}Ã${dimensions.width}`)
+    measurements = `المقاسات: ${dimensions.length}×${dimensions.width}`;
   }
 
-  lines.push(`Ø§ÙØ±Ø§Ø¨Ø·: ${SITE_URL}/product/${productId}`)
+  // بناء الرابط
+  const link = `${SITE_URL}/product/${productId}`;
 
-  return lines.join('\n')
+  // بناء الرسالة من القالب
+  const template = whatsappTemplate || DEFAULT_WHATSAPP_MESSAGE;
+  
+  let message = template
+    .replace('{product}', productName)
+    .replace('{measurements}', measurements)
+    .replace('{link}', link);
+
+  // تنظيف المسافات الزائدة (فراغات مزدوجة أو مبتورة)
+  message = message.replace(/\s+/g, ' ').trim();
+
+  return message;
 }
 
 /**
- * Ø¨ÙØ§Ø¡ Ø±Ø§Ø¨Ø· Ø§ÙÙØ§ØªØ³Ø§Ø¨ Ø§ÙÙØ§ÙÙ.
+ * بناء رابط الواتساب النهائي.
  *
- * @param phoneNumber â Ø±ÙÙ Ø§ÙÙØ§ØªØ³Ø§Ø¨ Ø¨Ø¯ÙÙ + (ÙØ«Ø§Ù: 20...)
- * @param message â Ø§ÙØ±Ø³Ø§ÙØ©
- * @returns Ø±Ø§Ø¨Ø· wa.me Ø§ÙÙØ§ÙÙ
+ * @param phoneNumber – رقم الواتساب بدون + (مثلاً: 20...)
+ * @param message – الرسالة
+ * @returns رابط wa.me النهائي
  */
 export function buildWhatsAppUrl(phoneNumber: string, message: string): string {
-  return `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
+  return `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
 }
