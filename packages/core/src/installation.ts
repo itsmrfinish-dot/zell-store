@@ -11,7 +11,9 @@
 
 export const INSTALLATION_LIMITS = { note: 300, inspectionNote: 600, whatsappMessage: 600, area: 40, maxPiastres: 1_000_000 } as const
 
-export const DEFAULT_INSPECTION_NOTE = 'Ø§ÙØªØ±ÙÙØ¨ Ø¨ÙØ¨Ø¯Ø£ Ø¨ÙØ¹Ø§ÙÙØ©: Ø§ÙÙÙÙ Ø¨ÙÙØ¬Ù ÙÙÙØ³ Ø§ÙØ¥Ø²Ø§Ø² Ø¹ÙÙ Ø§ÙØ·Ø¨ÙØ¹Ø©Ø ÙØªÙÙÙØ© Ø§ÙØªØ±ÙÙØ¨ Ø¨ØªØªØ­Ø³Ø¨ Ø¨Ø§ÙÙØªØ± Ø§ÙÙØ±Ø¨Ø¹ Ø­Ø³Ø¨ Ø§ÙÙÙØ§Ø³ Ø§ÙÙØ¹ÙÙØ ÙØ¨ØªØ¹Ø±Ù Ø§ÙØªÙÙÙØ© Ø§ÙÙÙØ§Ø¦ÙØ© ÙØªÙØ§ÙÙ Ø¹ÙÙÙØ§ ÙØ¨Ù ÙØ§ ÙØ¨Ø¯Ø£ Ø§ÙØ´ØºÙ. Ø³Ø¹Ø± Ø§ÙÙÙÙÙ ÙÙØ³Ù Ø¨Ø§ÙÙØªØ± Ø§ÙØ·ÙÙÙ Ø²Ù ÙØ§ ÙÙ ÙÙØªÙØ¨ ÙÙ Ø§ÙØµÙØ­Ø©.' as const
+export const DEFAULT_INSPECTION_NOTE = 'التركيب بيبدأ بمعاينة: الفني بييجي يقيس الإزاز على الطبيعة. بعد القياس بتتحسب تكلفة التركيب بالمتر المربع حسب المقاس الفعلي، وبيتم الاتفاق على التكلفة النهائية قبل بدء الشغل. سعر الفيلم نفسه بالمتر الطولي زي ما هو موضح في الصفحة.' as const
+
+export const DEFAULT_WHATSAPP_MESSAGE = 'مرحبًا، محتاج معاينة قبل التركيب للمنتج {product}. {measurements} عارف إن تكلفة التركيب بتتحسب بالمتر المربع بعد القياس الفعلي، وعايز أعرف التكلفة النهائية ونتفق عليها قبل ما يبدأ الشغل. سعر الفيلم نفسه بالمتر الطولي حسب الصفحة. {link}' as const
 
 /**
  * INSTALLER-ONLY (ÙØ±Ø§Ø± Ø§ÙÙØ§ÙÙ 2026-11-05) â Ø·Ø±ÙÙØ© Ø§ÙØªØ±ÙÙØ¨ ÙÙ ØµÙØ­Ø© Â«ÙÙÙ Ø§ÙØªØ±ÙÙØ¨Â» ÙÙ Ø§ÙÙÙØ­Ø©:
@@ -88,7 +90,7 @@ export function parseInstallationConfig(value: unknown): InstallationConfig {
   const inspectionNote = typeof raw['inspectionNote'] === 'string' 
     ? raw['inspectionNote'].trim().substring(0, INSTALLATION_LIMITS.inspectionNote)
     : DEFAULT_INSPECTION_NOTE
-  const whatsappMessage = typeof raw['whatsappMessage'] === 'string' 
+  const whatsappMessage = typeof raw['whatsappMessage'] === 'string'
     ? raw['whatsappMessage'].trim().substring(0, INSTALLATION_LIMITS.whatsappMessage)
     : DEFAULT_WHATSAPP_MESSAGE
   
