@@ -172,6 +172,7 @@ export default async function ProductPage({ params }: PageProps) {
               addons={addons}
               addonsTitle={settings.addonsTitle}
               installation={settings.installation}
+      whatsappNumber={settings.whatsappNumber}
               sizeEntry={settings.content.productSizeEntry}
               sizeTexts={settings.content.productSizeTexts}
             />
