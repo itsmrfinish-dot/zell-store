@@ -196,7 +196,7 @@ export async function saveInstallation(raw: unknown, rawExpected: unknown): Prom
     }
 
     const stored = await readInstallationRecord()
-    const expected: InstallationConfig = { enabled, note, feePerMeterPiastres: fee, areas, mode, installerOnlyProductIds }
+    const expected: InstallationConfig = { enabled, note, inspectionNote, feePerMeterPiastres: fee, areas, mode, installerOnlyProductIds }
     if (stored.updatedAt === null || !sameConfig(stored.config, expected)) return toInternalFailure(null)
     return { ok: true, data: stored }
   } catch (error) {
