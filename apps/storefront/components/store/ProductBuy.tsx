@@ -200,6 +200,25 @@ export function ProductBuy({
         attempt={attempt}
       />
 
+      {/* صندوق طلب المعاينة */}
+      {cart.installMode === 'installer' && installation?.inspectionNote && whatsappNumber ? (
+        <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+          <h3 className="font-semibold">محتاج معاينة</h3>
+          <p className="text-sm text-muted-foreground whitespace-pre-wrap">{installation.inspectionNote}</p>
+          <a
+            href={buildWhatsAppUrl(
+              whatsappNumber,
+              buildInspectionMessage(product.name_ar, decision, product.id, installation.inspectionNote)
+            )}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+          >
+            💬 واتساب
+          </a>
+        </div>
+      ) : null}
+
       <GiftNote text={gift} />
 
       {showChoice && fee !== null && choicePending ? (
