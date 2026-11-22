@@ -48,7 +48,7 @@ export function runInspectionCases(): { passed: number; failures: InspectionCase
   check(
     'buildWhatsAppUrl: بناء الرابط',
     buildWhatsAppUrl('201001234567', 'محتاج معاينة قبل التركيب'),
-    'https://wa.me/201001234567?text=محتاج%20معاينة%20قبل%20التركيب'
+    'https://wa.me/201001234567?text=%D9%85%D8%AD%D8%AA%D8%A7%D8%AC%20%D9%85%D8%B9%D8%A7%D9%8A%D9%86%D8%A9%20%D9%82%D8%A8%D9%84%20%D8%A7%D9%84%D8%AA%D8%B1%D9%83%D9%8A%D8%A8'
   )
 
   return { passed, failures }
