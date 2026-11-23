@@ -85,9 +85,9 @@ while IFS='|' read -r kind rel _reason; do
   runf="$f"
   if [ "$kind" = "apply" ] && grep -q 'zell\.approved_by' "$f"; then
     runf="$TMP/run_$n.sql"
-    sed "0,/^begin;\$/s//begin;\nset local zell.approved_by = 'ci-0030-build';/" "$f" > "$runf"
+    sed "0,/^begin;$/s//begin;\nset local zell.approved_by = 'ci-0030-build';/" "$f" > "$runf"
     if grep -q 'zell\.inv_expected' "$f"; then
-      sed -i "0,/^begin;\$/s//begin;\nset local zell.inv_expected = 'locations=1 suppliers=0 purchase_docs=0 purchase_doc_lines=0 purchase_doc_charges=0 opening_docs=0 opening_lines=0 stock_lots=0 commands=0 audit=0';/" "$runf"
+      sed -i "0,/^begin;$/s//begin;\nset local zell.inv_expected = 'locations=1 suppliers=0 purchase_docs=0 purchase_doc_lines=0 purchase_doc_charges=0 opening_docs=0 opening_lines=0 stock_lots=0 commands=0 audit=0';/" "$runf"
     fi
   fi
   pg_f "$DB" "$runf" > "$TMP/build_$n.log" 2>&1 || stop "B01 build step $n $rel" "$(tailof "$TMP/build_$n.log")"
@@ -119,6 +119,7 @@ if [ -z "$PID" ]; then
   PID=$(q "insert into public.products (name_ar, price_per_meter_piastres, is_active) values ('ci-0030-prod', 15000, true) returning id")
 fi
 q "insert into public.coupons (code, kind, percent_off, is_active) values ('K1RACE30', 'percent', 10, true), ('K2RACE30', 'percent', 10, true)" > /dev/null
+q "update public.settings set value = 'true'::jsonb where key = 'coupons_enabled'" > /dev/null
 K1ID=$(q "select id from public.coupons where code = 'K1RACE30'")
 K2ID=$(q "select id from public.coupons where code = 'K2RACE30'")
 ord_txt() {
@@ -133,13 +134,13 @@ del_txt() {
 }
 
 # K01: الطلب الأول (ماسك قفل الكوبون FOR UPDATE) ↔ الحذف بيستنى، وبعد الـ commit بيعدّ الطلب -> archived.
-overlap k1 "$(ord_txt ci30-k1-key K1RACE30 3)" "$(del_txt "$K1ID" 0)"
+overlap k1 "$(ord_txt ci30-k1-order-key-0001 K1RACE30 3)" "$(del_txt "$K1ID" 0)"
 fin=$(q "select pg_catalog.count(*) from public.orders where coupon_id = $K1ID")
 ok=no; [ "$OV" = yes ] && has "$TMP/k1w.out" 'archived' && [ "$fin" = "1" ] && ok=yes
 record "K01 order holds the coupon, delete waits (overlap seen) then counts the order -> archived; order kept" "$ok" "ov=$OV orders=$fin h=$(tailof "$TMP/k1h.out") w=$(tailof "$TMP/k1w.out")"
 
 # K02: الحذف الأول (كوبون فاضي) ↔ الطلب بيستنى قفل الصف، وبعد الـ commit الكوبون اختفى -> 45070.
-overlap k2 "$(del_txt "$K2ID" 3)" "$(ord_txt ci30-k2-key K2RACE30 0)"
+overlap k2 "$(del_txt "$K2ID" 3)" "$(ord_txt ci30-k2-order-key-0002 K2RACE30 0)"
 ok=no; [ "$OV" = yes ] && has "$TMP/k2h.out" 'deleted' && has "$TMP/k2w.out" '45070' && ok=yes
 record "K02 delete holds the coupon row, order waits (overlap seen) then coupon gone -> 45070" "$ok" "ov=$OV h=$(tailof "$TMP/k2h.out") w=$(tailof "$TMP/k2w.out")"
 
