@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { createServiceClient } from '../auth/supabaseServer'
+import { createAuthClient } from '../auth/supabaseServer'
 import { storageDelete } from './client'
 
 export type OrphanedImage = {
@@ -66,37 +66,51 @@ async function claimOrphans(supabase: any, dryRun: boolean, claimedBy: string): 
     const eligibilityDate = new Date(Math.max(new Date(config.backlogVerifiedAt).getTime(), retentionDate.getTime()))
     
     if (dryRun) {
+      const timeoutClaimed = new Date(Date.now() - CLAIM_TIMEOUT_MINUTES * 60000).toISOString()
       const { data, error } = await supabase
         .from('storage_orphans')
         .select('id,bucket,object_path,created_at,claimed_at,claimed_by,cleaned_at')
         .is('cleaned_at', null)
-        .or('claimed_at.is.null,claimed_at.lt.' + new Date(Date.now() - CLAIM_TIMEOUT_MINUTES * 60000).toISOString())
         .gte('created_at', eligibilityDate.toISOString())
         .order('created_at', { ascending: true })
         .limit(1000)
         .abortSignal(AbortSignal.timeout(TIMEOUT_MS))
-      return error ? [] : (data || [])
+      if (error) return []
+      return (data || []).filter(r => r.claimed_at === null || new Date(r.claimed_at) < new Date(timeoutClaimed))
     }
     
     const timeoutClaimed = new Date(Date.now() - CLAIM_TIMEOUT_MINUTES * 60000).toISOString()
-    const { data, error } = await supabase.rpc('claim_orphans_for_cleanup', {
-      p_eligibility_date: eligibilityDate.toISOString(),
-      p_timeout_claimed: timeoutClaimed,
-      p_claimed_by: claimedBy
-    }).abortSignal(AbortSignal.timeout(TIMEOUT_MS))
+    const { data: claimed, error } = await supabase
+      .from('storage_orphans')
+      .select('id,bucket,object_path,created_at,claimed_at,claimed_by,cleaned_at')
+      .is('cleaned_at', null)
+      .or('claimed_at.is.null,claimed_at.lt.' + timeoutClaimed)
+      .gte('created_at', eligibilityDate.toISOString())
+      .order('created_at', { ascending: true })
+      .limit(1000)
+      .abortSignal(AbortSignal.timeout(TIMEOUT_MS))
     
-    return error ? [] : (data || [])
+    if (error) return []
+    if (!claimed || claimed.length === 0) return []
+    
+    const ids = claimed.map((o: any) => o.id)
+    await supabase
+      .from('storage_orphans')
+      .update({ claimed_at: new Date().toISOString(), claimed_by: claimedBy })
+      .in('id', ids)
+      .abortSignal(AbortSignal.timeout(TIMEOUT_MS))
+    
+    return claimed
   } catch {
     return []
   }
 }
 
-async function isFileReferenced(supabase: any, bucket: string, objectPath: string): Promise<boolean> {
+async function isFileReferenced(supabase: any, objectPath: string): Promise<boolean> {
   try {
     const checks = [
-      supabase.from('product_images').select('id', { count: 'exact', head: true }).eq('bucket', bucket).eq('object_path', objectPath),
-      supabase.from('site_images').select('id', { count: 'exact', head: true }).eq('bucket', bucket).eq('object_path', objectPath),
-      supabase.from('collections').select('id', { count: 'exact', head: true }).eq('cover_bucket', bucket).eq('cover_object_path', objectPath),
+      supabase.from('product_images').select('id', { count: 'exact', head: true }).eq('object_path', objectPath),
+      supabase.from('site_images').select('id', { count: 'exact', head: true }).eq('object_path', objectPath),
     ]
     
     const results = await Promise.all(checks.map(c => c.abortSignal(AbortSignal.timeout(TIMEOUT_MS))))
@@ -106,39 +120,53 @@ async function isFileReferenced(supabase: any, bucket: string, objectPath: strin
   }
 }
 
-async function fileExistsInStorage(supabase: any, bucket: string, objectPath: string): Promise<boolean> {
+async function fileExistsInStorage(objectPath: string): Promise<boolean> {
   try {
-    const { data, error } = await supabase.storage.from(bucket).list(objectPath.split('/').slice(0, -1).join('/'), { limit: 1 }).abortSignal(AbortSignal.timeout(TIMEOUT_MS))
-    if (error) return true
-    return data?.some(f => f.name === objectPath.split('/').pop()) ?? false
+    const response = await fetch(
+      new URL(`/storage/v1/object/product-images/${encodeURIComponent(objectPath)}`, process.env.SUPABASE_URL).toString(),
+      { method: 'HEAD', headers: { apikey: process.env.SUPABASE_SERVICE_ROLE_KEY || '', Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY || ''}` }, signal: AbortSignal.timeout(TIMEOUT_MS) }
+    )
+    return response.ok
   } catch {
     return true
   }
 }
 
+async function releaseClaimOnError(supabase: any, orphanId: string): Promise<void> {
+  try {
+    await supabase.from('storage_orphans').update({ claimed_at: null, claimed_by: null }).eq('id', orphanId).abortSignal(AbortSignal.timeout(TIMEOUT_MS))
+  } catch {}
+}
+
 async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boolean): Promise<CleanupResult> {
   try {
-    const isReferenced = await isFileReferenced(supabase, orphan.bucket, orphan.object_path)
+    const isReferenced = await isFileReferenced(supabase, orphan.object_path)
     if (isReferenced) {
       if (!dryRun) {
-        await supabase.from('storage_orphans').update({ claimed_at: null, claimed_by: null }).eq('id', orphan.id)
+        await releaseClaimOnError(supabase, orphan.id)
       }
       return { status: 'failed', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path, error: 'File is still referenced' }
     }
     
-    const exists = await fileExistsInStorage(supabase, orphan.bucket, orphan.object_path)
+    const exists = await fileExistsInStorage(orphan.object_path)
     
     if (!dryRun) {
-      if (exists) {
-        await storageDelete(orphan.bucket, orphan.object_path)
+      try {
+        if (exists) {
+          await storageDelete(orphan.object_path)
+        }
+      } catch (err) {
+        await releaseClaimOnError(supabase, orphan.id)
+        return { status: 'failed', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path, error: 'Storage delete failed: ' + (err instanceof Error ? err.message : String(err)) }
       }
-      await supabase.from('storage_orphans').update({ cleaned_at: 'now()' }).eq('id', orphan.id)
+      
+      await supabase.from('storage_orphans').update({ cleaned_at: 'now()' }).eq('id', orphan.id).abortSignal(AbortSignal.timeout(TIMEOUT_MS))
     }
     
     return { status: exists ? 'success' : 'missing', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path }
   } catch (err) {
     if (!dryRun) {
-      await supabase.from('storage_orphans').update({ claimed_at: null, claimed_by: null }).eq('id', orphan.id).catch(() => {})
+      await releaseClaimOnError(supabase, orphan.id)
     }
     return { status: 'failed', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path, error: err instanceof Error ? err.message : String(err) }
   }
@@ -146,7 +174,7 @@ async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boole
 
 export async function cleanupImages(params: { dryRun: boolean; claimedBy: string }): Promise<{ stats: CleanupStats; results: CleanupResult[] }> {
   try {
-    const supabase = await createServiceClient()
+    const supabase = await createAuthClient()
     const orphans = await claimOrphans(supabase, params.dryRun, params.claimedBy)
     
     const results: CleanupResult[] = []
