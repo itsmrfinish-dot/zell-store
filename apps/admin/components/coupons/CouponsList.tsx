@@ -124,3 +124,20 @@ function Item({ label, value, wide = false }: { label: string; value: string; wi
     </div>
   )
 }
+
+  
+  const handleDelete = async (couponId: number, isUsed: boolean) => {
+    const confirmMsg = isUsed
+      ? 'هذا الكوبون مستخدم بالفعل. سيتم إلغاء الكوبون وإخفاؤه من القائمة ولن يمكن إعادة تفعيله. هل أنت متأكد؟'
+      : 'سيتم حذف هذا الكوبون نهائيًا ولا يمكن استرجاعه. هل أنت متأكد؟';
+    
+    if (!confirm(confirmMsg)) return;
+    
+    const result = await deleteCoupon(couponId);
+    if (result.success) {
+      toast.success(result.message);
+      refetchCoupons();
+    } else {
+      toast.error(result.message);
+    }
+  };
