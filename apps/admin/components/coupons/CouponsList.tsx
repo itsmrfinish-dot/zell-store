@@ -18,7 +18,7 @@ import { CouponForm } from './CouponForm'
 type Editing = { mode: 'create' } | { mode: 'edit'; coupon: AdminCoupon } | null
 
 /**
- * قايمة الكوبونات + الإنشاء والتعديل والتفعيل/الإيقاف. مفيش حذف (الإيقاف هو البديل).
+ * قايمة الكوبونات + الإنشاء والتعديل والتفعيل/الإيقاف والحذف (0030: حذف نهائي لغير المستخدم، وإلغاء دائم للمستخدم).
  * الاستخدامات = أوردرات غير ملغية، جاية مع القايمة في نفس الطلب.
  */
 export function CouponsList({ rows }: { rows: AdminCoupon[] }) {
@@ -40,9 +40,9 @@ export function CouponsList({ rows }: { rows: AdminCoupon[] }) {
     const confirmMsg = isUsed
       ? 'هذا الكوبون مستخدم بالفعل. سيتم إلغاء الكوبون وإخفاؤه من القائمة ولن يمكن إعادة تفعيله. هل أنت متأكد؟'
       : 'سيتم حذف هذا الكوبون نهائيًا ولا يمكن استرجاعه. هل أنت متأكد؟'
-    
+
     if (!confirm(confirmMsg)) return
-    
+
     setBusyId(coupon.id)
     void run(() => deleteCouponAction(coupon.id), {
       onSuccess: () => router.refresh(),
