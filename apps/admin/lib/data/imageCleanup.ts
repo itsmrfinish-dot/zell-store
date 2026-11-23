@@ -33,21 +33,30 @@ const TIMEOUT_MS = 30000
 const CLAIM_TIMEOUT_MINUTES = 15
 
 async function getCleanupConfig(supabase: any): Promise<{ retentionDays: number; backlogVerifiedAt: string }> {
+  // Settings table schema: key (string), value (JSONB), updated_at (timestamp)
   const { data: rows, error } = await supabase
     .from('settings')
     .select('key,value')
     .in('key', ['imageCleanupRetentionDays', 'imageCleanupBacklogVerifiedAt'])
   
   if (error) {
-    throw new Error('Failed to load cleanup config: ' + error.message)
+    throw new Error('Settings query failed: ' + error.message)
+  }
+  if (!rows || rows.length === 0) {
+    throw new Error('No cleanup settings found in database')
   }
   
   const config: Record<string, any> = {}
   for (const row of rows || []) {
     if (row.key === 'imageCleanupRetentionDays') {
-      const val = parseInt(row.value, 10)
+      // Validate: must be a strict non-negative integer (no decimals or non-numeric)
+      const trimmedVal = String(row.value).trim()
+      if (!/^\d+$/.test(trimmedVal)) {
+        throw new Error('imageCleanupRetentionDays must be a non-negative integer (no decimals), got: ' + row.value)
+      }
+      const val = parseInt(trimmedVal, 10)
       if (!Number.isFinite(val) || val < 0) {
-        throw new Error('imageCleanupRetentionDays must be a positive integer, got: ' + row.value)
+        throw new Error('imageCleanupRetentionDays validation failed, got: ' + row.value)
       }
       config.retentionDays = val
     }
@@ -71,7 +80,6 @@ async function getCleanupConfig(supabase: any): Promise<{ retentionDays: number;
     retentionDays: config.retentionDays,
     backlogVerifiedAt: config.backlogVerifiedAt,
   }
-}
 }
 
 async function claimOrphans(supabase: any, dryRun: boolean, claimedBy: string): Promise<OrphanedImage[]> {
@@ -107,7 +115,7 @@ async function claimOrphans(supabase: any, dryRun: boolean, claimedBy: string): 
         .limit(1000)
         .abortSignal(AbortSignal.timeout(TIMEOUT_MS))
       
-      if (error) return []
+      if (error) throw new Error('Failed to fetch orphans for dry run: ' + error.message)
       return (data || []).filter(r => r.claimed_at === null || new Date(r.claimed_at) < new Date(timeoutClaimed))
     }
     
@@ -124,10 +132,10 @@ async function claimOrphans(supabase: any, dryRun: boolean, claimedBy: string): 
       .limit(1000)
       .abortSignal(AbortSignal.timeout(TIMEOUT_MS))
     
-    if (error) return []
+    if (error) throw new Error('Failed to claim orphans: ' + error.message)
     return claimed || []
-  } catch {
-    return []
+  } catch (err) {
+    throw err
   }
 }
 
@@ -150,6 +158,7 @@ async function isFileReferenced(supabase: any, bucket: string, objectPath: strin
       supabase.from('products').select('id', { count: 'exact', head: true }).or('images.cs.' + JSON.stringify([{ object_path: objectPath }]) + ',images.cs.["' + objectPath + '"],image_url.eq.' + objectPath + ',before_image.eq.' + objectPath + ',after_image.eq.' + objectPath),
       
       // Check order_items.product_image_url (built from products.image_url in write path)
+      // order_items.product_image_url stores the value from products.image_url
       supabase.from('order_items').select('id', { count: 'exact', head: true }).eq('product_image_url', objectPath),
     ]
     
@@ -177,13 +186,30 @@ async function fileExistsInStorage(supabase: any, bucket: string, objectPath: st
   }
 }
 
-async function releaseClaimOnError(supabase: any, orphanId: string): Promise<void> {
+async function releaseClaimOnError(supabase: any, orphanId: string, runId: string): Promise<void> {
   try {
-    await supabase.from('storage_orphans').update({ claimed_at: null, claimed_by: null }).eq('id', orphanId).abortSignal(AbortSignal.timeout(TIMEOUT_MS))
-  } catch {}
+    // Only release if still claimed by this runId (atomic fencing)
+    const { data, error: updateError } = await supabase
+      .from('storage_orphans')
+      .update({ claimed_at: null, claimed_by: null })
+      .eq('id', orphanId)
+      .eq('claimed_by', runId)
+      .select('id')
+      .abortSignal(AbortSignal.timeout(TIMEOUT_MS))
+    
+    if (updateError) {
+      throw new Error('Failed to release claim: ' + updateError.message)
+    }
+    if (!data || data.length === 0) {
+      throw new Error('Claim already released by another process')
+    }
+  } catch (err) {
+    console.error('Release claim error:', err instanceof Error ? err.message : String(err))
+    throw err
+  }
 }
 
-async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boolean): Promise<CleanupResult> {
+async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boolean, runId: string): Promise<CleanupResult> {
   try {
     const isReferenced = await isFileReferenced(supabase, orphan.bucket, orphan.object_path)
     if (isReferenced) {
