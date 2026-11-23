@@ -99,6 +99,22 @@ export async function updateCoupon(rawId: unknown, raw: unknown, rawStamp: unkno
 
 /** تفعيل أو إيقاف — بديل الحذف الوحيد. */
 export async function setCouponActive(rawId: unknown, rawActive: unknown, rawStamp: unknown): Promise<MutationResult<AdminCoupon>> {
+  
+  // Block re-activation of revoked coupons (migration 0030)
+  if (rawActive === true) {
+    try {
+      const revokedCheck = await restGet<{ revoked_at: string | null }>(
+        TABLE,
+        'select=revoked_at&id=eq.' + String(parseCouponId(rawId)) + '&limit=1'
+      )
+      if (revokedCheck.rows[0]?.revoked_at !== null && revokedCheck.rows[0]?.revoked_at !== undefined) {
+        return invalid('الكوبون ملغى ولا يمكن إعادة تفعيله')
+      }
+    } catch (error) {
+      // Continue with normal flow on error
+    }
+  }
+
   const id = parseCouponId(rawId)
   if (id === null) return invalid(BAD_ID_MESSAGE)
   const active = flag(rawActive, 'حالة الكوبون')
@@ -154,6 +170,33 @@ export async function setCouponsEnabled(rawEnabled: unknown): Promise<MutationRe
 }
 
 
-export async function deleteCoupon(couponId: number) {
-  return await deleteCouponAction(couponId);
+/**
+ * حذف/إلغاء كوبون (migration 0030).
+ * منطق ذري: غير مستخدم → حذف صف كامل؛ مستخدم → أرشفة (revoked_at + is_active = false).
+ * الكوبون المؤرشف مرفوض في zell_preview_coupon ولا يمكن إعادة تفعيله.
+ */
+export async function deleteCoupon(rawId: unknown): Promise<MutationResult<{ status: 'deleted' | 'archived' }>> {
+  const id = parseCouponId(rawId)
+  if (id === null) return invalid(BAD_ID_MESSAGE)
+
+  try {
+    // Call the security-definer function via RPC
+    const result = await restGet<{ zell_delete_coupon: string }>(
+      'rpc/zell_delete_coupon',
+      'p_coupon_id=' + id,
+    )
+    
+    if (!result.rows || result.rows.length === 0) {
+      return toInternalFailure(null)
+    }
+
+    const status = result.rows[0]['zell_delete_coupon']
+    if (status === 'not_found') {
+      return invalid(NOT_FOUND_MESSAGE)
+    }
+
+    return { ok: true, data: { status: status as 'deleted' | 'archived' } }
+  } catch (error) {
+    return toInternalFailure(error)
+  }
 }
