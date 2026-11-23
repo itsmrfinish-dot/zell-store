@@ -141,22 +141,23 @@ async function claimOrphans(supabase: any, dryRun: boolean, claimedBy: string): 
 
 async function isFileReferenced(supabase: any, bucket: string, objectPath: string): Promise<{ referenced: boolean; error?: string }> {
   try {
+    // Settings check: separate step (not a Promise) so it doesn't break abortSignal mapping
+    const { data: settings, error: settingsError } = await supabase
+      .from('settings')
+      .select('key,value')
+      .abortSignal(AbortSignal.timeout(TIMEOUT_MS))
+    
+    if (settingsError) {
+      throw new Error('settings check failed: ' + settingsError.message)
+    }
+    
+    const settingsHasReference = settings && settings.some(s => JSON.stringify(s.value).includes(objectPath) || JSON.stringify(s.value).includes(bucket))
+    if (settingsHasReference) {
+      return { referenced: true }
+    }
+    
+    // Remaining checks: query builders only
     const checks = [
-      // Check settings that may reference this path as bucket or object_path
-      // Check settings: read key,value (JSONB) and match stringified value
-      (async () => {
-        const { data: settings, error } = await supabase
-          .from('settings')
-          .select('key,value')
-          .abortSignal(AbortSignal.timeout(TIMEOUT_MS))
-        if (error) throw new Error('settings check failed: ' + error.message)
-        // Match objectPath or bucket in stringified JSONB values
-        return {
-          count: settings && settings.some(s => JSON.stringify(s.value).includes(objectPath) || JSON.stringify(s.value).includes(bucket)) ? 1 : 0,
-          error: null
-        }
-      })(),
-      
       // Check product_images
       supabase.from('product_images').select('id', { count: 'exact', head: true }).eq('object_path', objectPath),
       
@@ -175,12 +176,6 @@ async function isFileReferenced(supabase: any, bucket: string, objectPath: strin
     ]
     
     const results = await Promise.allSettled(checks.map(c => c.abortSignal(AbortSignal.timeout(TIMEOUT_MS))))
-    
-    // Check for any errors in the results
-    const settingsCheckResult = results.find(r => r.status === 'fulfilled' && r.value?.error?.includes?.('settings check failed'))
-    if (settingsCheckResult?.status === 'fulfilled' && settingsCheckResult.value?.error) {
-      throw new Error(settingsCheckResult.value.error)
-    }
     
     return { 
       referenced: results.some(r => {
