@@ -46,7 +46,7 @@ async function getCleanupConfig(supabase: any): Promise<{ retentionDays: number;
   for (const row of rows || []) {
     if (row.key === 'imageCleanupRetentionDays') {
       const val = parseInt(row.value, 10)
-      if (!Number.isFinite(val) || val <= 0) {
+      if (!Number.isFinite(val) || val < 0) {
         throw new Error('imageCleanupRetentionDays must be a positive integer, got: ' + row.value)
       }
       config.retentionDays = val
@@ -72,13 +72,6 @@ async function getCleanupConfig(supabase: any): Promise<{ retentionDays: number;
     backlogVerifiedAt: config.backlogVerifiedAt,
   }
 }
-    return {
-      retentionDays: config.retentionDays ?? DEFAULT_RETENTION_DAYS,
-      backlogVerifiedAt: config.backlogVerifiedAt ?? DEFAULT_BACKLOG_VERIFIED_AT,
-    }
-  } catch {
-    return { retentionDays: DEFAULT_RETENTION_DAYS, backlogVerifiedAt: DEFAULT_BACKLOG_VERIFIED_AT }
-  }
 }
 
 async function claimOrphans(supabase: any, dryRun: boolean, claimedBy: string): Promise<OrphanedImage[]> {
