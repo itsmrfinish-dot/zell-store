@@ -152,3 +152,8 @@ export async function setCouponsEnabled(rawEnabled: unknown): Promise<MutationRe
     return toInternalFailure(error)
   }
 }
+
+
+export async function deleteCoupon(couponId: number) {
+  return await deleteCouponAction(couponId);
+}
