@@ -29,3 +29,15 @@ export async function createAuthClient(): Promise<SupabaseClient> {
     cookies: serverCookieMethods(store),
   })
 }
+
+export async function createServiceClient(): Promise<SupabaseClient> {
+  const url = (process.env['SUPABASE_URL'] ?? '').trim()
+  if (url === '') throw new Error('SUPABASE_URL not configured')
+
+  const serviceRoleKey = (process.env['SUPABASE_SERVICE_ROLE_KEY'] ?? '').trim()
+  if (serviceRoleKey === '') throw new Error('SUPABASE_SERVICE_ROLE_KEY not configured')
+
+  return createServerClient(url, serviceRoleKey, {
+    auth: { persistSession: false }
+  })
+}
