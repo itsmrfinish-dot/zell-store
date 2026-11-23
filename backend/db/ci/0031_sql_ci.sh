@@ -53,13 +53,13 @@ check [ "$result" = "1" ] "new orphan (5d old) is not yet eligible for cleanup"
 echo "Test: backlog orphan eligible after backlog date + retention"
 psql -X -q -v ON_ERROR_STOP=1 -U "$SUPER" -d "$DB" -c "
 INSERT INTO storage_orphans (id, bucket, object_path, created_at) 
-VALUES ('old1', 'test', 'path2', '2026-11-20'::timestamptz)
+VALUES ('old1', 'test', 'path2', '2026-11-15'::timestamptz)
 "
 result=$(psql -X -q -tA -v ON_ERROR_STOP=1 -U "$SUPER" -d "$DB" -c "
 SELECT COUNT(*) FROM storage_orphans 
-WHERE id = 'old1' AND created_at >= '2026-11-23'::timestamptz AND created_at <= (now() - interval '30 days')
+WHERE id = 'old1' AND created_at < '2026-11-23'::timestamptz AND created_at <= (now() - interval '30 days')
 ")
-check [ "$result" = "1" ] "backlog orphan (2026-11-20) is eligible after retention"
+check [ "$result" = "1" ] "backlog orphan created 2026-11-15 (before verification date) becomes eligible after retention period"
 
 echo "Test: atomic claiming prevents double claim"
 psql -X -q -v ON_ERROR_STOP=1 -U "$SUPER" -d "$DB" -c "
