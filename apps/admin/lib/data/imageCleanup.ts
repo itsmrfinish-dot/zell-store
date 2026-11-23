@@ -30,8 +30,6 @@ export type CleanupStats = {
 }
 
 const TIMEOUT_MS = 30000
-const DEFAULT_RETENTION_DAYS = 30
-const DEFAULT_BACKLOG_VERIFIED_AT = '2026-11-23'
 const CLAIM_TIMEOUT_MINUTES = 15
 
 async function getCleanupConfig(supabase: any): Promise<{ retentionDays: number; backlogVerifiedAt: string }> {
