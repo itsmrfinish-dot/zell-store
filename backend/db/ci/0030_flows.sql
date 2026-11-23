@@ -7,6 +7,8 @@ set local idle_in_transaction_session_timeout = '30s';
 
 create temporary table zt_results (n serial, id text, outcome text, detail text) on commit drop;
 
+-- تفعيل مفتاح الكوبونات جوه المعاملة (القاعدة المبنية من الصفر بتتزرع مقفولة من 0019).
+update public.settings set value = 'true'::jsonb where key = 'coupons_enabled';
 do $zchk$
 declare
   v_pid bigint;
