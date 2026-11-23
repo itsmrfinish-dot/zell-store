@@ -115,4 +115,5 @@ export const ACCESS_MANIFEST: readonly ManifestEntry[] = [
   { kind: 'action', file: 'lib/couponActions.ts', symbol: 'updateCouponAction', capability: 'zell.coupons.edit', mutates: true, todayGuard: 'owner', todayFlag: true, forbiddenMessage: 'OWNER_ONLY_MESSAGE', mapFailure: null },
   { kind: 'action', file: 'lib/couponActions.ts', symbol: 'setCouponActiveAction', capability: 'zell.coupons.edit', mutates: true, todayGuard: 'owner', todayFlag: true, forbiddenMessage: 'OWNER_ONLY_MESSAGE', mapFailure: null },
   { kind: 'action', file: 'lib/couponActions.ts', symbol: 'setCouponsEnabledAction', capability: 'zell.coupons.edit', mutates: true, todayGuard: 'owner', todayFlag: true, forbiddenMessage: 'OWNER_ONLY_MESSAGE', mapFailure: null },
+  { kind: 'action', file: 'lib/couponActions.ts', symbol: 'deleteCouponAction', capability: 'zell.coupons.edit', mutates: true, todayGuard: 'owner', todayFlag: true, forbiddenMessage: 'OWNER_ONLY_MESSAGE', mapFailure: null },
 ]

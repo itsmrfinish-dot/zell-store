@@ -302,20 +302,30 @@ export default async function OrderReceiptPage({
         {money !== null && (money.fee > 0 || money.paid > 0) ? (
           <div className="space-y-2 rounded-lg border border-border bg-card p-4 text-sm">
             <h2 className="text-sm font-bold text-fg">{CHECKOUT_FEE_TEXT.receiptTitle}</h2>
+            <div className="flex justify-between gap-3 text-muted">
+              <span>الإجمالي</span>
+              <span><Num>{formatPiastres(money.total)}</Num></span>
+            </div>
             {money.fee > 0 ? (
               <div className="flex justify-between gap-3 text-muted">
-                <span>{CHECKOUT_FEE_TEXT.receiptFee}</span>
+                <span>المقدم المطلوب</span>
                 <span><Num>{formatPiastres(money.fee)}</Num></span>
               </div>
             ) : null}
             <div className="flex justify-between gap-3 text-muted">
-              <span>{CHECKOUT_FEE_TEXT.receiptPaid}</span>
+              <span>المدفوع فعليًا</span>
               <span><Num>{formatPiastres(money.paid)}</Num></span>
             </div>
             <div className="flex justify-between gap-3 border-t border-border pt-2 font-bold text-fg">
-              <span>{CHECKOUT_FEE_TEXT.receiptRemaining}</span>
+              <span>المتبقي غير المدفوع</span>
               <span><Num>{formatPiastres(money.total - money.paid)}</Num></span>
             </div>
+            {money.fee > 0 ? (
+              <div className="flex justify-between gap-3 font-bold text-fg">
+                <span>المتوقع عند الاستلام بعد سداد المقدم</span>
+                <span><Num>{formatPiastres(money.total - money.fee)}</Num></span>
+              </div>
+            ) : null}
             {money.fee > 0 && money.paid < money.fee ? <p className="text-xs text-muted">{CHECKOUT_FEE_TEXT.receiptAwaiting}</p> : null}
           </div>
         ) : null}

@@ -58,3 +58,5 @@ apply|migrations/0026_image_delete.sql|image delete + activation guard (applied 
 apply|migrations/0027_default_privileges.sql|default privileges (applied + verified on Production 2026-11-07: impact 23:06, ptest 23:07, apply 23:09, verify 23:10, final impact 23:10 UTC; #228 · #229 · DEFAULT-PRIVILEGES §8 build-list step)
 apply|migrations/0028_cleanup_dead_access.sql|cleanup dead access-generation objects (remove unused erp_* and zell_erp_* functions and tables)
 apply|migrations/0029_cleanup_order_config.sql|cleanup order config log (remove zell_order_config_log table and related functions)
+apply|migrations/0030_coupon_soft_delete.sql|coupon delete/revoke — owner decision 2026-11-23 supersedes 0019 deactivate-only: revoked_at + zell_delete_coupon + revoked rejection in preview/create_order (fork PR #13; not yet applied to Production)
+
