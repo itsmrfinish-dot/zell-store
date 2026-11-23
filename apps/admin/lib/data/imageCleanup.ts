@@ -31,6 +31,7 @@ export type CleanupResult = {
   orphan_id: string
   bucket: string
   object_path: string
+  publicUrl?: string
   error?: string
 }
 
@@ -244,7 +245,7 @@ async function releaseClaimOnError(supabase: any, orphanId: string, runId: strin
   }
 }
 
-async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boolean, runId: string): Promise<CleanupResult> {
+async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boolean, runId: string, buildPublicUrl: (bucket: string, objectPath: string) => string): Promise<CleanupResult> {
   try {
     const refResult = await isFileReferenced(supabase, orphan.bucket, orphan.object_path)
     if (refResult.error) {
@@ -280,7 +281,7 @@ async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boole
           return { status: 'failed', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path, error: 'Failed to mark missing: orphan not found or claim lost' }
         }
       }
-      return { status: 'missing', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path }
+      return { status: 'missing', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path, publicUrl: buildPublicUrl(orphan.bucket, orphan.object_path) }
     }
     
     if (fileStatus === 'error') {
@@ -332,7 +333,7 @@ async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boole
       }
     }
     
-    return { status: 'success', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path }
+    return { status: 'success', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path, publicUrl: buildPublicUrl(orphan.bucket, orphan.object_path) }
   } catch (err) {
     if (!dryRun) {
       await releaseClaimOnError(supabase, orphan.id, runId)
@@ -343,6 +344,9 @@ async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boole
 
 export async function cleanupImages(params: { dryRun: boolean; claimedBy: string }): Promise<{ stats: CleanupStats; results: CleanupResult[] }> {
   const runId = params.claimedBy + '_' + Date.now()
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  if (!supabaseUrl) throw new Error('NEXT_PUBLIC_SUPABASE_URL not configured')
+  const buildPublicUrl = (bucket: string, objectPath: string) => supabaseUrl + '/storage/v1/object/public/' + bucket + '/' + objectPath
   try {
     const supabase = await createServiceClient()
     const orphans = await claimOrphans(supabase, params.dryRun, runId)
@@ -350,7 +354,7 @@ export async function cleanupImages(params: { dryRun: boolean; claimedBy: string
     const results: CleanupResult[] = []
     for (const orphan of orphans) {
       try {
-        const result = await processOrphan(supabase, orphan, params.dryRun, runId)
+        const result = await processOrphan(supabase, orphan, params.dryRun, runId, buildPublicUrl)
         results.push(result)
       } catch (err) {
         // Isolate failure to this orphan; continue processing others
