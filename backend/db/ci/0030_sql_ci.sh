@@ -111,8 +111,8 @@ record "S01 state after build: revoked_at column, delete fn, revoked checks in p
 rc=0
 psql -X -q -tA -v ON_ERROR_STOP=1 -v VERBOSITY=verbose -U postgres -d "$DB" -f "$FLOWS" < /dev/null > "$TMP/f1.out" 2>&1 || rc=$?
 summ=$(grep '^0|summary|' "$TMP/f1.out" | cut -d'|' -f3-)
-ok=no; [ "$rc" = "0" ] && [ "$summ" = "PASS|pass=10 fail=0" ] && ok=yes
-record "F01 flows (0030_flows.sql) -> PASS 10/0" "$ok" "rc=$rc summary=[$summ] $(grep '|fail|' "$TMP/f1.out" | tr '\n' ' ' | cut -c1-600)"
+ok=no; [ "$rc" = "0" ] && [ "$summ" = "PASS|pass=11 fail=0" ] && ok=yes
+record "F01 flows (0030_flows.sql) -> PASS 11/0" "$ok" "rc=$rc summary=[$summ] $(grep '|fail|' "$TMP/f1.out" | tr '\n' ' ' | cut -c1-600)"
 
 # ---- بيانات التزامن (committed) ----
 PID=$(q "select id from public.products where is_active order by id limit 1")
