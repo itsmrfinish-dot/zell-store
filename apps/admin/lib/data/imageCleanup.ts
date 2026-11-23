@@ -205,7 +205,7 @@ async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boole
     if (!dryRun) {
       try {
         if (exists) {
-          await storageDelete(orphan.object_path)
+          await storageDelete(orphan.bucket, orphan.object_path)
         }
       } catch (err) {
         await releaseClaimOnError(supabase, orphan.id, runId)
