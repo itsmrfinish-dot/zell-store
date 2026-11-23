@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { restGet, restInsert, restPatch } from '../data/client'
+import { restGet, restInsert, restPatch, restRpc } from '../data/client'
 import type { MutationResult } from '../mutations'
 import {
   CODE_TAKEN_MESSAGE,
@@ -97,24 +97,8 @@ export async function updateCoupon(rawId: unknown, raw: unknown, rawStamp: unkno
   }
 }
 
-/** تفعيل أو إيقاف — بديل الحذف الوحيد. */
+/** تفعيل أو إيقاف. الكوبون الملغى (revoked_at) لا يُعاد تفعيله أبدًا. */
 export async function setCouponActive(rawId: unknown, rawActive: unknown, rawStamp: unknown): Promise<MutationResult<AdminCoupon>> {
-  
-  // Block re-activation of revoked coupons (migration 0030)
-  if (rawActive === true) {
-    try {
-      const revokedCheck = await restGet<{ revoked_at: string | null }>(
-        TABLE,
-        'select=revoked_at&id=eq.' + String(parseCouponId(rawId)) + '&limit=1'
-      )
-      if (revokedCheck.rows[0]?.revoked_at !== null && revokedCheck.rows[0]?.revoked_at !== undefined) {
-        return invalid('الكوبون ملغى ولا يمكن إعادة تفعيله')
-      }
-    } catch (error) {
-      // Continue with normal flow on error
-    }
-  }
-
   const id = parseCouponId(rawId)
   if (id === null) return invalid(BAD_ID_MESSAGE)
   const active = flag(rawActive, 'حالة الكوبون')
@@ -123,6 +107,21 @@ export async function setCouponActive(rawId: unknown, rawActive: unknown, rawSta
   if (!stamp.ok) return stamp
 
   try {
+    // منع إعادة تفعيل كوبون ملغى (0030) — فشل القراءة بيوقف العملية (fail-closed).
+    // الذرّية: الأرشفة في zell_delete_coupon بتحدّث updated_at، فلو الحذف سبق
+    // patchGuarded بين القراءة والكتابة هيطلع CONFLICT ومش هيتفعّل.
+    if (active.value === true) {
+      const check = await restGet<{ revoked_at: string | null }>(
+        TABLE,
+        'select=revoked_at&id=eq.' + String(id) + '&limit=1',
+      )
+      const row = check.rows[0]
+      if (!row) return invalid(NOT_FOUND_MESSAGE)
+      if (row.revoked_at !== null) {
+        return invalid('الكوبون ملغى ولا يمكن إعادة تفعيله')
+      }
+    }
+
     const result = await patchGuarded<CouponRow>({
       table: TABLE,
       idColumn: 'id',
@@ -178,24 +177,16 @@ export async function setCouponsEnabled(rawEnabled: unknown): Promise<MutationRe
 export async function deleteCoupon(rawId: unknown): Promise<MutationResult<{ status: 'deleted' | 'archived' }>> {
   const id = parseCouponId(rawId)
   if (id === null) return invalid(BAD_ID_MESSAGE)
-
   try {
-    // Call the security-definer function via RPC
-    const result = await restGet<{ zell_delete_coupon: string }>(
-      'rpc/zell_delete_coupon',
-      'p_coupon_id=' + id,
-    )
-    
-    if (!result.rows || result.rows.length === 0) {
-      return toInternalFailure(null)
-    }
-
-    const status = result.rows[0]['zell_delete_coupon']
+    // نداء POST لدالة الحذف الذرّية (0030) — الذرّية مسؤولية الدالة نفسها.
+    const status = await restRpc<unknown>('zell_delete_coupon', { p_coupon_id: id })
     if (status === 'not_found') {
       return invalid(NOT_FOUND_MESSAGE)
     }
-
-    return { ok: true, data: { status: status as 'deleted' | 'archived' } }
+    if (status === 'deleted' || status === 'archived') {
+      return { ok: true, data: { status } }
+    }
+    return toInternalFailure(null)
   } catch (error) {
     return toInternalFailure(error)
   }
