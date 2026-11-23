@@ -59,4 +59,4 @@ apply|migrations/0027_default_privileges.sql|default privileges (applied + verif
 apply|migrations/0028_cleanup_dead_access.sql|cleanup dead access-generation objects (remove unused erp_* and zell_erp_* functions and tables)
 apply|migrations/0029_cleanup_order_config.sql|cleanup order config log (remove zell_order_config_log table and related functions)
 apply|migrations/0030_coupon_soft_delete.sql|coupon delete/revoke — owner decision 2026-11-23 supersedes 0019 deactivate-only: revoked_at + zell_delete_coupon + revoked rejection in preview/create_order (fork PR #13; not yet applied to Production)
-
+apply|migrations/0031_image_cleanup.sql|storage_orphans claiming columns for IMAGE-CLEANUP
