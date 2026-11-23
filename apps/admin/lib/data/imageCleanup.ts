@@ -160,7 +160,7 @@ async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boole
     const isReferenced = await isFileReferenced(supabase, orphan.bucket, orphan.object_path)
     if (isReferenced) {
       if (!dryRun) {
-        await releaseClaimOnError(supabase, orphan.id)
+        await releaseClaimOnError(supabase, orphan.id, runId)
       }
       return { status: 'failed', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path, error: 'File is still referenced' }
     }
@@ -173,13 +173,18 @@ async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boole
           await storageDelete(orphan.object_path)
         }
       } catch (err) {
-        await releaseClaimOnError(supabase, orphan.id)
+        await releaseClaimOnError(supabase, orphan.id, runId)
         return { status: 'failed', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path, error: 'Storage delete failed: ' + (err instanceof Error ? err.message : String(err)) }
       }
       
-      const { error: updateError } = await supabase.from('storage_orphans').update({ cleaned_at: new Date().toISOString() }).eq('id', orphan.id).abortSignal(AbortSignal.timeout(TIMEOUT_MS))
+      const { error: updateError } = await supabase
+        .from('storage_orphans')
+        .update({ cleaned_at: new Date().toISOString() })
+        .eq('id', orphan.id)
+        .eq('claimed_by', runId)
+        .abortSignal(AbortSignal.timeout(TIMEOUT_MS))
       if (updateError) {
-        await releaseClaimOnError(supabase, orphan.id)
+        await releaseClaimOnError(supabase, orphan.id, runId)
         return { status: 'failed', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path, error: 'Failed to mark cleaned: ' + updateError.message }
       }
     }
@@ -187,16 +192,17 @@ async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boole
     return { status: exists ? 'success' : 'missing', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path }
   } catch (err) {
     if (!dryRun) {
-      await releaseClaimOnError(supabase, orphan.id)
+      await releaseClaimOnError(supabase, orphan.id, runId)
     }
     return { status: 'failed', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path, error: err instanceof Error ? err.message : String(err) }
   }
 }
 
 export async function cleanupImages(params: { dryRun: boolean; claimedBy: string }): Promise<{ stats: CleanupStats; results: CleanupResult[] }> {
+  const runId = params.claimedBy + '_' + Date.now()
   try {
     const supabase = await createServiceClient()
-    const orphans = await claimOrphans(supabase, params.dryRun, params.claimedBy)
+    const orphans = await claimOrphans(supabase, params.dryRun, runId)
     
     const results: CleanupResult[] = []
     for (const orphan of orphans) {
