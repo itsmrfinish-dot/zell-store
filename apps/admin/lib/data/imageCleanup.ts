@@ -33,20 +33,45 @@ const TIMEOUT_MS = 30000
 const CLAIM_TIMEOUT_MINUTES = 15
 
 async function getCleanupConfig(supabase: any): Promise<{ retentionDays: number; backlogVerifiedAt: string }> {
-  try {
-    const { data, error } = await supabase
-      .from('settings')
-      .select('key,value')
-      .in('key', ['imageCleanupRetentionDays', 'imageCleanupBacklogVerifiedAt'])
-      .abortSignal(AbortSignal.timeout(TIMEOUT_MS))
-    
-    if (error) return { retentionDays: DEFAULT_RETENTION_DAYS, backlogVerifiedAt: DEFAULT_BACKLOG_VERIFIED_AT }
-    
-    const config: Record<string, any> = {}
-    for (const row of data || []) {
-      if (row.key === 'imageCleanupRetentionDays') config.retentionDays = parseInt(row.value, 10) || DEFAULT_RETENTION_DAYS
-      if (row.key === 'imageCleanupBacklogVerifiedAt') config.backlogVerifiedAt = row.value || DEFAULT_BACKLOG_VERIFIED_AT
+  const { data: rows, error } = await supabase
+    .from('settings')
+    .select('key,value')
+    .in('key', ['imageCleanupRetentionDays', 'imageCleanupBacklogVerifiedAt'])
+  
+  if (error) {
+    throw new Error('Failed to load cleanup config: ' + error.message)
+  }
+  
+  const config: Record<string, any> = {}
+  for (const row of rows || []) {
+    if (row.key === 'imageCleanupRetentionDays') {
+      const val = parseInt(row.value, 10)
+      if (!Number.isFinite(val) || val <= 0) {
+        throw new Error('imageCleanupRetentionDays must be a positive integer, got: ' + row.value)
+      }
+      config.retentionDays = val
     }
+    if (row.key === 'imageCleanupBacklogVerifiedAt') {
+      const dateVal = new Date(row.value)
+      if (isNaN(dateVal.getTime())) {
+        throw new Error('imageCleanupBacklogVerifiedAt must be a valid ISO date, got: ' + row.value)
+      }
+      config.backlogVerifiedAt = row.value
+    }
+  }
+  
+  if (config.retentionDays === undefined) {
+    throw new Error('Missing required setting: imageCleanupRetentionDays')
+  }
+  if (config.backlogVerifiedAt === undefined) {
+    throw new Error('Missing required setting: imageCleanupBacklogVerifiedAt')
+  }
+  
+  return {
+    retentionDays: config.retentionDays,
+    backlogVerifiedAt: config.backlogVerifiedAt,
+  }
+}
     return {
       retentionDays: config.retentionDays ?? DEFAULT_RETENTION_DAYS,
       backlogVerifiedAt: config.backlogVerifiedAt ?? DEFAULT_BACKLOG_VERIFIED_AT,
