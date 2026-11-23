@@ -42,6 +42,12 @@ begin
   select id into v_can from public.coupons where code = 'DELCAN30';
   select id into v_live from public.coupons where code = 'DELLIVE30';
 
+
+  -- بذرة إعدادات التركيب والشحن
+  insert into public.settings (key, value) values
+    ('installation', '{"enabled": true, "feePerMeterPiastres": 1500, "areas": {"القاهرة": {"المعادي": 2500, "مدينة نصر": 0}}}')
+    ('shipping_areas', '{"القاهرة": ["المعادي", "مدينة نصر"]}')
+  on conflict (key) do update set value = excluded.value;
   -- T06: طلب تحكم بكوبون حي — بينجح وبيسجل خصم (وبيخلي DELUSED30 مستخدم).
   begin
     v_ord := public.zell_create_order(
@@ -165,14 +171,15 @@ begin
       coalesce((select pg_catalog.string_agg(k, ',' order by k) from pg_catalog.jsonb_object_keys(v_json) as k), '-'));
 
 
+
   -- T11: طلب تركيب فني بـ express (غير متاح للمحافظة) — بينجح وshipping_piastres = 0.
   begin
     v_ord := public.zell_create_order(
       pg_catalog.jsonb_build_array(pg_catalog.jsonb_build_object('productId', v_pid, 'lengthCm', 300)),
-      'عميل تجربة', '01000000311', 'القاهرة', 'المعادي', null,
+      'عميل تجربة', '01000000311', 'القاهرة', 'شارع التجربة رقم ١١', null,
       'ci30-t11-' || pg_catalog.gen_random_uuid()::text,
       pg_catalog.md5(pg_catalog.gen_random_uuid()::text) || pg_catalog.md5(pg_catalog.gen_random_uuid()::text),
-      pg_catalog.repeat('a', 64), pg_catalog.repeat('b', 64), null, true, null, null, 'express');
+      pg_catalog.repeat('a', 64), pg_catalog.repeat('b', 64), 'المعادي', true, null, null, 'express');
     v_state := 'ok';
   exception when others then
     v_state := 'E' || sqlstate;
