@@ -116,15 +116,21 @@ async function claimOrphans(supabase: any, dryRun: boolean, claimedBy: string): 
   }
 }
 
-async function isFileReferenced(supabase: any, objectPath: string): Promise<boolean> {
+async function isFileReferenced(supabase: any, bucket: string, objectPath: string): Promise<boolean> {
   try {
     const checks = [
       supabase.from('product_images').select('id', { count: 'exact', head: true }).eq('object_path', objectPath),
       supabase.from('site_images').select('id', { count: 'exact', head: true }).eq('object_path', objectPath),
+      supabase.from('collections').select('id', { count: 'exact', head: true }).eq('cover_bucket', bucket).eq('cover_object_path', objectPath),
+      supabase.from('order_items').select('id', { count: 'exact', head: true }).eq('product_image_url', objectPath),
     ]
     
-    const results = await Promise.all(checks.map(c => c.abortSignal(AbortSignal.timeout(TIMEOUT_MS))))
-    return results.some(r => !r.error && (r.count ?? 0) > 0)
+    const results = await Promise.allSettled(checks.map(c => c.abortSignal(AbortSignal.timeout(TIMEOUT_MS))))
+    return results.some(r => {
+      if (r.status === 'rejected') return true
+      const data = r.value
+      return !data.error && (data.count ?? 0) > 0
+    })
   } catch {
     return true
   }
@@ -150,7 +156,7 @@ async function releaseClaimOnError(supabase: any, orphanId: string): Promise<voi
 
 async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boolean): Promise<CleanupResult> {
   try {
-    const isReferenced = await isFileReferenced(supabase, orphan.object_path)
+    const isReferenced = await isFileReferenced(supabase, orphan.bucket, orphan.object_path)
     if (isReferenced) {
       if (!dryRun) {
         await releaseClaimOnError(supabase, orphan.id)
