@@ -73,6 +73,7 @@ export const deleteCouponAction = actionWithAccess(
   async (_ctx: AccessContext, id: string): Promise<MutationResult<{ status: 'deleted' | 'archived' }>> => {
     const result = await deleteCoupon(id)
     if (!result.ok) return result
-    return revalidateStorefront() ? result : { ...result, warning: REVALIDATION_WARNING }
+    const refreshed = await revalidateStorefront()
+    return refreshed ? result : { ...result, warning: REVALIDATION_WARNING }
   },
 )
