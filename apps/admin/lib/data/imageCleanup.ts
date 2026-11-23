@@ -220,6 +220,7 @@ async function fileExistsInStorage(supabase: any, bucket: string, objectPath: st
 
 async function releaseClaimOnError(supabase: any, orphanId: string, runId: string): Promise<void> {
   try {
+    // Best-effort release: failures are silently logged, never thrown
     // Only release if still claimed by this runId (atomic fencing)
     const { data, error: updateError } = await supabase
       .from('storage_orphans')
@@ -230,14 +231,16 @@ async function releaseClaimOnError(supabase: any, orphanId: string, runId: strin
       .abortSignal(AbortSignal.timeout(TIMEOUT_MS))
     
     if (updateError) {
-      throw new Error('Failed to release claim: ' + updateError.message)
+      console.error('Release claim error - update failed:', updateError.message)
+      return
     }
     if (!data || data.length === 0) {
-      throw new Error('Claim already released by another process')
+      console.warn('Release claim warning - no rows updated, claim already released')
+      return
     }
   } catch (err) {
-    console.error('Release claim error:', err instanceof Error ? err.message : String(err))
-    throw err
+    console.error('Release claim error - exception:', err instanceof Error ? err.message : String(err))
+    // Silently swallow - best effort only
   }
 }
 
@@ -324,7 +327,8 @@ async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boole
         if (!dryRun) {
           await releaseClaimOnError(supabase, orphan.id, runId)
         }
-        return { status: 'failed', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path, error: 'Failed to mark cleaned: ' + updateError.message }
+        const errorMsg = updateError ? 'Failed to mark cleaned: ' + updateError.message : 'claim lost'
+        return { status: 'failed', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path, error: errorMsg }
       }
     }
     
@@ -345,8 +349,19 @@ export async function cleanupImages(params: { dryRun: boolean; claimedBy: string
     
     const results: CleanupResult[] = []
     for (const orphan of orphans) {
-      const result = await processOrphan(supabase, orphan, params.dryRun, runId)
-      results.push(result)
+      try {
+        const result = await processOrphan(supabase, orphan, params.dryRun, runId)
+        results.push(result)
+      } catch (err) {
+        // Isolate failure to this orphan; continue processing others
+        results.push({
+          status: 'failed',
+          orphan_id: orphan.id,
+          bucket: orphan.bucket,
+          object_path: orphan.object_path,
+          error: 'Unexpected cleanup error: ' + (err instanceof Error ? err.message : String(err))
+        })
+      }
     }
     
     const stats: CleanupStats = {
