@@ -29,7 +29,7 @@
       "names": [
         "zell_delete_coupon"
       ],
-      "reason": "applied + verified on Production 2026-11-23 and in build_from_scratch.list after 0029 (#13). Skipped only by 0022_sql_ci.sh and 0023_sql_ci.sh (--later skip), which build the list up to before their own migration; checked in the full build (BASELINE K01/K02)."
+      "reason": "introduced by 0030_coupon_soft_delete.sql (fork PR #13); in build_from_scratch.list after 0029 (#13); NOT yet applied to Production. Skipped only by 0022_sql_ci.sh and 0023_sql_ci.sh (--later skip), which build the list up to before their own migration; checked in the full build (BASELINE K01/K02)."
     }
   ],
   "excluded_paths": [
