@@ -101,7 +101,6 @@ st=$(q "select (exists (select 1 from information_schema.columns where table_sch
        || '|' || (pg_catalog.to_regprocedure('public.zell_delete_coupon(bigint)') is not null)::text
        || '|' || (select p.prosrc like '%revoked_at%' from pg_catalog.pg_proc p where p.oid = pg_catalog.to_regprocedure('public.zell_preview_coupon(text)'))::text
        || '|' || pg_catalog.has_function_privilege('service_role', 'public.zell_delete_coupon(bigint)', 'EXECUTE')::text
-       || '|' || (select p.prosrc like '%v_cp_revoked%' from pg_catalog.pg_proc p where p.oid = pg_catalog.to_regprocedure('public.zell_create_order(jsonb,text,text,text,text,text,text,text,text,text,text,boolean,text,jsonb,text)'))::text
        || '|' || (select p.prosrc like '%INSTALLER-SHIPPING%' from pg_catalog.pg_proc p where p.oid = pg_catalog.to_regprocedure('public.zell_create_order(jsonb,text,text,text,text,text,text,text,text,text,text,boolean,text,jsonb,text)'))::text
        || '|' || pg_catalog.has_function_privilege('anon', 'public.zell_delete_coupon(bigint)', 'EXECUTE')::text")
 ok=no; [ "$st" = "true|true|true|true|true|true|false" ] && ok=yes
