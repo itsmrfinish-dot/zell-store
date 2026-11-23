@@ -36,6 +36,7 @@ import type { AccessContext } from './access/wrappers'
 import type { MutationResult } from './mutations'
 import type { SaveVersion } from './mutations/concurrency'
 import {
+import { cleanupImages } from './data/imageCleanup'
   createCollection,
   deleteCollection,
   reorderCollections,
