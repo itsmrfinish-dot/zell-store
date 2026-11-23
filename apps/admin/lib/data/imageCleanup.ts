@@ -143,7 +143,19 @@ async function isFileReferenced(supabase: any, bucket: string, objectPath: strin
   try {
     const checks = [
       // Check settings that may reference this path as bucket or object_path
-      supabase.from('settings').select('id', { count: 'exact', head: true }).or('value.eq.' + objectPath + ',value.ilike.' + bucket),
+      // Check settings: read key,value (JSONB) and match stringified value
+      (async () => {
+        const { data: settings, error } = await supabase
+          .from('settings')
+          .select('key,value')
+          .abortSignal(AbortSignal.timeout(TIMEOUT_MS))
+        if (error) throw new Error('settings check failed: ' + error.message)
+        // Match objectPath or bucket in stringified JSONB values
+        return {
+          count: settings && settings.some(s => JSON.stringify(s.value).includes(objectPath) || JSON.stringify(s.value).includes(bucket)) ? 1 : 0,
+          error: null
+        }
+      })(),
       
       // Check product_images
       supabase.from('product_images').select('id', { count: 'exact', head: true }).eq('object_path', objectPath),
