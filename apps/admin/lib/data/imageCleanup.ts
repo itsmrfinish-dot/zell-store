@@ -167,12 +167,14 @@ async function isFileReferenced(supabase: any, bucket: string, objectPath: strin
       // Check collections cover
       supabase.from('collections').select('id', { count: 'exact', head: true }).eq('cover_bucket', bucket).eq('cover_object_path', objectPath),
       
-      // Check products.images for both formats: text strings and {object_path} objects
+      // Check products: image_url (full URL), before_image (full URL), after_image (full URL), images (JSON array)
+      // Note: image_url, before_image, after_image store full URLs; order_items.product_image_url copies this URL directly
       supabase.from('products').select('id', { count: 'exact', head: true }).or('images.cs.' + JSON.stringify([{ object_path: objectPath }]) + ',images.cs.["' + objectPath + '"],image_url.eq.' + objectPath + ',before_image.eq.' + objectPath + ',after_image.eq.' + objectPath),
       
-      // Check order_items.product_image_url (built from products.image_url in write path)
-      // order_items.product_image_url stores the value from products.image_url
-      supabase.from('order_items').select('id', { count: 'exact', head: true }).eq('product_image_url', objectPath),
+      // Check order_items.product_image_url: stores full URL from products.image_url
+      // products.image_url is a full URL (e.g. https://bucket.storage.googleapis.com/path/to/file)
+      // objectPath is just the path part - match both the path and the full URL pattern
+      supabase.from('order_items').select('id', { count: 'exact', head: true }).or('product_image_url.eq.' + objectPath + ',product_image_url.ilike.' + '%' + objectPath),
     ]
     
     const results = await Promise.allSettled(checks.map(c => c.abortSignal(AbortSignal.timeout(TIMEOUT_MS))))
@@ -229,7 +231,9 @@ async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boole
   try {
     const refResult = await isFileReferenced(supabase, orphan.bucket, orphan.object_path)
     if (refResult.error) {
-      await releaseClaimOnError(supabase, orphan.id, runId)
+      if (!dryRun) {
+        await releaseClaimOnError(supabase, orphan.id, runId)
+      }
       return { status: 'failed', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path, error: 'File reference check failed: ' + refResult.error }
     }
     if (refResult.referenced) {
@@ -261,12 +265,26 @@ async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boole
     
     if (fileStatus === 'error') {
       // Error checking file: release claim, report error per file, do not mark cleaned_at
-      await releaseClaimOnError(supabase, orphan.id, runId)
+      if (!dryRun) {
+        await releaseClaimOnError(supabase, orphan.id, runId)
+      }
       return { status: 'failed', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path, error: 'Failed to check file existence' }
     }
     
     // fileStatus === 'exists' - proceed with deletion
     if (!dryRun) {
+      // Re-verify ownership before deletion (atomic fencing)
+      const { data: ownershipCheck, error: ownershipError } = await supabase
+        .from('storage_orphans')
+        .select('id')
+        .eq('id', orphan.id)
+        .eq('claimed_by', runId)
+        .abortSignal(AbortSignal.timeout(TIMEOUT_MS))
+      
+      if (ownershipError || !ownershipCheck || ownershipCheck.length === 0) {
+        return { status: 'failed', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path, error: 'claim lost' }
+      }
+      
       try {
         await storageDelete(orphan.bucket, orphan.object_path)
       } catch (err) {
@@ -274,14 +292,17 @@ async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boole
         return { status: 'failed', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path, error: 'Storage delete failed: ' + (err instanceof Error ? err.message : String(err)) }
       }
       
-      const { error: updateError } = await supabase
+      const { data: cleanedData, error: updateError } = await supabase
         .from('storage_orphans')
         .update({ cleaned_at: new Date().toISOString() })
         .eq('id', orphan.id)
         .eq('claimed_by', runId)
+        .select('id')
         .abortSignal(AbortSignal.timeout(TIMEOUT_MS))
-      if (updateError) {
-        await releaseClaimOnError(supabase, orphan.id, runId)
+      if (updateError || !cleanedData || cleanedData.length === 0) {
+        if (!dryRun) {
+          await releaseClaimOnError(supabase, orphan.id, runId)
+        }
         return { status: 'failed', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path, error: 'Failed to mark cleaned: ' + updateError.message }
       }
     }
@@ -303,7 +324,7 @@ export async function cleanupImages(params: { dryRun: boolean; claimedBy: string
     
     const results: CleanupResult[] = []
     for (const orphan of orphans) {
-      const result = await processOrphan(supabase, orphan, params.dryRun)
+      const result = await processOrphan(supabase, orphan, params.dryRun, runId)
       results.push(result)
     }
     
