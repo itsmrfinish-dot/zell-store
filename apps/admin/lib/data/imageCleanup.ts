@@ -136,13 +136,13 @@ async function isFileReferenced(supabase: any, bucket: string, objectPath: strin
   }
 }
 
-async function fileExistsInStorage(objectPath: string): Promise<boolean> {
+async function fileExistsInStorage(supabase: any, bucket: string, objectPath: string): Promise<boolean> {
   try {
-    const response = await fetch(
-      new URL(`/storage/v1/object/product-images/${encodeURIComponent(objectPath)}`, process.env.SUPABASE_URL).toString(),
-      { method: 'HEAD', headers: { apikey: process.env.SUPABASE_SERVICE_ROLE_KEY || '', Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY || ''}` }, signal: AbortSignal.timeout(TIMEOUT_MS) }
-    )
-    return response.ok
+    const dir = objectPath.substring(0, objectPath.lastIndexOf('/')) || ''
+    const { data, error } = await supabase.storage.from(bucket).list(dir, { limit: 1000 }).abortSignal(AbortSignal.timeout(TIMEOUT_MS))
+    if (error) return true
+    const fileName = objectPath.substring(objectPath.lastIndexOf('/') + 1)
+    return (data || []).some(f => f.name === fileName)
   } catch {
     return true
   }
