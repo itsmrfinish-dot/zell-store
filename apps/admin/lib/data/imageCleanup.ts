@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { createAuthClient } from '../auth/supabaseServer'
+import { createServiceClient } from '../auth/supabaseServer'
 import { storageDelete } from './client'
 
 export type OrphanedImage = {
@@ -195,7 +195,7 @@ async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boole
 
 export async function cleanupImages(params: { dryRun: boolean; claimedBy: string }): Promise<{ stats: CleanupStats; results: CleanupResult[] }> {
   try {
-    const supabase = await createAuthClient()
+    const supabase = await createServiceClient()
     const orphans = await claimOrphans(supabase, params.dryRun, params.claimedBy)
     
     const results: CleanupResult[] = []
