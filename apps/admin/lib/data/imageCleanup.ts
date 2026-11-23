@@ -67,24 +67,24 @@ async function claimOrphans(supabase: any, dryRun: boolean, claimedBy: string): 
     const backlogPlusRetention = new Date(backlogDate.getTime() + config.retentionDays * 24 * 60 * 60 * 1000)
     const now = new Date()
     
-    // Eligible if: created_at <= (now - retention) AND (created_at >= backlogVerifiedAt OR now >= backlogVerifiedAt + retention)
+    // Eligibility: created_at <= (now - retention) AND (created_at >= backlogVerifiedAt OR now >= backlogVerifiedAt + retention)
     const eligibleCreatedBefore = retentionDate.toISOString()
     const eligibleCreatedAfter = backlogDate.toISOString()
     const nowAfterBacklogPlus = backlogPlusRetention.getTime() <= now.getTime()
     
+    // Build query with consistent backlog gate
+    const buildQuery = (q: any) => {
+      q = q.is('cleaned_at', null).lte('created_at', eligibleCreatedBefore)
+      if (!nowAfterBacklogPlus) {
+        q = q.gte('created_at', eligibleCreatedAfter)
+      }
+      return q
+    }
+    
     if (dryRun) {
       const timeoutClaimed = new Date(Date.now() - CLAIM_TIMEOUT_MINUTES * 60000).toISOString()
-      let query = supabase
-        .from('storage_orphans')
-        .select('id,bucket,object_path,created_at,claimed_at,claimed_by,cleaned_at')
-        .is('cleaned_at', null)
-        .lte('created_at', eligibleCreatedBefore)
-      
-      if (nowAfterBacklogPlus) {
-        query = query.gte('created_at', eligibleCreatedAfter)
-      } else {
-        // No files eligible yet from backlog; skip this filter
-      }
+      let query = supabase.from('storage_orphans').select('id,bucket,object_path,created_at,claimed_at,claimed_by,cleaned_at')
+      query = buildQuery(query)
       
       const { data, error } = await query
         .order('created_at', { ascending: true })
@@ -97,13 +97,12 @@ async function claimOrphans(supabase: any, dryRun: boolean, claimedBy: string): 
     
     const timeoutClaimed = new Date(Date.now() - CLAIM_TIMEOUT_MINUTES * 60000).toISOString()
     
-    // Atomic claim: SELECT + UPDATE in one transaction via UPDATE with conditions and RETURNING
-    const { data: claimed, error } = await supabase
-      .from('storage_orphans')
-      .update({ claimed_at: new Date().toISOString(), claimed_by: claimedBy })
-      .is('cleaned_at', null)
-      .or('claimed_at.is.null,claimed_at.lt.' + timeoutClaimed)
-      .lte('created_at', retentionDate.toISOString())
+    // Atomic claim: UPDATE with state conditions and RETURNING
+    let query = supabase.from('storage_orphans').update({ claimed_at: new Date().toISOString(), claimed_by: claimedBy })
+    query = query.is('cleaned_at', null).or('claimed_at.is.null,claimed_at.lt.' + timeoutClaimed)
+    query = buildQuery(query)
+    
+    const { data: claimed, error } = await query
       .select('id,bucket,object_path,created_at,claimed_at,claimed_by,cleaned_at')
       .order('created_at', { ascending: true })
       .limit(1000)
