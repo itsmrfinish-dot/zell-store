@@ -400,7 +400,16 @@ begin
   if pg_catalog.jsonb_typeof(v_gov_cfg) is distinct from 'object' then
     v_gov_cfg := null;
   end if;
-  if v_method = 'express' then
+  -- INSTALLER-SHIPPING: طلب بفني = الشحن 0 (الانتقال بدل الشحن)، ولقطة الطريقة والمدة NULL. اختيار الشحن الصحيح
+  --   (standard أو express) بيتجاهل: مفيش فحص سريع ولا 45431. القيمة غير المعروفة لسه 45432 فوق، مع الفني ومن غيره.
+  --   أي رفض للفني بيحصل في مكانه تحت زي ما هو.
+  if v_install then
+    v_base := 0;
+    v_threshold := 0;
+    v_method := null;
+    v_days_min := null;
+    v_days_max := null;
+  elsif v_method = 'express' then
     if not coalesce(v_ship_express, false) or v_gov_cfg is null
        or (v_gov_cfg -> 'express_enabled') is distinct from 'true'::jsonb
        or pg_catalog.jsonb_typeof(v_gov_cfg -> 'express_price_piastres') is distinct from 'number'
