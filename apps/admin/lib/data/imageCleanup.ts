@@ -121,6 +121,7 @@ async function isFileReferenced(supabase: any, bucket: string, objectPath: strin
       supabase.from('product_images').select('id', { count: 'exact', head: true }).eq('object_path', objectPath),
       supabase.from('site_images').select('id', { count: 'exact', head: true }).eq('object_path', objectPath),
       supabase.from('collections').select('id', { count: 'exact', head: true }).eq('cover_bucket', bucket).eq('cover_object_path', objectPath),
+      supabase.from('products').select('id', { count: 'exact', head: true }).or('images.cs.{},image_url.eq.' + objectPath + ',before_image.eq.' + objectPath + ',after_image.eq.' + objectPath),
       supabase.from('order_items').select('id', { count: 'exact', head: true }).eq('product_image_url', objectPath),
     ]
     
@@ -128,7 +129,8 @@ async function isFileReferenced(supabase: any, bucket: string, objectPath: strin
     return results.some(r => {
       if (r.status === 'rejected') return true
       const data = r.value
-      return !data.error && (data.count ?? 0) > 0
+      if (data.error) return true
+      return (data.count ?? 0) > 0
     })
   } catch {
     return true
