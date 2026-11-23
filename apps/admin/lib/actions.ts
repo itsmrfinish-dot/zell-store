@@ -542,7 +542,6 @@ export const cleanupImagesAction = actionWithAccess(
   'zell.images.cleanup',
   { mutates: true },
   async (ctx, input: { dryRun: boolean }) => {
-    const { default: cleanupImages } = await import('../admin/cleanupImages')
     return cleanupImages({ dryRun: input.dryRun, claimedBy: ctx.user.userId })
   },
 )
