@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus } from 'lucide-react'
-import { setCouponActiveAction } from '../../lib/couponActions'
+import { setCouponActiveAction, deleteCouponAction } from '../../lib/couponActions'
 import { couponLimitLabel, couponValueLabel, couponWindowLabel, type AdminCoupon } from '../../lib/coupons/form'
 import { formatPiastres } from '../../lib/format'
 import { useSaveAction } from '../../lib/client/useSaveAction'
@@ -31,6 +31,20 @@ export function CouponsList({ rows }: { rows: AdminCoupon[] }) {
   function toggleActive(coupon: AdminCoupon) {
     setBusyId(coupon.id)
     void run(() => setCouponActiveAction(coupon.id, !coupon.isActive, coupon.updatedAt), {
+      onSuccess: () => router.refresh(),
+    }).finally(() => setBusyId(null))
+  }
+
+  function handleDelete(coupon: AdminCoupon) {
+    const isUsed = coupon.uses > 0
+    const confirmMsg = isUsed
+      ? 'هذا الكوبون مستخدم بالفعل. سيتم إلغاء الكوبون وإخفاؤه من القائمة ولن يمكن إعادة تفعيله. هل أنت متأكد؟'
+      : 'سيتم حذف هذا الكوبون نهائيًا ولا يمكن استرجاعه. هل أنت متأكد؟'
+    
+    if (!confirm(confirmMsg)) return
+    
+    setBusyId(coupon.id)
+    void run(() => deleteCouponAction(coupon.id), {
       onSuccess: () => router.refresh(),
     }).finally(() => setBusyId(null))
   }
@@ -88,6 +102,14 @@ export function CouponsList({ rows }: { rows: AdminCoupon[] }) {
                     >
                       {busyId === coupon.id ? 'بيحفظ…' : coupon.isActive ? 'إيقاف' : 'تفعيل'}
                     </Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      disabled={!mutationsOn || state === 'saving'}
+                      onClick={() => handleDelete(coupon)}
+                    >
+                      حذف
+                    </Button>
                   </div>
                 </div>
 
@@ -124,20 +146,3 @@ function Item({ label, value, wide = false }: { label: string; value: string; wi
     </div>
   )
 }
-
-  
-  const handleDelete = async (couponId: number, isUsed: boolean) => {
-    const confirmMsg = isUsed
-      ? 'هذا الكوبون مستخدم بالفعل. سيتم إلغاء الكوبون وإخفاؤه من القائمة ولن يمكن إعادة تفعيله. هل أنت متأكد؟'
-      : 'سيتم حذف هذا الكوبون نهائيًا ولا يمكن استرجاعه. هل أنت متأكد؟';
-    
-    if (!confirm(confirmMsg)) return;
-    
-    const result = await deleteCoupon(couponId);
-    if (result.success) {
-      toast.success(result.message);
-      refetchCoupons();
-    } else {
-      toast.error(result.message);
-    }
-  };
