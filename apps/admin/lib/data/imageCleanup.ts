@@ -63,18 +63,34 @@ async function claimOrphans(supabase: any, dryRun: boolean, claimedBy: string): 
     const config = await getCleanupConfig(supabase)
     const retentionDate = new Date()
     retentionDate.setDate(retentionDate.getDate() - config.retentionDays)
-    const eligibilityDate = new Date(Math.max(new Date(config.backlogVerifiedAt).getTime(), retentionDate.getTime()))
+    const backlogDate = new Date(config.backlogVerifiedAt)
+    const backlogPlusRetention = new Date(backlogDate.getTime() + config.retentionDays * 24 * 60 * 60 * 1000)
+    const now = new Date()
+    
+    // Eligible if: created_at <= (now - retention) AND (created_at >= backlogVerifiedAt OR now >= backlogVerifiedAt + retention)
+    const eligibleCreatedBefore = retentionDate.toISOString()
+    const eligibleCreatedAfter = backlogDate.toISOString()
+    const nowAfterBacklogPlus = backlogPlusRetention.getTime() <= now.getTime()
     
     if (dryRun) {
       const timeoutClaimed = new Date(Date.now() - CLAIM_TIMEOUT_MINUTES * 60000).toISOString()
-      const { data, error } = await supabase
+      let query = supabase
         .from('storage_orphans')
         .select('id,bucket,object_path,created_at,claimed_at,claimed_by,cleaned_at')
         .is('cleaned_at', null)
-        .gte('created_at', eligibilityDate.toISOString())
+        .lte('created_at', eligibleCreatedBefore)
+      
+      if (nowAfterBacklogPlus) {
+        query = query.gte('created_at', eligibleCreatedAfter)
+      } else {
+        // No files eligible yet from backlog; skip this filter
+      }
+      
+      const { data, error } = await query
         .order('created_at', { ascending: true })
         .limit(1000)
         .abortSignal(AbortSignal.timeout(TIMEOUT_MS))
+      
       if (error) return []
       return (data || []).filter(r => r.claimed_at === null || new Date(r.claimed_at) < new Date(timeoutClaimed))
     }
