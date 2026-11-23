@@ -344,8 +344,8 @@ async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boole
 
 export async function cleanupImages(params: { dryRun: boolean; claimedBy: string }): Promise<{ stats: CleanupStats; results: CleanupResult[] }> {
   const runId = params.claimedBy + '_' + Date.now()
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  if (!supabaseUrl) throw new Error('NEXT_PUBLIC_SUPABASE_URL not configured')
+  const supabaseUrl = (process.env['SUPABASE_URL'] ?? '').trim()
+  if (!supabaseUrl) throw new Error('SUPABASE_URL not configured')
   const buildPublicUrl = (bucket: string, objectPath: string) => supabaseUrl + '/storage/v1/object/public/' + bucket + '/' + objectPath
   try {
     const supabase = await createServiceClient()
