@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { restGet, restInsert, restPatch } from '../data/client'
+import { restGet, restInsert, restPatch, restRpc } from '../data/client'
 import type { MutationResult } from '../mutations'
 import {
   CODE_TAKEN_MESSAGE,
@@ -22,7 +22,7 @@ import { readCouponsSwitch, countLiveCoupons, TABLE, COLUMNS, USES, SWITCH_KEY }
  *
  * 🔒 الصلاحية (المالك بس) والعلم في lib/couponActions.ts **قبل** أي دالة هنا.
  * 🔒 التحقق هنا تاني من غير ما نثق في الواجهة (validateCouponInput)، والداتابيز عندها نفس القيود.
- * 🔒 مفيش حذف خالص — الإيقاف بس. ومفيش عدّاد استخدام بيتكتب: العدد من الأوردرات غير الملغية.
+ * 🔒 الحذف من 0030: غير المستخدم بيتحذف نهائيًا، والمستخدم بيتلغي وبيتأرشف ومفيش إعادة تفعيل. ومفيش عدّاد استخدام بيتكتب: العدد من الأوردرات غير الملغية.
  * ⚠️ مفيش trigger على updated_at، فـpatchGuarded بيبعته (تزامن تفاؤلي).
  */
 
@@ -97,7 +97,7 @@ export async function updateCoupon(rawId: unknown, raw: unknown, rawStamp: unkno
   }
 }
 
-/** تفعيل أو إيقاف — بديل الحذف الوحيد. */
+/** تفعيل أو إيقاف. الكوبون الملغى (revoked_at) لا يُعاد تفعيله أبدًا. */
 export async function setCouponActive(rawId: unknown, rawActive: unknown, rawStamp: unknown): Promise<MutationResult<AdminCoupon>> {
   const id = parseCouponId(rawId)
   if (id === null) return invalid(BAD_ID_MESSAGE)
@@ -107,6 +107,21 @@ export async function setCouponActive(rawId: unknown, rawActive: unknown, rawSta
   if (!stamp.ok) return stamp
 
   try {
+    // منع إعادة تفعيل كوبون ملغى (0030) — فشل القراءة بيوقف العملية (fail-closed).
+    // الذرّية: الأرشفة في zell_delete_coupon بتحدّث updated_at، فلو الحذف سبق
+    // patchGuarded بين القراءة والكتابة هيطلع CONFLICT ومش هيتفعّل.
+    if (active.value === true) {
+      const check = await restGet<{ revoked_at: string | null }>(
+        TABLE,
+        'select=revoked_at&id=eq.' + String(id) + '&limit=1',
+      )
+      const row = check.rows[0]
+      if (!row) return invalid(NOT_FOUND_MESSAGE)
+      if (row.revoked_at !== null) {
+        return invalid('الكوبون ملغى ولا يمكن إعادة تفعيله')
+      }
+    }
+
     const result = await patchGuarded<CouponRow>({
       table: TABLE,
       idColumn: 'id',
@@ -148,6 +163,30 @@ export async function setCouponsEnabled(rawEnabled: unknown): Promise<MutationRe
     const stored = await readCouponsSwitch()
     if (stored.enabled !== enabled.value) return toInternalFailure(null)
     return { ok: true, data: { enabled: enabled.value } }
+  } catch (error) {
+    return toInternalFailure(error)
+  }
+}
+
+
+/**
+ * حذف/إلغاء كوبون (migration 0030).
+ * منطق ذري: غير مستخدم → حذف صف كامل؛ مستخدم → أرشفة (revoked_at + is_active = false).
+ * الكوبون المؤرشف مرفوض في zell_preview_coupon ولا يمكن إعادة تفعيله.
+ */
+export async function deleteCoupon(rawId: unknown): Promise<MutationResult<{ status: 'deleted' | 'archived' }>> {
+  const id = parseCouponId(rawId)
+  if (id === null) return invalid(BAD_ID_MESSAGE)
+  try {
+    // نداء POST لدالة الحذف الذرّية (0030) — الذرّية مسؤولية الدالة نفسها.
+    const status = await restRpc<unknown>('zell_delete_coupon', { p_coupon_id: id })
+    if (status === 'not_found') {
+      return invalid(NOT_FOUND_MESSAGE)
+    }
+    if (status === 'deleted' || status === 'archived') {
+      return { ok: true, data: { status } }
+    }
+    return toInternalFailure(null)
   } catch (error) {
     return toInternalFailure(error)
   }

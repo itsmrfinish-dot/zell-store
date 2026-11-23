@@ -15,7 +15,7 @@ export const TABLE = 'coupons'
 
 export const COLUMNS =
   'id,code,kind,percent_off,amount_off_piastres,max_discount_piastres,min_subtotal_piastres,' +
-  'starts_at,ends_at,max_uses,max_uses_per_phone,is_active,internal_note,created_at,updated_at'
+  'starts_at,ends_at,max_uses,max_uses_per_phone,is_active,internal_note,created_at,updated_at,revoked_at'
 
 /**
  * العدّادين في نفس الطلب (مفيش N+1) — نفس العلاقة باسمين، والفلتر على الاسم الأول بس:
@@ -36,7 +36,7 @@ export async function listCoupons(rawPage: number): Promise<CouponsPage> {
   const result = await restGet<CouponRow>(
     TABLE,
     [
-      'select=' + COLUMNS + ',' + USES,
+      'select=' + COLUMNS + ',' + USES + '&revoked_at=is.null',
       'order=created_at.desc,id.desc',
       'limit=' + String(COUPONS_PAGE_SIZE),
       'offset=' + String(offset),
@@ -60,7 +60,7 @@ export async function readCouponsSwitch(): Promise<CouponsSwitch> {
 export async function countLiveCoupons(): Promise<number> {
   const result = await restGet<{ is_active: boolean; starts_at: string | null; ends_at: string | null }>(
     TABLE,
-    'select=is_active,starts_at,ends_at&is_active=eq.true&limit=' + String(LIVE_SCAN_LIMIT),
+    'select=is_active,starts_at,ends_at&is_active=eq.true&revoked_at=is.null&limit=' + String(LIVE_SCAN_LIMIT),
   )
   const now = Date.now()
   return result.rows.filter((row) => isCouponLive({ isActive: row.is_active, startsAt: row.starts_at, endsAt: row.ends_at }, now)).length

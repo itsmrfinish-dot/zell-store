@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus } from 'lucide-react'
-import { setCouponActiveAction } from '../../lib/couponActions'
+import { setCouponActiveAction, deleteCouponAction } from '../../lib/couponActions'
 import { couponLimitLabel, couponValueLabel, couponWindowLabel, type AdminCoupon } from '../../lib/coupons/form'
 import { formatPiastres } from '../../lib/format'
 import { useSaveAction } from '../../lib/client/useSaveAction'
@@ -18,7 +18,7 @@ import { CouponForm } from './CouponForm'
 type Editing = { mode: 'create' } | { mode: 'edit'; coupon: AdminCoupon } | null
 
 /**
- * قايمة الكوبونات + الإنشاء والتعديل والتفعيل/الإيقاف. مفيش حذف (الإيقاف هو البديل).
+ * قايمة الكوبونات + الإنشاء والتعديل والتفعيل/الإيقاف والحذف (0030: حذف نهائي لغير المستخدم، وإلغاء دائم للمستخدم).
  * الاستخدامات = أوردرات غير ملغية، جاية مع القايمة في نفس الطلب.
  */
 export function CouponsList({ rows }: { rows: AdminCoupon[] }) {
@@ -31,6 +31,20 @@ export function CouponsList({ rows }: { rows: AdminCoupon[] }) {
   function toggleActive(coupon: AdminCoupon) {
     setBusyId(coupon.id)
     void run(() => setCouponActiveAction(coupon.id, !coupon.isActive, coupon.updatedAt), {
+      onSuccess: () => router.refresh(),
+    }).finally(() => setBusyId(null))
+  }
+
+  function handleDelete(coupon: AdminCoupon) {
+    const isUsed = (coupon.references ?? 0) > 0
+    const confirmMsg = isUsed
+      ? 'هذا الكوبون مستخدم بالفعل. سيتم إلغاء الكوبون وإخفاؤه من القائمة ولن يمكن إعادة تفعيله. هل أنت متأكد؟'
+      : 'سيتم حذف هذا الكوبون نهائيًا ولا يمكن استرجاعه. هل أنت متأكد؟'
+
+    if (!confirm(confirmMsg)) return
+
+    setBusyId(coupon.id)
+    void run(() => deleteCouponAction(coupon.id), {
       onSuccess: () => router.refresh(),
     }).finally(() => setBusyId(null))
   }
@@ -87,6 +101,14 @@ export function CouponsList({ rows }: { rows: AdminCoupon[] }) {
                       onClick={() => toggleActive(coupon)}
                     >
                       {busyId === coupon.id ? 'بيحفظ…' : coupon.isActive ? 'إيقاف' : 'تفعيل'}
+                    </Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      disabled={!mutationsOn || state === 'saving'}
+                      onClick={() => handleDelete(coupon)}
+                    >
+                      حذف
                     </Button>
                   </div>
                 </div>
