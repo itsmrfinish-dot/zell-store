@@ -86,7 +86,7 @@ export default function ImageCleanupPage() {
                 <div key={item.orphan_id} className="flex gap-4 p-3 border border-border rounded hover:bg-muted/50 transition">
                   <div className="flex-shrink-0 w-20 h-20 bg-muted rounded overflow-hidden flex items-center justify-center">
                     <img
-                      src={"https://" + item.bucket + ".supabase.co/storage/v1/object/public/" + item.bucket + "/" + item.object_path}
+                      src={item.publicUrl}
                       alt={item.object_path}
                       className="w-full h-full object-contain"
                       onError={(e) => {
