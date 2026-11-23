@@ -1,5 +1,5 @@
--- Migration 0030: Coupon soft delete with revoked_at column and enhanced validation
--- Migration date: 2026-11-23T04:02:45.554Z
+-- Migration 0030: Coupon soft delete with revoked_at column
+-- Migration date: 2026-11-23T18:00:00.000Z
 -- Purpose: Add soft-delete capability for coupons with archive via revoked_at.
 -- Note: Forward-only migration. Do not rollback in production.
 
@@ -30,12 +30,12 @@ BEGIN
     RETURN 'not_found';
   END IF;
 
-  -- Count orders using this coupon (non-cancelled orders)
+  -- Count all orders using this coupon (including cancelled)
+  -- This matches ON DELETE RESTRICT constraint on orders.coupon_id
   SELECT COUNT(*)
   INTO v_order_count
   FROM orders
-  WHERE coupon_id = p_coupon_id
-    AND status != 'cancelled';
+  WHERE coupon_id = p_coupon_id;
 
   -- If no orders, delete the entire row
   IF v_order_count = 0 THEN
@@ -58,29 +58,32 @@ $$;
 GRANT EXECUTE ON FUNCTION zell_delete_coupon(BIGINT) TO service_role;
 
 -- Enhance zell_preview_coupon to reject revoked coupons
--- (Redefine with same signature but add revoked_at check)
-CREATE OR REPLACE FUNCTION zell_preview_coupon(p_code TEXT)
-RETURNS TABLE (
-  id BIGINT,
-  kind TEXT,
-  percent_off NUMERIC,
-  amount_off_piastres BIGINT,
-  max_discount_piastres BIGINT
-)
-LANGUAGE sql
-STABLE
-SET search_path = public
-AS $$
-  SELECT
-    id,
-    kind,
-    percent_off,
-    amount_off_piastres,
-    max_discount_piastres
-  FROM coupons
-  WHERE code = UPPER(BTRIM(p_code))
-    AND is_active = TRUE
-    AND revoked_at IS NULL;
-$$;
+-- Keep original signature and behavior from 0019; add revoked_at check only
+CREATE OR REPLACE FUNCTION zell_preview_coupon(p_code text)
+ RETURNS jsonb
+ LANGUAGE sql
+ STABLE
+ SET search_path TO public
+AS $function$
+  SELECT jsonb_build_object(
+    'id', c.id,
+    'kind', c.kind,
+    'percent_off', c.percent_off,
+    'amount_off_piastres', c.amount_off_piastres,
+    'max_discount_piastres', c.max_discount_piastres,
+    'code', c.code,
+    'min_subtotal_piastres', c.min_subtotal_piastres,
+    'starts_at', c.starts_at,
+    'ends_at', c.ends_at,
+    'max_uses', c.max_uses,
+    'max_uses_per_phone', c.max_uses_per_phone
+  )
+  FROM coupons c
+  WHERE c.code = UPPER(BTRIM(p_code))
+    AND c.is_active
+    AND (c.starts_at IS NULL OR c.starts_at <= now())
+    AND (c.ends_at IS NULL OR now() < c.ends_at)
+    AND c.revoked_at IS NULL;
+$function$;
 
 COMMIT;
