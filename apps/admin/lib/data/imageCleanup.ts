@@ -116,10 +116,22 @@ async function claimOrphans(supabase: any, dryRun: boolean, claimedBy: string): 
 async function isFileReferenced(supabase: any, bucket: string, objectPath: string): Promise<boolean> {
   try {
     const checks = [
+      // Check settings that may reference this path as bucket or object_path
+      supabase.from('settings').select('id', { count: 'exact', head: true }).or('value.eq.' + objectPath + ',value.ilike.' + bucket),
+      
+      // Check product_images
       supabase.from('product_images').select('id', { count: 'exact', head: true }).eq('object_path', objectPath),
+      
+      // Check site_images
       supabase.from('site_images').select('id', { count: 'exact', head: true }).eq('object_path', objectPath),
+      
+      // Check collections cover
       supabase.from('collections').select('id', { count: 'exact', head: true }).eq('cover_bucket', bucket).eq('cover_object_path', objectPath),
-      supabase.from('products').select('id', { count: 'exact', head: true }).or('images.cs.' + JSON.stringify([{ object_path: objectPath }]) + ',image_url.eq.' + objectPath + ',before_image.eq.' + objectPath + ',after_image.eq.' + objectPath),
+      
+      // Check products.images for both formats: text strings and {object_path} objects
+      supabase.from('products').select('id', { count: 'exact', head: true }).or('images.cs.' + JSON.stringify([{ object_path: objectPath }]) + ',images.cs.["' + objectPath + '"],image_url.eq.' + objectPath + ',before_image.eq.' + objectPath + ',after_image.eq.' + objectPath),
+      
+      // Check order_items.product_image_url (built from products.image_url in write path)
       supabase.from('order_items').select('id', { count: 'exact', head: true }).eq('product_image_url', objectPath),
     ]
     
