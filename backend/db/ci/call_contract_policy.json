@@ -9,13 +9,27 @@
   "later": [
     {
       "migration": "0024_order_delete.sql",
-      "names": ["zell_purge_preview", "zell_purge_orders", "zell_purge_reauth_begin", "zell_purge_reauth_finish"],
+      "names": [
+        "zell_purge_preview",
+        "zell_purge_orders",
+        "zell_purge_reauth_begin",
+        "zell_purge_reauth_finish"
+      ],
       "reason": "applied + verified on Production 2026-11-04 (#199) and in build_from_scratch.list after 0022 and 0023 (#200). Skipped only by 0022_sql_ci.sh and 0023_sql_ci.sh (--later skip), which build the list up to before their own migration; checked everywhere else (BASELINE K01/K02, 0024 K01)."
     },
     {
       "migration": "0026_image_delete.sql",
-      "names": ["zell_product_image_delete"],
+      "names": [
+        "zell_product_image_delete"
+      ],
       "reason": "applied + verified on Production 2026-11-07 (#223) and in build_from_scratch.list after 0025 (#225). Skipped only by 0022_sql_ci.sh and 0023_sql_ci.sh (--later skip) and 0024_sql_ci.sh (--later skip:0026_image_delete.sql), which build the list up to before their own migration; checked in the full build (BASELINE K01/K02)."
+    },
+    {
+      "migration": "0030_coupon_soft_delete.sql",
+      "names": [
+        "zell_delete_coupon"
+      ],
+      "reason": "applied + verified on Production 2026-11-23 and in build_from_scratch.list after 0029 (#13). Skipped only by 0022_sql_ci.sh and 0023_sql_ci.sh (--later skip), which build the list up to before their own migration; checked in the full build (BASELINE K01/K02)."
     }
   ],
   "excluded_paths": [
