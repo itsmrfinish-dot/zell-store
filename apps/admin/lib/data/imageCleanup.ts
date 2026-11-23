@@ -219,13 +219,36 @@ async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boole
       return { status: 'failed', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path, error: 'File is still referenced' }
     }
     
-    const exists = await fileExistsInStorage(supabase, orphan.bucket, orphan.object_path)
+    const fileStatus = await fileExistsInStorage(supabase, orphan.bucket, orphan.object_path)
     
+    // Handle the three file states explicitly
+    if (fileStatus === 'missing') {
+      // File confirmed missing: mark cleaned without calling delete
+      if (!dryRun) {
+        const { error: markError } = await supabase
+          .from('storage_orphans')
+          .update({ cleaned_at: new Date().toISOString() })
+          .eq('id', orphan.id)
+          .eq('claimed_by', runId)
+          .abortSignal(AbortSignal.timeout(TIMEOUT_MS))
+        if (markError) {
+          await releaseClaimOnError(supabase, orphan.id, runId)
+          return { status: 'failed', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path, error: 'Failed to mark missing: ' + markError.message }
+        }
+      }
+      return { status: 'missing', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path }
+    }
+    
+    if (fileStatus === 'error') {
+      // Error checking file: release claim, report error per file, do not mark cleaned_at
+      await releaseClaimOnError(supabase, orphan.id, runId)
+      return { status: 'failed', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path, error: 'Failed to check file existence' }
+    }
+    
+    // fileStatus === 'exists' - proceed with deletion
     if (!dryRun) {
       try {
-        if (exists) {
-          await storageDelete(orphan.bucket, orphan.object_path)
-        }
+        await storageDelete(orphan.bucket, orphan.object_path)
       } catch (err) {
         await releaseClaimOnError(supabase, orphan.id, runId)
         return { status: 'failed', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path, error: 'Storage delete failed: ' + (err instanceof Error ? err.message : String(err)) }
@@ -243,7 +266,7 @@ async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boole
       }
     }
     
-    return { status: exists ? 'success' : 'missing', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path }
+    return { status: 'success', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path }
   } catch (err) {
     if (!dryRun) {
       await releaseClaimOnError(supabase, orphan.id, runId)
