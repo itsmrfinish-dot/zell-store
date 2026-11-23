@@ -44,7 +44,7 @@ export function CouponsList({ rows }: { rows: AdminCoupon[] }) {
     if (!confirm(confirmMsg)) return
     
     setBusyId(coupon.id)
-    void run(() => deleteCouponAction(Number(coupon.id)), {
+    void run(() => deleteCouponAction(coupon.id), {
       onSuccess: () => router.refresh(),
     }).finally(() => setBusyId(null))
   }
