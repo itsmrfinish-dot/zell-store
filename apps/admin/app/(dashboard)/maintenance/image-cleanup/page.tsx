@@ -77,6 +77,32 @@ export default function ImageCleanupPage() {
               <p className="text-sm text-muted-foreground">Claimed</p>
               <p className="text-2xl font-bold">{results.stats.claimed}</p>
             </div>
+
+        {results.results && results.results.length > 0 && (
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Candidates for Cleanup</h3>
+            <div className="space-y-3">
+              {results.results.map((item: any) => (
+                <div key={item.orphan_id} className="flex gap-4 p-3 border border-border rounded hover:bg-muted/50 transition">
+                  <div className="flex-shrink-0 w-20 h-20 bg-muted rounded overflow-hidden flex items-center justify-center">
+                    <img
+                      src={"https://" + item.bucket + ".supabase.co/storage/v1/object/public/" + item.bucket + "/" + item.object_path}
+                      alt={item.object_path}
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = "none"
+                      }}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-mono text-sm text-muted-foreground break-all">{item.object_path}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Bucket: {item.bucket}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
           </div>
         </div>
       )}
