@@ -3,6 +3,19 @@ import 'server-only'
 import { createServiceClient } from '../auth/supabaseServer'
 import { storageDelete } from './client'
 
+/**
+ * Image Cleanup Service - Path Reuse Safety
+ * 
+ * INVARIANT: Paths are never reused for new uploads.
+ * - All new uploads generate paths with UUIDs: /year/month/uuid-filename
+ * - A path once marked orphaned cannot be claimed by a new upload
+ * - Code never creates new storage_orphans rows with existing paths
+ * - Code never updates storage_orphans.object_path to point to current files
+ * 
+ * This means: if a file is orphaned and later deleted, any new uploads
+ * use different paths. No race condition between cleanup and new uploads.
+ */
+
 export type OrphanedImage = {
   id: string
   bucket: string
@@ -167,9 +180,10 @@ async function isFileReferenced(supabase: any, bucket: string, objectPath: strin
       // Check collections cover
       supabase.from('collections').select('id', { count: 'exact', head: true }).eq('cover_bucket', bucket).eq('cover_object_path', objectPath),
       
-      // Check products: image_url (full URL), before_image (full URL), after_image (full URL), images (JSON array)
-      // Note: image_url, before_image, after_image store full URLs; order_items.product_image_url copies this URL directly
-      supabase.from('products').select('id', { count: 'exact', head: true }).or('images.cs.' + JSON.stringify([{ object_path: objectPath }]) + ',images.cs.["' + objectPath + '"],image_url.eq.' + objectPath + ',before_image.eq.' + objectPath + ',after_image.eq.' + objectPath),
+      // Check products: image_url, before_image, after_image store full URLs (copied from storage)
+      // images is a JSON array with {object_path} objects
+      // Match image_url/before_image/after_image against both raw path and full URL patterns
+      supabase.from('products').select('id', { count: 'exact', head: true }).or('images.cs.' + JSON.stringify([{ object_path: objectPath }]) + ',images.cs.["' + objectPath + '"],image_url.eq.' + objectPath + ',image_url.ilike.' + '%' + objectPath + ',before_image.eq.' + objectPath + ',before_image.ilike.' + '%' + objectPath + ',after_image.eq.' + objectPath + ',after_image.ilike.' + '%' + objectPath),
       
       // Check order_items.product_image_url: stores full URL from products.image_url
       // products.image_url is a full URL (e.g. https://bucket.storage.googleapis.com/path/to/file)
@@ -249,15 +263,18 @@ async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boole
     if (fileStatus === 'missing') {
       // File confirmed missing: mark cleaned without calling delete
       if (!dryRun) {
-        const { error: markError } = await supabase
+        const { data: missingData, error: markError } = await supabase
           .from('storage_orphans')
           .update({ cleaned_at: new Date().toISOString() })
           .eq('id', orphan.id)
           .eq('claimed_by', runId)
+          .select('id')
           .abortSignal(AbortSignal.timeout(TIMEOUT_MS))
-        if (markError) {
-          await releaseClaimOnError(supabase, orphan.id, runId)
-          return { status: 'failed', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path, error: 'Failed to mark missing: ' + markError.message }
+        if (markError || !missingData || missingData.length === 0) {
+          if (!dryRun) {
+            await releaseClaimOnError(supabase, orphan.id, runId)
+          }
+          return { status: 'failed', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path, error: 'Failed to mark missing: orphan not found or claim lost' }
         }
       }
       return { status: 'missing', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path }
@@ -273,15 +290,19 @@ async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boole
     
     // fileStatus === 'exists' - proceed with deletion
     if (!dryRun) {
-      // Re-verify ownership before deletion (atomic fencing)
-      const { data: ownershipCheck, error: ownershipError } = await supabase
+      // Atomic fence: re-verify and update claimed_at in one operation
+      // Check: id match, claimed_by match, and claimed_at within retention window (< 15 min old)
+      const claimTimeout = new Date(Date.now() - CLAIM_TIMEOUT_MINUTES * 60000).toISOString()
+      const { data: fencedUpdate, error: fenceError } = await supabase
         .from('storage_orphans')
-        .select('id')
+        .update({ claimed_at: new Date().toISOString() })
         .eq('id', orphan.id)
         .eq('claimed_by', runId)
+        .gt('claimed_at', claimTimeout)
+        .select('id')
         .abortSignal(AbortSignal.timeout(TIMEOUT_MS))
       
-      if (ownershipError || !ownershipCheck || ownershipCheck.length === 0) {
+      if (fenceError || !fencedUpdate || fencedUpdate.length !== 1) {
         return { status: 'failed', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path, error: 'claim lost' }
       }
       
