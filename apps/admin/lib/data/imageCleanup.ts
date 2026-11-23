@@ -96,27 +96,21 @@ async function claimOrphans(supabase: any, dryRun: boolean, claimedBy: string): 
     }
     
     const timeoutClaimed = new Date(Date.now() - CLAIM_TIMEOUT_MINUTES * 60000).toISOString()
+    
+    // Atomic claim: SELECT + UPDATE in one transaction via UPDATE with conditions and RETURNING
     const { data: claimed, error } = await supabase
       .from('storage_orphans')
-      .select('id,bucket,object_path,created_at,claimed_at,claimed_by,cleaned_at')
+      .update({ claimed_at: new Date().toISOString(), claimed_by: claimedBy })
       .is('cleaned_at', null)
       .or('claimed_at.is.null,claimed_at.lt.' + timeoutClaimed)
-      .gte('created_at', eligibilityDate.toISOString())
+      .lte('created_at', retentionDate.toISOString())
+      .select('id,bucket,object_path,created_at,claimed_at,claimed_by,cleaned_at')
       .order('created_at', { ascending: true })
       .limit(1000)
       .abortSignal(AbortSignal.timeout(TIMEOUT_MS))
     
     if (error) return []
-    if (!claimed || claimed.length === 0) return []
-    
-    const ids = claimed.map((o: any) => o.id)
-    await supabase
-      .from('storage_orphans')
-      .update({ claimed_at: new Date().toISOString(), claimed_by: claimedBy })
-      .in('id', ids)
-      .abortSignal(AbortSignal.timeout(TIMEOUT_MS))
-    
-    return claimed
+    return claimed || []
   } catch {
     return []
   }
