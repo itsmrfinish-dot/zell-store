@@ -139,7 +139,7 @@ async function claimOrphans(supabase: any, dryRun: boolean, claimedBy: string): 
   }
 }
 
-async function isFileReferenced(supabase: any, bucket: string, objectPath: string): Promise<boolean> {
+async function isFileReferenced(supabase: any, bucket: string, objectPath: string): Promise<{ referenced: boolean; error?: string }> {
   try {
     const checks = [
       // Check settings that may reference this path as bucket or object_path
@@ -175,14 +175,23 @@ async function isFileReferenced(supabase: any, bucket: string, objectPath: strin
     ]
     
     const results = await Promise.allSettled(checks.map(c => c.abortSignal(AbortSignal.timeout(TIMEOUT_MS))))
-    return results.some(r => {
-      if (r.status === 'rejected') return true
-      const data = r.value
-      if (data.error) return true
-      return (data.count ?? 0) > 0
-    })
-  } catch {
-    return true
+    
+    // Check for any errors in the results
+    const settingsCheckResult = results.find(r => r.status === 'fulfilled' && r.value?.error?.includes?.('settings check failed'))
+    if (settingsCheckResult?.status === 'fulfilled' && settingsCheckResult.value?.error) {
+      throw new Error(settingsCheckResult.value.error)
+    }
+    
+    return { 
+      referenced: results.some(r => {
+        if (r.status === 'rejected') return true
+        const data = r.value
+        if (data?.error) return true
+        return (data?.count ?? 0) > 0
+      })
+    }
+  } catch (err) {
+    return { referenced: true, error: err instanceof Error ? err.message : String(err) }
   }
 }
 
@@ -223,8 +232,12 @@ async function releaseClaimOnError(supabase: any, orphanId: string, runId: strin
 
 async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boolean, runId: string): Promise<CleanupResult> {
   try {
-    const isReferenced = await isFileReferenced(supabase, orphan.bucket, orphan.object_path)
-    if (isReferenced) {
+    const refResult = await isFileReferenced(supabase, orphan.bucket, orphan.object_path)
+    if (refResult.error) {
+      await releaseClaimOnError(supabase, orphan.id, runId)
+      return { status: 'failed', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path, error: 'File reference check failed: ' + refResult.error }
+    }
+    if (refResult.referenced) {
       if (!dryRun) {
         await releaseClaimOnError(supabase, orphan.id, runId)
       }
