@@ -1,6 +1,6 @@
 -- 0030 COUPON-DELETE — سيناريوهات flows (CI): بتتشغّل بعد تطبيق 0030 على قاعدة مبنية
 -- من build_from_scratch.list (backend/db/ci/0030_sql_ci.sh). معاملة واحدة بتترجع.
--- النتيجة: صف summary أول (0|summary|PASS|pass=10 fail=0) بصيغة 0026.
+-- النتيجة: صف summary أول (0|summary|PASS|pass=11 fail=0) بصيغة 0026.
 
 begin;
 set local idle_in_transaction_session_timeout = '30s';
@@ -45,7 +45,7 @@ begin
 
   -- بذرة إعدادات التركيب والشحن
   insert into public.settings (key, value) values
-    ('installation', '{"enabled": true, "feePerMeterPiastres": 1500, "areas": {"القاهرة": {"المعادي": 2500, "مدينة نصر": 0}}}')
+    ('installation', '{"enabled": true, "feePerMeterPiastres": 1500, "areas": {"القاهرة": {"المعادي": 2500, "مدينة نصر": 0}}}'),
     ('shipping_areas', '{"القاهرة": ["المعادي", "مدينة نصر"]}')
   on conflict (key) do update set value = excluded.value;
   -- T06: طلب تحكم بكوبون حي — بينجح وبيسجل خصم (وبيخلي DELUSED30 مستخدم).
@@ -193,7 +193,7 @@ $zchk$;
 
 select s.n, s.id, s.outcome, s.detail
   from (select 0 as n, 'summary'::text as id,
-               case when pg_catalog.count(*) filter (where r.outcome = 'fail') = 0 and pg_catalog.count(*) = 10 then 'PASS' else 'FAIL' end as outcome,
+               case when pg_catalog.count(*) filter (where r.outcome = 'fail') = 0 and pg_catalog.count(*) = 11 then 'PASS' else 'FAIL' end as outcome,
                'pass=' || pg_catalog.count(*) filter (where r.outcome = 'pass') || ' fail=' || pg_catalog.count(*) filter (where r.outcome = 'fail') as detail
           from pg_temp.zt_results r
         union all
