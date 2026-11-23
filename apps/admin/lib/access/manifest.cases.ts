@@ -45,6 +45,7 @@ export const UNIMPLEMENTED_SYMBOLS: readonly string[] = [
   'resendNotificationAction',
   'saveOperationalSettingsAction',
   'uploadProductImagePlaceholder',
+  'cleanupImagesAction',
 ]
 
 const HTTP_STATUS: Readonly<Record<string, number>> = { UNAUTHENTICATED: 401, FORBIDDEN: 403, DISABLED: 409 }
