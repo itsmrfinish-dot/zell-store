@@ -165,7 +165,7 @@ async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boole
       return { status: 'failed', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path, error: 'File is still referenced' }
     }
     
-    const exists = await fileExistsInStorage(orphan.object_path)
+    const exists = await fileExistsInStorage(supabase, orphan.bucket, orphan.object_path)
     
     if (!dryRun) {
       try {
