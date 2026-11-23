@@ -68,34 +68,10 @@ export const setCouponsEnabledAction = actionWithAccess(
 )
 
 
-'use server';
-
-export async function deleteCouponAction(couponId: number): Promise<{
-  success: boolean;
-  status: 'deleted' | 'archived';
-  message: string;
-}> {
-  try {
-    const result = await zell_delete_coupon(couponId);
-    
-    if (result === 'not_found') {
-      return { success: false, status: 'deleted', message: 'الكوبون غير موجود' };
-    }
-    
-    const isDeleted = result === 'deleted';
-    return {
-      success: true,
-      status: result as 'deleted' | 'archived',
-      message: isDeleted
-        ? 'تم حذف الكوبون نهائيًا'
-        : 'تم إلغاء الكوبون وإخفاؤه من القائمة',
-    };
-  } catch (error) {
-    console.error('Error deleting coupon:', error);
-    return {
-      success: false,
-      status: 'deleted',
-      message: 'فشل حذف الكوبون. الرجاء المحاولة لاحقًا.',
-    };
-  }
-}
+export const deleteCouponAction = actionWithAccess(
+  'zell.coupons.edit',
+  { mutates: true, forbiddenMessage: OWNER_ONLY_MESSAGE },
+  async (_ctx: AccessContext, couponId: number): Promise<MutationResult<{ status: 'deleted' | 'archived' }>> => {
+    return deleteCoupon(couponId)
+  },
+)
