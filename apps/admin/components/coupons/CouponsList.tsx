@@ -36,7 +36,7 @@ export function CouponsList({ rows }: { rows: AdminCoupon[] }) {
   }
 
   function handleDelete(coupon: AdminCoupon) {
-    const isUsed = coupon.uses > 0
+    const isUsed = (coupon.references ?? 0) > 0
     const confirmMsg = isUsed
       ? 'هذا الكوبون مستخدم بالفعل. سيتم إلغاء الكوبون وإخفاؤه من القائمة ولن يمكن إعادة تفعيله. هل أنت متأكد؟'
       : 'سيتم حذف هذا الكوبون نهائيًا ولا يمكن استرجاعه. هل أنت متأكد؟'
@@ -44,7 +44,7 @@ export function CouponsList({ rows }: { rows: AdminCoupon[] }) {
     if (!confirm(confirmMsg)) return
     
     setBusyId(coupon.id)
-    void run(() => deleteCouponAction(coupon.id), {
+    void run(() => deleteCouponAction(Number(coupon.id)), {
       onSuccess: () => router.refresh(),
     }).finally(() => setBusyId(null))
   }
