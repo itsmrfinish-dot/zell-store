@@ -7,7 +7,7 @@ import { storageDelete } from './client'
  * Image Cleanup Service - Path Reuse Safety
  * 
  * INVARIANT: Paths are never reused for new uploads.
- * - All new uploads generate paths with UUIDs: /year/month/uuid-filename
+ * - All new uploads generate paths with UUIDs: products/{id}/UUID, branding/.../UUID, collections/{id}/UUID
  * - A path once marked orphaned cannot be claimed by a new upload
  * - Code never creates new storage_orphans rows with existing paths
  * - Code never updates storage_orphans.object_path to point to current files
