@@ -19,7 +19,7 @@ import { actionWithAccess } from './access/instance'
 import type { AccessContext } from './access/wrappers'
 import { OWNER_ONLY_MESSAGE, type AdminCoupon, type CouponInput } from './coupons/form'
 import type { MutationResult } from './mutations'
-import { createCoupon, setCouponActive, setCouponsEnabled, updateCoupon } from './mutations/coupons'
+import { createCoupon, deleteCoupon, setCouponActive, setCouponsEnabled, updateCoupon } from './mutations/coupons'
 import { REVALIDATION_WARNING, revalidateStorefront } from './revalidateStorefront'
 
 export const createCouponAction = actionWithAccess(
