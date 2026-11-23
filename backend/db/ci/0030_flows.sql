@@ -164,21 +164,22 @@ begin
     'preview live parity -> ' || v_state || ' keys=' ||
       coalesce((select pg_catalog.string_agg(k, ',' order by k) from pg_catalog.jsonb_object_keys(v_json) as k), '-'));
 
-  -- T11: طلب تركيب فني بـ express (غير متاح) — بينجح وbases_piastres = 0 (zero shipping).
+
+  -- T11: طلب تركيب فني بـ express (غير متاح للمحافظة) — بينجح وshipping_piastres = 0.
   begin
     v_ord := public.zell_create_order(
       pg_catalog.jsonb_build_array(pg_catalog.jsonb_build_object('productId', v_pid, 'lengthCm', 300)),
-      'عميل تجربة', '01000000311', 'القاهرة', 'شارع التجربة رقم ١١', null,
+      'عميل تجربة', '01000000311', 'القاهرة', 'المعادي', null,
       'ci30-t11-' || pg_catalog.gen_random_uuid()::text,
       pg_catalog.md5(pg_catalog.gen_random_uuid()::text) || pg_catalog.md5(pg_catalog.gen_random_uuid()::text),
-      pg_catalog.repeat('a', 64), pg_catalog.repeat('b', 64), null, true, null);
+      pg_catalog.repeat('a', 64), pg_catalog.repeat('b', 64), null, true, null, null, 'express');
     v_state := 'ok';
   exception when others then
     v_state := 'E' || sqlstate;
   end;
   insert into pg_temp.zt_results (id, outcome, detail) values ('T11',
-    case when v_state = 'ok' and (v_ord ->> 'bases_piastres')::integer = 0 then 'pass' else 'fail' end,
-    'installer request express (unavail) -> ' || v_state || ' bases=' || coalesce(v_ord ->> 'bases_piastres', '-'));
+    case when v_state = 'ok' and (v_ord ->> 'shipping_piastres')::integer = 0 then 'pass' else 'fail' end,
+    'installer request express (unavail) -> ' || v_state || ' shipping=' || coalesce(v_ord ->> 'shipping_piastres', '-'));
 
 end
 $zchk$;
