@@ -176,7 +176,11 @@ async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boole
         return { status: 'failed', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path, error: 'Storage delete failed: ' + (err instanceof Error ? err.message : String(err)) }
       }
       
-      await supabase.from('storage_orphans').update({ cleaned_at: 'now()' }).eq('id', orphan.id).abortSignal(AbortSignal.timeout(TIMEOUT_MS))
+      const { error: updateError } = await supabase.from('storage_orphans').update({ cleaned_at: new Date().toISOString() }).eq('id', orphan.id).abortSignal(AbortSignal.timeout(TIMEOUT_MS))
+      if (updateError) {
+        await releaseClaimOnError(supabase, orphan.id)
+        return { status: 'failed', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path, error: 'Failed to mark cleaned: ' + updateError.message }
+      }
     }
     
     return { status: exists ? 'success' : 'missing', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path }
