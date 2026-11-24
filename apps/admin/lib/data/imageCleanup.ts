@@ -212,7 +212,7 @@ async function isFileReferenced(supabase: any, bucket: string, objectPath: strin
 export async function fileExistsInStorage(supabase: any, bucket: string, objectPath: string): Promise<'exists' | 'missing' | 'error'> {
   try {
     const dir = objectPath.substring(0, objectPath.lastIndexOf('/')) || ''
-    const { data, error } = await supabase.storage.from(bucket).list(dir, { limit: 1000 }
+    const { data, error } = await supabase.storage.from(bucket).list(dir, { limit: 1000 })
     if (error) return 'error'
     const fileName = objectPath.substring(objectPath.lastIndexOf('/') + 1)
     return (data || []).some((f: { name: string }) => f.name === fileName) ? 'exists' : 'missing'
