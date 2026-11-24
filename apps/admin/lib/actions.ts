@@ -541,7 +541,7 @@ export const savePolicyPagesAction = actionWithAccess(
 
 export const cleanupImagesAction = actionWithAccess(
   'zell.images.cleanup',
-  { mutates: true },
+  { mutates: true, forbiddenMessage: OWNER_ONLY_MESSAGE },
   async (ctx, input: { dryRun: boolean }) => {
     return cleanupImages({ dryRun: input.dryRun, claimedBy: ctx.identity.userId })
   },
