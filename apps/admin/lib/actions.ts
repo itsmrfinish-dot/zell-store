@@ -35,6 +35,7 @@ import { actionWithAccess } from './access/instance'
 import type { AccessContext } from './access/wrappers'
 import type { MutationResult } from './mutations'
 import type { SaveVersion } from './mutations/concurrency'
+import { cleanupImages } from './data/imageCleanup'
 import {
   createCollection,
   deleteCollection,
@@ -81,6 +82,7 @@ import type { ContentInput } from './validation/content'
 import type { ProductInput } from './validation/product'
 import type { IdentityInput, ShippingInput } from './validation/settings'
 import { REVALIDATION_WARNING, revalidateStorefront } from './revalidateStorefront'
+import { OWNER_ONLY_MESSAGE } from './coupons/form'
 
 async function refreshAfter<T>(result: MutationResult<T>): Promise<MutationResult<T>> {
   if (!result.ok) return result
@@ -534,5 +536,14 @@ export const savePolicyPagesAction = actionWithAccess(
     expectedUpdatedAt: string | null,
   ): Promise<MutationResult<PolicyPagesRecord>> => {
     return refreshAfter(await savePolicyPages(input, expectedUpdatedAt))
+  },
+)
+
+
+export const cleanupImagesAction = actionWithAccess(
+  'zell.images.cleanup',
+  { mutates: true, forbiddenMessage: OWNER_ONLY_MESSAGE },
+  async (ctx, input: { dryRun: boolean }) => {
+    return cleanupImages({ dryRun: input.dryRun, claimedBy: ctx.identity.userId })
   },
 )
