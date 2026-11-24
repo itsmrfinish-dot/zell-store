@@ -2,6 +2,7 @@ import 'server-only'
 
 import { createServiceClient } from '../auth/supabaseServer'
 import { storageDelete } from './client'
+type StorageSetting = { key: string; value: unknown }
 
 /**
  * Image Cleanup Service - Path Reuse Safety
