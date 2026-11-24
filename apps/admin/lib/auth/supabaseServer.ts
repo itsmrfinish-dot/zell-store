@@ -1,7 +1,7 @@
 import 'server-only'
 
 import { createServerClient } from '@supabase/ssr'
-import type { SupabaseClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { adminAuthCookieOptions, serverCookieMethods } from './cookieOptions'
 import { authCredentials } from './env'
@@ -37,7 +37,7 @@ export async function createServiceClient(): Promise<SupabaseClient> {
   const serviceRoleKey = (process.env['SUPABASE_SERVICE_ROLE_KEY'] ?? '').trim()
   if (serviceRoleKey === '') throw new Error('SUPABASE_SERVICE_ROLE_KEY not configured')
 
-  return createServerClient(url, serviceRoleKey, {
-    auth: { persistSession: false }
+  return createClient(url, serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false }
   })
 }
