@@ -24,7 +24,7 @@ TMP="$(mktemp -d)"
 PASS=0
 FAIL=0
 SEEN=" "
-EXPECTED="S01 B01 F01 K01 K02"
+EXPECTED="S01 B01 F01 0031 K01 K02"
 
 record() {
   SEEN="$SEEN$(printf '%s' "$1" | cut -d' ' -f1) "
@@ -92,8 +92,8 @@ while IFS='|' read -r kind rel _reason; do
   fi
   pg_f "$DB" "$runf" > "$TMP/build_$n.log" 2>&1 || stop "B01 build step $n $rel" "$(tailof "$TMP/build_$n.log")"
 done < "$LIST"
-ok=no; [ "$n" -gt 10 ] && [ "$last" = "migrations/0030_coupon_soft_delete.sql" ] && ok=yes
-record "B01 database built from build_from_scratch.list in full ($n steps, last $last = 0030)" "$ok" "steps=$n last=$last"
+ok=no; [ "$n" -gt 11 ] && [ "$last" = "migrations/0031_image_cleanup.sql" ] && ok=yes
+record "B01 database built from build_from_scratch.list in full ($n steps, last $last = 0031)" "$ok" "steps=$n last=$last"
 [ "$ok" = yes ] || finish
 
 # ---- S01: حالة ما بعد البناء ----
