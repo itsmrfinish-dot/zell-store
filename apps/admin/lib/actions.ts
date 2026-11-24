@@ -543,6 +543,6 @@ export const cleanupImagesAction = actionWithAccess(
   'zell.images.cleanup',
   { mutates: true },
   async (ctx, input: { dryRun: boolean }) => {
-    return cleanupImages({ dryRun: input.dryRun, claimedBy: ctx.user.userId })
+    return cleanupImages({ dryRun: input.dryRun, claimedBy: ctx.identity.userId })
   },
 )
