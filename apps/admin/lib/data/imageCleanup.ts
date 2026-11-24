@@ -208,10 +208,11 @@ async function isFileReferenced(supabase: any, bucket: string, objectPath: strin
   }
 }
 
-async function fileExistsInStorage(supabase: any, bucket: string, objectPath: string): Promise<'exists' | 'missing' | 'error'> {
+  // Exported for the storage-list cases (regression for the .abortSignal bug).
+export async function fileExistsInStorage(supabase: any, bucket: string, objectPath: string): Promise<'exists' | 'missing' | 'error'> {
   try {
     const dir = objectPath.substring(0, objectPath.lastIndexOf('/')) || ''
-    const { data, error } = await supabase.storage.from(bucket).list(dir, { limit: 1000 }).abortSignal(AbortSignal.timeout(TIMEOUT_MS))
+    const { data, error } = await supabase.storage.from(bucket).list(dir, { limit: 1000 })
     if (error) return 'error'
     const fileName = objectPath.substring(objectPath.lastIndexOf('/') + 1)
     return (data || []).some((f: { name: string }) => f.name === fileName) ? 'exists' : 'missing'
@@ -246,7 +247,8 @@ async function releaseClaimOnError(supabase: any, orphanId: string, runId: strin
   }
 }
 
-async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boolean, runId: string, buildPublicUrl: (bucket: string, objectPath: string) => string): Promise<CleanupResult> {
+ // Exported for the storage-list cases (regression for the .abortSignal bug).
+export async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boolean, runId: string, buildPublicUrl: (bucket: string, objectPath: string) => string, deleteFile: (bucket: string, objectPath: string) => Promise<void> = storageDelete): Promise<CleanupResult> {
   try {
     const refResult = await isFileReferenced(supabase, orphan.bucket, orphan.object_path)
     if (refResult.error) {
@@ -290,7 +292,7 @@ async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boole
       if (!dryRun) {
         await releaseClaimOnError(supabase, orphan.id, runId)
       }
-      return { status: 'failed', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path, error: 'Failed to check file existence' }
+      return { status: 'failed', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path, error: 'Failed to check file existence', publicUrl: buildPublicUrl(orphan.bucket, orphan.object_path) }
     }
     
     // fileStatus === 'exists' - proceed with deletion
@@ -312,7 +314,7 @@ async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boole
       }
       
       try {
-        await storageDelete(orphan.bucket, orphan.object_path)
+        await deleteFile(orphan.bucket, orphan.object_path)
       } catch (err) {
         await releaseClaimOnError(supabase, orphan.id, runId)
         return { status: 'failed', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path, error: 'Storage delete failed: ' + (err instanceof Error ? err.message : String(err)) }
