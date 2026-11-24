@@ -1,29 +1,35 @@
 // STORAGE-LIST — regression لحذف .abortSignal من storage list() (الـ dry-run كان بيفشل كل الملفات).
 // storage-js الـ list() بيرجع Promise عادي مفيهوش .abortSignal؛ استدعاؤها كان بيرمي TypeError على كل ملف.
 // الاختبار بيستخدم عميل مزيّف: الـ list بتاعته دالة عادية من غير .abortSignal أصلًا، فلو الكود ناداها كان هيقع.
+// الـ fake واعي بالجدول: settings بيرجع صف صالح (value: null) عشان فحص المراجع يعدّي، وباقي الجداول بيرجع count: 0.
 import { fileExistsInStorage, processOrphan, type OrphanedImage } from './imageCleanup'
 
 type StorageListCaseReport = { passed: number; failures: { name: string; expected: string; actual: string }[] }
 
 type ListBehavior = { kind: 'data'; names: string[] } | { kind: 'error' } | { kind: 'throw' }
 
-function fakeBuilder(result: { count: number; data: { id: number }[] }, updates: Record<string, unknown>[]) {
+function fakeBuilder(table: string, updates: Record<string, unknown>[]) {
   const b: Record<string, unknown> = {}
   b['select'] = () => b
   b['eq'] = () => b
   b['ilike'] = () => b
+  b['or'] = () => b
+  b['gt'] = () => b
   b['update'] = (values: Record<string, unknown>) => {
     updates.push(values)
     return b
   }
   b['abortSignal'] = () => b
-  b['then'] = (resolve: (value: unknown) => void) => resolve(result)
+  b['then'] = (resolve: (value: unknown) => void) => {
+    if (table === 'settings') resolve({ data: [{ key: 'test', value: null }], error: null })
+    else resolve({ count: 0, data: [{ id: 1 }] })
+  }
   return b
 }
 
 function fakeSupabase(listBehavior: ListBehavior, updates: Record<string, unknown>[]) {
   return {
-    from: () => fakeBuilder({ count: 0, data: [{ id: 1 }] }, updates),
+    from: (table: string) => fakeBuilder(table, updates),
     storage: {
       from: () => ({
         list: async () => {
@@ -63,10 +69,25 @@ export async function runStorageListCases(): Promise<StorageListCaseReport> {
 
   const updatesD: Record<string, unknown>[] = []
   const supabaseD = fakeSupabase({ kind: 'throw' }, updatesD)
-  const failed = await processOrphan(supabaseD, orphan(), false, 'run-1', buildPublicUrl)
+  const deleteCalls: { bucket: string; objectPath: string }[] = []
+  const spyDelete = async (bucket: string, objectPath: string) => {
+    deleteCalls.push({ bucket, objectPath })
+  }
+  const failed = await processOrphan(supabaseD, orphan(), false, 'run-1', buildPublicUrl, spyDelete)
   check('existence failure status is failed', 'failed', failed.status)
   check('existence failure carries publicUrl', 'https://example.test/product-images/products/1/a.png', failed.publicUrl ?? 'undefined')
   check('existence failure never marks cleaned_at', 'false', String(updatesD.some((u) => 'cleaned_at' in u)))
+  check('existence failure never calls storageDelete', '0', String(deleteCalls.length))
+
+  const updatesE: Record<string, unknown>[] = []
+  const supabaseE = fakeSupabase({ kind: 'data', names: ['a.png'] }, updatesE)
+  const deleteCallsE: { bucket: string; objectPath: string }[] = []
+  const spyDeleteE = async (bucket: string, objectPath: string) => {
+    deleteCallsE.push({ bucket, objectPath })
+  }
+  const succeeded = await processOrphan(supabaseE, orphan(), false, 'run-1', buildPublicUrl, spyDeleteE)
+  check('existing file deletes once via injected delete', '1', String(deleteCallsE.length))
+  check('existing file deletion succeeds', 'success', succeeded.status)
 
   return { passed, failures }
 }
