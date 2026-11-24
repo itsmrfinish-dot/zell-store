@@ -30,6 +30,12 @@ export async function runServiceClientCases(): Promise<ServiceClientCaseReport> 
     if (value === undefined) delete env[name]
     else env[name] = value
   }
+  // supabase-js بيعمل عميل realtime وقت إنشاء العميل، وrealtime-js بيدوّر على WebSocket ساعتها (Node 20 في CI مفيهوش
+  // WebSocket أصلي؛ Edge وNode الأحدث فيهم). مفيش اتصال بيتفتح في الحالات دي، فـ class فاضية كفاية، وبترجع زي ما كانت بعدها.
+  const g = globalThis as Record<string, unknown>
+  const hadWebSocket = typeof g['WebSocket'] !== 'undefined'
+  const savedWebSocket = g['WebSocket']
+  if (!hadWebSocket) g['WebSocket'] = class CasesWebSocket {}
   try {
     env['SUPABASE_URL'] = URL
     env['SUPABASE_SERVICE_ROLE_KEY'] = KEY
@@ -62,6 +68,8 @@ export async function runServiceClientCases(): Promise<ServiceClientCaseReport> 
   } finally {
     restore('SUPABASE_URL', savedUrl)
     restore('SUPABASE_SERVICE_ROLE_KEY', savedKey)
+    if (hadWebSocket) g['WebSocket'] = savedWebSocket
+    else delete g['WebSocket']
   }
   return { passed, failures }
 }
