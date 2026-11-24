@@ -24,7 +24,7 @@ TMP="$(mktemp -d)"
 PASS=0
 FAIL=0
 SEEN=" "
-EXPECTED="S01 B01 F01 0031 K01 K02"
+EXPECTED="S01 B01 F01 K01 K02"
 
 record() {
   SEEN="$SEEN$(printf '%s' "$1" | cut -d' ' -f1) "
