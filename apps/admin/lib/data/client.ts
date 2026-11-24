@@ -413,7 +413,11 @@ export async function storageUpload(
   }
 }
 
-export async function storageDelete(objectPath: string): Promise<void> {
+export async function storageDelete(bucket: string, objectPath: string): Promise<void> {
+  if (bucket !== 'product-images') {
+    throw new Error('Only product-images bucket is supported for deletion, got: ' + bucket)
+  }
+  
   const { url, key } = credentials()
 
   let response: Response
@@ -425,11 +429,12 @@ export async function storageDelete(objectPath: string): Promise<void> {
       signal: AbortSignal.timeout(STORAGE_TIMEOUT_MS),
     })
   } catch (error) {
-    throw new Error('فشل حذف الملف: ' + describeFailure(error))
+    throw new Error('Storage delete failed: ' + describeFailure(error))
   }
 
   if (!response.ok) {
-    throw new Error('حذف الملف رجّع ' + String(response.status) + ' ' + response.statusText)
+    const body = await response.text().catch(() => '')
+    throw new Error('Storage delete HTTP ' + response.status + ': ' + (body || response.statusText))
   }
 }
 

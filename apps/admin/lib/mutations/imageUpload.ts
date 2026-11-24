@@ -57,7 +57,7 @@ type CountRow = { id: string }
 /** اعتماديات سلّم التراجع: DELETE مشروط · مسح الملف · تسجيل insert_failed (نفس الصلاحية الموجودة لمسار الرفع على السيرفر). */
 const rollbackDeps: RollbackDeps = {
   deleteRows: async (query) => (await restDelete<{ id: string }>('product_images', query)).length,
-  deleteObject: (objectPath) => storageDelete(objectPath),
+  deleteObject: (objectPath) => storageDelete('product-images', objectPath),
   recordOrphan: async (objectPath) => {
     await restInsert('storage_orphans', {
       bucket: imageBucket(),

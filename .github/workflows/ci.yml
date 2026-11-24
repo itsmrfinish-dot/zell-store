@@ -1190,3 +1190,6 @@ jobs:
 
       - name: SQL suite (0030 on a database built from the whole build_from_scratch.list)
         run: bash backend/db/ci/0030_sql_ci.sh
+
+      - name: SQL suite (0031 IMAGE-CLEANUP eligibility and claiming tests)
+        run: bash backend/db/ci/0031_sql_ci.sh

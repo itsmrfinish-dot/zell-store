@@ -115,7 +115,7 @@ async function sha256Hex(bytes: Uint8Array<ArrayBuffer>): Promise<string> {
 /** مسح الملف، ولو فشل سجّله orphan. */
 async function discardObject(objectPath: string): Promise<'clean' | 'orphaned' | 'stuck'> {
   try {
-    await storageDelete(objectPath)
+    await storageDelete('product-images', objectPath)
     return 'clean'
   } catch {
     try {

@@ -48,7 +48,7 @@ function fail(
 /** مسح الملف، ولو فشل سجّله orphan. */
 async function discardObject(objectPath: string): Promise<void> {
   try {
-    await storageDelete(objectPath)
+    await storageDelete('product-images', objectPath)
   } catch {
     try {
       await restInsert('storage_orphans', {

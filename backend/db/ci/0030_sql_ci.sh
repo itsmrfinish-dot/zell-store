@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # COUPON-DELETE (0030) — اختبار SQL في CI: Postgres 17 مؤقت، والداتابيز مبنية من الصفر
-# بالقايمة الصريحة كاملة (backend/db/ci/build_from_scratch.list — و0030 آخر سطر فيها)،
+# بالقايمة الصريحة كاملة (backend/db/ci/build_from_scratch.list — و0032 آخر سطر فيها)،
 # وبعدين فحوص حالة + سيناريوهات (0030_flows.sql) + تزامن بجلستين حقيقيتين مع إثبات التداخل.
 # مفيش أي اتصال بـ Supabase. ممنوع يتشغّل على أي داتابيز غير الحاوية المؤقتة.
 set -uo pipefail
@@ -24,7 +24,7 @@ TMP="$(mktemp -d)"
 PASS=0
 FAIL=0
 SEEN=" "
-EXPECTED="S01 B01 F01 K01 K02"
+EXPECTED="S01 B01 C01 F01 K01 K02"
 
 record() {
   SEEN="$SEEN$(printf '%s' "$1" | cut -d' ' -f1) "
@@ -92,8 +92,8 @@ while IFS='|' read -r kind rel _reason; do
   fi
   pg_f "$DB" "$runf" > "$TMP/build_$n.log" 2>&1 || stop "B01 build step $n $rel" "$(tailof "$TMP/build_$n.log")"
 done < "$LIST"
-ok=no; [ "$n" -gt 10 ] && [ "$last" = "migrations/0030_coupon_soft_delete.sql" ] && ok=yes
-record "B01 database built from build_from_scratch.list in full ($n steps, last $last = 0030)" "$ok" "steps=$n last=$last"
+ok=no; [ "$n" -gt 11 ] && [ "$last" = "migrations/0032_image_cleanup_capability.sql" ] && ok=yes
+record "B01 database built from build_from_scratch.list in full ($n steps, last $last = 0032)" "$ok" "steps=$n last=$last"
 [ "$ok" = yes ] || finish
 
 # ---- S01: حالة ما بعد البناء ----
@@ -106,6 +106,16 @@ st=$(q "select (exists (select 1 from information_schema.columns where table_sch
        || '|' || pg_catalog.has_function_privilege('anon', 'public.zell_delete_coupon(bigint)', 'EXECUTE')::text")
 ok=no; [ "$st" = "true|true|true|true|true|true|false" ] && ok=yes
 record "S01 state after build: revoked_at column, delete fn, revoked checks in preview + create_order bodies, EXECUTE service_role only" "$ok" "$st"
+
+# ---- C01: صلاحية تنظيف الصور (0032) ----
+c01=$(q "select pg_catalog.count(*) from public.erp_capabilities where key = 'zell.images.cleanup' and category = 'owner' and description = 'تنظيف الصور اليتيمة من التخزين'")
+c01rc=0
+pg_f "$DB" "$MIG/0032_image_cleanup_capability.sql" > "$TMP/c01_reapply.log" 2>&1 || c01rc=$?
+c01b=$(q "select pg_catalog.count(*) from public.erp_capabilities where key = 'zell.images.cleanup'")
+pg_f "$DB" "$MIG/0032_image_cleanup_capability_rollback.sql" > "$TMP/c01_rollback.log" 2>&1
+c01c=$(q "select pg_catalog.count(*) from public.erp_capabilities where key = 'zell.images.cleanup'")
+ok=no; [ "$c01" = "1" ] && [ "$c01b" = "1" ] && [ "$c01c" = "0" ] && [ "$c01rc" = "0" ] && ok=yes
+record "C01 capability 0032: row present (owner + description), re-apply idempotent (still 1), rollback removes it" "$ok" "present=$c01 after_reapply=$c01b after_rollback=$c01c"
 
 # ---- F01: السيناريوهات ----
 rc=0
