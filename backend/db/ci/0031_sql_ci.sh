@@ -37,60 +37,60 @@ psql -X -q -v ON_ERROR_STOP=1 -U "$SUPER" -d "$DB" < "$MIG/0031_image_cleanup.sq
 
 echo "Test: columns exist and are nullable"
 result=$(psql -X -q -tA -v ON_ERROR_STOP=1 -U "$SUPER" -d "$DB" -c "SELECT COUNT(*) FROM information_schema.columns WHERE table_name = 'storage_orphans' AND column_name IN ('claimed_at', 'claimed_by') AND is_nullable = 'YES'")
-check [ "$result" = "2" ] "claimed_at and claimed_by are nullable"
+check "$([ "$result" = "2" ] && echo yes || echo no)" "claimed_at and claimed_by are nullable"
 
 echo "Test: new orphan not eligible (before retention window)"
 psql -X -q -v ON_ERROR_STOP=1 -U "$SUPER" -d "$DB" -c "
-INSERT INTO storage_orphans (id, bucket, object_path, created_at) 
-VALUES ('new1', 'test', 'path1', (now() - interval '5 days'))
+INSERT INTO storage_orphans (id, bucket, object_path, created_at, reason) 
+VALUES (900001, 'test', 'path1', (now() - interval '5 days'), 'replaced')
 "
 result=$(psql -X -q -tA -v ON_ERROR_STOP=1 -U "$SUPER" -d "$DB" -c "
 SELECT COUNT(*) FROM storage_orphans 
-WHERE id = 'new1' AND cleaned_at IS NULL AND created_at > (now() - interval '30 days')
+WHERE id = 900001 AND cleaned_at IS NULL AND created_at > (now() - interval '30 days')
 ")
-check [ "$result" = "1" ] "new orphan (5d old) is not yet eligible for cleanup"
+check "$([ "$result" = "1" ] && echo yes || echo no)" "new orphan (5d old) is not yet eligible for cleanup"
 
 echo "Test: backlog orphan eligible after backlog date + retention"
 psql -X -q -v ON_ERROR_STOP=1 -U "$SUPER" -d "$DB" -c "
-INSERT INTO storage_orphans (id, bucket, object_path, created_at) 
-VALUES ('old1', 'test', 'path2', '2026-11-15'::timestamptz)
+INSERT INTO storage_orphans (id, bucket, object_path, created_at, reason) 
+VALUES (900002, 'test', 'path2', '2026-11-15'::timestamptz, 'replaced')
 "
 result=$(psql -X -q -tA -v ON_ERROR_STOP=1 -U "$SUPER" -d "$DB" -c "
 SELECT COUNT(*) FROM storage_orphans 
-WHERE id = 'old1' AND created_at < '2026-11-23'::timestamptz AND created_at <= (now() - interval '30 days')
+WHERE id = 900002 AND created_at < '2026-11-23'::timestamptz AND created_at <= (now() - interval '30 days')
 ")
-check [ "$result" = "1" ] "backlog orphan created 2026-11-15 (before verification date) becomes eligible after retention period"
+check "$([ "$result" = "1" ] && echo yes || echo no)" "backlog orphan created 2026-11-15 (before verification date) becomes eligible after retention period"
 
 echo "Test: atomic claiming prevents double claim"
 psql -X -q -v ON_ERROR_STOP=1 -U "$SUPER" -d "$DB" -c "
 BEGIN
-  UPDATE storage_orphans SET claimed_at = now(), claimed_by = 'runner1' WHERE id = 'old1' AND claimed_at IS NULL;
-  UPDATE storage_orphans SET claimed_at = now(), claimed_by = 'runner2' WHERE id = 'old1' AND claimed_at IS NULL;
+  UPDATE storage_orphans SET claimed_at = now(), claimed_by = 'runner1' WHERE id = 900002 AND claimed_at IS NULL;
+  UPDATE storage_orphans SET claimed_at = now(), claimed_by = 'runner2' WHERE id = 900002 AND claimed_at IS NULL;
 COMMIT
 "
 result=$(psql -X -q -tA -v ON_ERROR_STOP=1 -U "$SUPER" -d "$DB" -c "
-SELECT claimed_by FROM storage_orphans WHERE id = 'old1'
+SELECT claimed_by FROM storage_orphans WHERE id = 900002
 ")
-check [ "$result" = "runner1" ] "first claimer wins (double-claim prevented)"
+check "$([ "$result" = "runner1" ] && echo yes || echo no)" "first claimer wins (double-claim prevented)"
 
 echo "Test: abandoned claim recoverable (>15min)"
 psql -X -q -v ON_ERROR_STOP=1 -U "$SUPER" -d "$DB" -c "
-UPDATE storage_orphans SET claimed_at = (now() - interval '20 minutes'), claimed_by = 'stale' WHERE id = 'new1'
+UPDATE storage_orphans SET claimed_at = (now() - interval '20 minutes'), claimed_by = 'stale' WHERE id = 900001
 "
 result=$(psql -X -q -tA -v ON_ERROR_STOP=1 -U "$SUPER" -d "$DB" -c "
 SELECT COUNT(*) FROM storage_orphans 
-WHERE id = 'new1' AND (claimed_at IS NULL OR claimed_at < (now() - interval '15 minutes'))
+WHERE id = 900001 AND (claimed_at IS NULL OR claimed_at < (now() - interval '15 minutes'))
 ")
-check [ "$result" = "1" ] "stale claim is claimable again after 15 minutes"
+check "$([ "$result" = "1" ] && echo yes || echo no)" "stale claim is claimable again after 15 minutes"
 
 echo "Test: authenticated user cannot SELECT storage_orphans"
 result=$(psql -X -q -tA -U "authenticated" -d "$DB" -c "SELECT 1 FROM storage_orphans LIMIT 1" 2>&1 || echo "DENIED")
-check [ "$result" != "1" ] "authenticated role denied access to storage_orphans"
+check "$([ "$result" != "1" ] && echo yes || echo no)" "authenticated role denied access to storage_orphans"
 
 echo "Test: rollback"
 psql -X -q -v ON_ERROR_STOP=1 -U "$SUPER" -d "$DB" < "$MIG/0031_image_cleanup_rollback.sql"
 result=$(psql -X -q -tA -U "$SUPER" -d "$DB" -c "SELECT COUNT(*) FROM information_schema.columns WHERE table_name = 'storage_orphans' AND column_name IN ('claimed_at', 'claimed_by')" 2>&1 || echo "0")
-check [ "$result" = "0" ] "rollback removes columns"
+check "$([ "$result" = "0" ] && echo yes || echo no)" "rollback removes columns"
 
 psql -X -q -U "$SUPER" -d postgres -c "DROP DATABASE IF EXISTS \"$DB\""
 
