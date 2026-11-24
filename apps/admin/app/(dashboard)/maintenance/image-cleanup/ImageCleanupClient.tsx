@@ -7,6 +7,12 @@ export function ImageCleanupClient() {
   const [isLoading, setIsLoading] = useState(false)
   const [results, setResults] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
+  const showFailure = (result: any) => {
+    if (result && result.error) {
+      const e = result.error
+      setError('Cleanup failed at stage ' + e.stage + (e.code ? ' (' + e.code + ')' : '') + ': ' + e.message)
+    }
+  }
 
   const handleDryRun = async () => {
     setIsLoading(true)
@@ -14,6 +20,7 @@ export function ImageCleanupClient() {
     try {
       const result = await cleanupImagesAction({ dryRun: true })
       setResults(result)
+      showFailure(result)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
@@ -28,6 +35,7 @@ export function ImageCleanupClient() {
     try {
       const result = await cleanupImagesAction({ dryRun: false })
       setResults(result)
+      showFailure(result)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
@@ -97,6 +105,7 @@ export function ImageCleanupClient() {
                   <div className="flex-1 min-w-0">
                     <p className="font-mono text-sm text-muted-foreground break-all">{item.object_path}</p>
                     <p className="text-xs text-muted-foreground mt-1">Bucket: {item.bucket}</p>
+                    {item.error && <p className="text-xs text-red-600 mt-1">{item.error}</p>}
                   </div>
                 </div>
               ))}
