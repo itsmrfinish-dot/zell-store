@@ -165,7 +165,7 @@ async function isFileReferenced(supabase: any, bucket: string, objectPath: strin
       throw new Error('settings check failed: ' + settingsError.message)
     }
     
-    const settingsHasReference = settings && settings.some(s => JSON.stringify(s.value).includes(objectPath) || JSON.stringify(s.value).includes(bucket))
+    const settingsHasReference = settings && settings.some((s: StorageSetting) => JSON.stringify(s.value).includes(objectPath) || JSON.stringify(s.value).includes(bucket))
     if (settingsHasReference) {
       return { referenced: true }
     }
@@ -371,9 +371,9 @@ export async function cleanupImages(params: { dryRun: boolean; claimedBy: string
     const stats: CleanupStats = {
       total_eligible: orphans.length,
       claimed: params.dryRun ? 0 : orphans.length,
-      cleaned: results.filter(r => r.status === 'success').length,
-      failed: results.filter(r => r.status === 'failed').length,
-      missing: results.filter(r => r.status === 'missing').length,
+      cleaned: results.filter((r: CleanupResult) => r.status === 'success').length,
+      failed: results.filter((r: CleanupResult) => r.status === 'failed').length,
+      missing: results.filter((r: CleanupResult) => r.status === 'missing').length,
     }
     
     return { stats, results }
