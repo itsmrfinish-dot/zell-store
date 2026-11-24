@@ -67,12 +67,7 @@ WHERE id = 900002 AND cleaned_at IS NULL AND created_at <= ('2026-12-24'::timest
 check "$([ "$result" = "1" ] && echo yes || echo no)" "backlog row becomes eligible after verifiedAt + retention"
 
 echo "Test: atomic claiming prevents double claim"
-psql -X -q -v ON_ERROR_STOP=1 -U "$SUPER" -d "$DB" -c "
-BEGIN
-  UPDATE storage_orphans SET claimed_at = now(), claimed_by = 'runner1' WHERE id = 900002 AND claimed_at IS NULL;
-  UPDATE storage_orphans SET claimed_at = now(), claimed_by = 'runner2' WHERE id = 900002 AND claimed_at IS NULL;
-COMMIT
-"
+psql -X -q -v ON_ERROR_STOP=1 -U "$SUPER" -d "$DB" -c "BEGIN; UPDATE storage_orphans SET claimed_at = now(), claimed_by = 'runner1' WHERE id = 900002 AND claimed_at IS NULL; UPDATE storage_orphans SET claimed_at = now(), claimed_by = 'runner2' WHERE id = 900002 AND claimed_at IS NULL; COMMIT;"
 result=$(psql -X -q -tA -v ON_ERROR_STOP=1 -U "$SUPER" -d "$DB" -c "
 SELECT claimed_by FROM storage_orphans WHERE id = 900002
 ")
