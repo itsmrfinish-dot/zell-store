@@ -130,7 +130,7 @@ async function claimOrphans(supabase: any, dryRun: boolean, claimedBy: string): 
         .abortSignal(AbortSignal.timeout(TIMEOUT_MS))
       
       if (error) throw new Error('Failed to fetch orphans for dry run: ' + error.message)
-      return (data || []).filter(r => r.claimed_at === null || new Date(r.claimed_at) < new Date(timeoutClaimed))
+      return (data || []).filter((r: any) => r.claimed_at === null || new Date(r.claimed_at) < new Date(timeoutClaimed))
     }
     
     const timeoutClaimed = new Date(Date.now() - CLAIM_TIMEOUT_MINUTES * 60000).toISOString()
@@ -213,7 +213,7 @@ async function fileExistsInStorage(supabase: any, bucket: string, objectPath: st
     const { data, error } = await supabase.storage.from(bucket).list(dir, { limit: 1000 }).abortSignal(AbortSignal.timeout(TIMEOUT_MS))
     if (error) return 'error'
     const fileName = objectPath.substring(objectPath.lastIndexOf('/') + 1)
-    return (data || []).some(f => f.name === fileName) ? 'exists' : 'missing'
+    return (data || []).some((f: { name: string }) => f.name === fileName) ? 'exists' : 'missing'
   } catch {
     return 'error'
   }
