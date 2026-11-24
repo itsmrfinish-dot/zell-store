@@ -23,7 +23,7 @@ check() {
   fi
 }
 
-psql -X -q -U "$SUPER" -d postgres -c "DROP DATABASE IF EXISTS \"$DB\" 2>/dev/null || true"
+psql -X -q -U "$SUPER" -d postgres -c "DROP DATABASE IF EXISTS \"$DB\"" 2>/dev/null || true
 psql -X -q -U "$SUPER" -d postgres -c "CREATE DATABASE \"$DB\""
 
 echo "Loading schema and migrations through 0030..."
