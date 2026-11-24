@@ -62,7 +62,7 @@ const SUITES = [
   // أكواد الخصم: الحالات كانت بتتعمل typecheck بس ومابتتشغّلش (مراجعة أمنية 2026-11).
   { name: 'coupons', dir: 'lib/coupons', entry: 'form.cases.ts', run: 'runAdminCouponCases', also: ['lib', 'lib/orders'] },
   // SERVICE-CLIENT — إنشاء عميل الخدمة من غير كوكيز (regression للـ dry-run).
-  { name: 'service-client', dir: 'lib/auth', entry: 'serviceClient.cases.ts', run: 'runServiceClientCases', link: ['@supabase/ssr', '@supabase/supabase-js', 'next'], stub: ['server-only'] ,}
+  { name: 'service-client', dir: 'lib/auth', entry: 'serviceClient.cases.ts', run: 'runServiceClientCases', link: ['@supabase/ssr', '@supabase/supabase-js', 'next'], stub: ['server-only']},
   // COOKIES-HEADERS §٣ — كوكيز الجلسة المكتوبة فعليًا بالمكتبة الحقيقية وfetch مزيّف. آخر suite لأنها بتغيّر متغيرات البيئة وfetch (وبترجّعهم).
   { name: 'auth-cookies', dir: 'lib/auth', entry: 'cookies.cases.ts', run: 'runAuthCookieCases', link: ['@supabase/ssr', 'next'] },
 ]
