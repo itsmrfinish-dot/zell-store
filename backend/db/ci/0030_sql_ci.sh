@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # COUPON-DELETE (0030) — اختبار SQL في CI: Postgres 17 مؤقت، والداتابيز مبنية من الصفر
-# بالقايمة الصريحة كاملة (backend/db/ci/build_from_scratch.list — و0030 آخر سطر فيها)،
+# بالقايمة الصريحة كاملة (backend/db/ci/build_from_scratch.list — و0031 آخر سطر فيها)،
 # وبعدين فحوص حالة + سيناريوهات (0030_flows.sql) + تزامن بجلستين حقيقيتين مع إثبات التداخل.
 # مفيش أي اتصال بـ Supabase. ممنوع يتشغّل على أي داتابيز غير الحاوية المؤقتة.
 set -uo pipefail
