@@ -343,7 +343,7 @@ async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boole
   }
 }
 
-export async function cleanupImages(params: { dryRun: boolean; claimedBy: string }): Promise<{ stats: CleanupStats; results: CleanupResult[] }> {
+export async function cleanupImages(params: { dryRun: boolean; claimedBy: string }): Promise<{ stats: CleanupStats; results: CleanupResult[]; error?: { stage: string; code?: string; message: string } }> {
   const runId = params.claimedBy + '_' + Date.now()
   const supabaseUrl = (process.env['SUPABASE_URL'] ?? '').trim()
   if (!supabaseUrl) throw new Error('SUPABASE_URL not configured')
@@ -379,6 +379,21 @@ export async function cleanupImages(params: { dryRun: boolean; claimedBy: string
     
     return { stats, results }
   } catch (err) {
-    return { stats: { total_eligible: 0, claimed: 0, cleaned: 0, failed: 1, missing: 0 }, results: [] }
-  }
+    const message = err instanceof Error ? err.message : String(err)
+    const rawCode = (err as { code?: unknown } | null)?.code
+    const code = typeof rawCode === 'string' ? rawCode : message.match(/PGRST\d+|42703|42501/)?.[0]
+    const stage = /Settings query failed|No cleanup settings found|Missing required setting|imageCleanupRetentionDays|imageCleanupBacklogVerifiedAt/.test(message)
+      ? 'config'
+      : /Failed to fetch orphans|Failed to claim orphans/.test(message)
+      ? 'claim'
+      : /SUPABASE_URL|SUPABASE_SERVICE_ROLE_KEY/.test(message)
+      ? 'service-client'
+              : 'unknown'
+    console.error('[image-cleanup]', runId, 'stage=' + stage, 'code=' + (code ?? 'none'), message)
+    return {
+      stats: { total_eligible: 0, claimed: 0, cleaned: 0, failed: 1, missing: 0 },
+      results: [],
+      error: { stage, code, message },
+    }
+  }      
 }
