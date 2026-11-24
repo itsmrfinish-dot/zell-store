@@ -349,7 +349,10 @@ export async function cleanupImages(params: { dryRun: boolean; claimedBy: string
     const supabaseUrl = (process.env['SUPABASE_URL'] ?? '').trim()
     if (!supabaseUrl) throw new Error('SUPABASE_URL not configured')
     const buildPublicUrl = (bucket: string, objectPath: string) => supabaseUrl + '/storage/v1/object/public/' + bucket + '/' + objectPath
-    const supabase = await createServiceClient()
+    const supabase = await createServiceClient().catch((err: unknown) => {
+      const message = err instanceof Error ? err.message : String(err)
+      throw new Error('Service client creation failed: ' + message)
+    })
     const orphans = await claimOrphans(supabase, params.dryRun, runId)
     
     const results: CleanupResult[] = []
@@ -386,7 +389,7 @@ export async function cleanupImages(params: { dryRun: boolean; claimedBy: string
       ? 'config'
       : /Failed to fetch orphans|Failed to claim orphans/.test(message)
       ? 'claim'
-      : /SUPABASE_URL|SUPABASE_SERVICE_ROLE_KEY/.test(message)
+      : /SUPABASE_URL|SUPABASE_SERVICE_ROLE_KEY|Service client creation failed/.test(message)
       ? 'service-client'
               : 'unknown'
     console.error('[image-cleanup]', runId, 'stage=' + stage, 'code=' + (code ?? 'none'), message)
