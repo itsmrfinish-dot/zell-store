@@ -50,16 +50,21 @@ WHERE id = 900001 AND cleaned_at IS NULL AND created_at > (now() - interval '30 
 ")
 check "$([ "$result" = "1" ] && echo yes || echo no)" "new orphan (5d old) is not yet eligible for cleanup"
 
-echo "Test: backlog orphan eligible after backlog date + retention"
+echo "Test: backlog orphan eligibility before/after verifiedAt + retention"
 psql -X -q -v ON_ERROR_STOP=1 -U "$SUPER" -d "$DB" -c "
 INSERT INTO storage_orphans (id, bucket, object_path, created_at, reason) 
-VALUES (900002, 'test', 'path2', (now() - interval '40 days'), 'replaced')
+VALUES (900002, 'test', 'path2', '2026-10-15'::timestamptz, 'replaced')
 "
 result=$(psql -X -q -tA -v ON_ERROR_STOP=1 -U "$SUPER" -d "$DB" -c "
 SELECT COUNT(*) FROM storage_orphans 
-WHERE id = 900002 AND created_at < '2026-11-23'::timestamptz AND created_at <= (now() - interval '30 days')
+WHERE id = 900002 AND cleaned_at IS NULL AND created_at <= ('2026-11-24'::timestamptz - interval '30 days') AND created_at >= '2026-11-23'::timestamptz
 ")
-check "$([ "$result" = "1" ] && echo yes || echo no)" "backlog orphan (40d old, before verification date) becomes eligible after retention period"
+check "$([ "$result" = "0" ] && echo yes || echo no)" "backlog row created before verification date is NOT eligible before verifiedAt + retention"
+result=$(psql -X -q -tA -v ON_ERROR_STOP=1 -U "$SUPER" -d "$DB" -c "
+SELECT COUNT(*) FROM storage_orphans 
+WHERE id = 900002 AND cleaned_at IS NULL AND created_at <= ('2026-12-24'::timestamptz - interval '30 days')
+")
+check "$([ "$result" = "1" ] && echo yes || echo no)" "backlog row becomes eligible after verifiedAt + retention"
 
 echo "Test: atomic claiming prevents double claim"
 psql -X -q -v ON_ERROR_STOP=1 -U "$SUPER" -d "$DB" -c "
