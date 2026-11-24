@@ -248,7 +248,7 @@ async function releaseClaimOnError(supabase: any, orphanId: string, runId: strin
 }
 
  // Exported for the storage-list cases (regression for the .abortSignal bug).
-export async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boolean, runId: string, buildPublicUrl: (bucket: string, objectPath: string) => string): Promise<CleanupResult> {
+export async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun: boolean, runId: string, buildPublicUrl: (bucket: string, objectPath: string) => string, deleteFile: (bucket: string, objectPath: string) => Promise<void> = storageDelete): Promise<CleanupResult> {
   try {
     const refResult = await isFileReferenced(supabase, orphan.bucket, orphan.object_path)
     if (refResult.error) {
@@ -314,7 +314,7 @@ export async function processOrphan(supabase: any, orphan: OrphanedImage, dryRun
       }
       
       try {
-        await storageDelete(orphan.bucket, orphan.object_path)
+        await deleteFile(orphan.bucket, orphan.object_path)
       } catch (err) {
         await releaseClaimOnError(supabase, orphan.id, runId)
         return { status: 'failed', orphan_id: orphan.id, bucket: orphan.bucket, object_path: orphan.object_path, error: 'Storage delete failed: ' + (err instanceof Error ? err.message : String(err)) }
