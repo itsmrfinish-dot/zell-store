@@ -34,6 +34,7 @@ import type { AdminCollection, AdminImage, AdminProduct, ImageFit, OrderStatus }
 import { actionWithAccess } from './access/instance'
 import type { AccessContext } from './access/wrappers'
 import type { MutationResult } from './mutations'
+import { CLEANUP_ONLY_MESSAGE } from './mutations/errors'
 import type { SaveVersion } from './mutations/concurrency'
 import { cleanupImages } from './data/imageCleanup'
 import {
