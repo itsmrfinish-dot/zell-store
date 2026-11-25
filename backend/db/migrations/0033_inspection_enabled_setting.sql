@@ -2,7 +2,7 @@
 -- INSPECTION-TOGGLE: add inspection_enabled parameter to zell_save_identity RPC
 -- Modifies the existing zell_save_identity function to accept and store p_inspection_enabled parameter
 -- Related: apps/admin/lib/validation/settings.ts, apps/admin/lib/mutations/settings.ts
--- Idempotent: recreates the function with the new parameter
+-- Idempotent: recreates the function with the new parameter, with conflict detection via p_expected_updated_at
 
 CREATE OR REPLACE FUNCTION public.zell_save_identity(
   p_expected_updated_at timestamptz,
@@ -14,7 +14,26 @@ CREATE OR REPLACE FUNCTION public.zell_save_identity(
 ) RETURNS timestamptz AS $function$
 declare
   v_new_updated_at timestamptz;
+  v_current_updated_at timestamptz;
 begin
+  -- Get current max updated_at to check for version conflicts
+  select max(updated_at) into v_current_updated_at
+  from public.settings
+  where key in ('store_name', 'offer_text', 'whatsapp_number', 'whatsapp_message', 'inspection_enabled');
+
+  -- Check for version conflict: if p_expected_updated_at is provided and doesn't match current, raise error
+  if p_expected_updated_at is not null and v_current_updated_at is not null
+     and p_expected_updated_at != v_current_updated_at then
+    raise exception 'Store identity version conflict: expected %, got %',
+      to_char(p_expected_updated_at, 'YYYY-MM-DD HH24:MI:SS.US'),
+      to_char(v_current_updated_at, 'YYYY-MM-DD HH24:MI:SS.US');
+  end if;
+
+  -- Create inspection_enabled row if it doesn't exist
+  insert into public.settings (key, value)
+  values ('inspection_enabled', p_inspection_enabled::text)
+  on conflict (key) do nothing;
+
   -- Update settings with the new inspection_enabled parameter
   update public.settings
   set value = case
@@ -26,9 +45,12 @@ begin
     else value
   end,
   updated_at = now()
-  where key in ('store_name', 'offer_text', 'whatsapp_number', 'whatsapp_message', 'inspection_enabled')
-  returning (select max(updated_at) from public.settings where key in ('store_name', 'offer_text', 'whatsapp_number', 'whatsapp_message', 'inspection_enabled'))
-  into v_new_updated_at;
+  where key in ('store_name', 'offer_text', 'whatsapp_number', 'whatsapp_message', 'inspection_enabled');
+
+  -- Get and return the new updated_at timestamp
+  select max(updated_at) into v_new_updated_at
+  from public.settings
+  where key in ('store_name', 'offer_text', 'whatsapp_number', 'whatsapp_message', 'inspection_enabled');
 
   return v_new_updated_at;
 end;
