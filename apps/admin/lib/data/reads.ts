@@ -498,6 +498,7 @@ export const supabaseAdminData: AdminDataSource = {
       offerEnabled: map.get('offer_enabled') !== false,
       whatsappNumber: readString(map, 'whatsapp_number'),
       whatsappMessage: readString(map, 'whatsapp_message'),
+      inspectionEnabled: map.get('inspection_enabled') !== false,
       updatedAt: latestUpdatedAt(rows.rows, IDENTITY_SAVE_KEYS),
     }
   },
