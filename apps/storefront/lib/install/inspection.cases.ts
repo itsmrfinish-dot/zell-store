@@ -17,24 +17,24 @@ function testInspectionEnabledMapping(): void {
   const rowTrue = {
     id: '1',
     key: 'inspection_enabled',
-    value: JSON.stringify(true),
+    value: true,
     created_at: '2026-01-01T00:00:00Z',
     updated_at: '2026-01-01T00:00:00Z',
   }
   
-  const settingsTrue = toStoreSettings([rowTrue], {})
+  const settingsTrue = toStoreSettings([rowTrue], {}, null)
   check('inspection_enabled_true', settingsTrue.storeIdentity.inspectionEnabled, true)
   
   // Test inspection_enabled = false maps to storeIdentity.inspectionEnabled = false
-  const rowFalse = { ...rowTrue, value: JSON.stringify(false) }
-  const settingsFalse = toStoreSettings([rowFalse], {})
+  const rowFalse = { ...rowTrue, value: false }
+  const settingsFalse = toStoreSettings([rowFalse], {}, null)
   check('inspection_enabled_false', settingsFalse.storeIdentity.inspectionEnabled, false)
   
   // Test missing inspection_enabled row defaults to true
   const noInspectionRows = [
-    { ...rowTrue, key: 'store_name', value: JSON.stringify('test') }
+    { ...rowTrue, key: 'store_name', value: 'test' }
   ]
-  const settingsDefault = toStoreSettings(noInspectionRows, {})
+  const settingsDefault = toStoreSettings(noInspectionRows, {}, null)
   check('inspection_enabled_missing_defaults_true', settingsDefault.storeIdentity.inspectionEnabled, true)
 }
 
