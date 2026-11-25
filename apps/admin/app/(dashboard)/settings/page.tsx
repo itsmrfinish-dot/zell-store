@@ -16,7 +16,7 @@ export const dynamic = 'force-dynamic'
 
 export default pageWithAccess('zell.settings.view', async function SettingsPage(ctx) {
   // 0021-D2 — إعداد موعد التسليم: القراية لأي أدمن شغّال، والحفظ للمالك بس (والقرار النهائي في الداتابيز)
-  const [settings, health, delivery, identity] = await Promise.all([adminData.getOperationalSettings(), getSystemHealth(), getDeliverySettings(), adminData.getStoreIdentity()])
+  const [settings, health, delivery, storeIdentity] = await Promise.all([adminData.getOperationalSettings(), getSystemHealth(), getDeliverySettings(), adminData.getIdentity()])
 
   return (
     <>
@@ -25,7 +25,7 @@ export default pageWithAccess('zell.settings.view', async function SettingsPage(
         <SystemHealthView health={health} />
         <DeliverySettingsCard key={delivery?.updatedAt ?? 'none'} settings={delivery} canSave={ctx.identity.role === 'owner'} />
         <SettingsEditor settings={settings} />
-        <InspectionToggleCard identity={identity} canSave={ctx.identity.role === 'owner'} />
+        <InspectionToggleCard identity={storeIdentity} canSave={ctx.identity.role === 'owner'} />
         {/* ORDER-DELETE (المرحلة C): مسح كل الطلبات — للمالك بس (قرار المالك §١٠)، والقرار النهائي في الداتابيز. */}
         {ctx.identity.role === 'owner' ? <OrderPurgeCard scope="all" /> : null}
       </div>
