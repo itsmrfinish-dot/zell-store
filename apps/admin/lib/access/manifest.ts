@@ -27,6 +27,7 @@ export type ManifestEntry = {
     | 'PRODUCT_DELETE_OWNER_ONLY_MESSAGE'
     | 'ORDER_PURGE_OWNER_ONLY_MESSAGE'
     | 'IMAGE_DELETE_OWNER_ONLY_MESSAGE'
+    | 'CLEANUP_ONLY_MESSAGE'
     | null
   mapFailure: 'rejectedFailure' | null
 }
