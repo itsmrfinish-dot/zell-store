@@ -22,6 +22,8 @@ DBDIR="$ROOT/backend/db"
 MIG="$DBDIR/migrations"
 CIDIR="$DBDIR/ci"
 LIST="$CIDIR/build_from_scratch.list"
+# Apply 0033 migration before testing K01
+MIG_0033="$MIG/0033_inspection_enabled_setting.sql"
 APPLY="$MIG/0023_inventory_removal.sql"
 PTEST="$MIG/0023_inventory_removal_ptest.sql"
 VERIFY="$MIG/0023_inventory_removal_verify.sql"
