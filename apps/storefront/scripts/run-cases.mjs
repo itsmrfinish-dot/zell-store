@@ -1,19 +1,19 @@
 /**
- * مشغّل حالات المتجر — منطق خالص بس، من غير داتابيز ولا شبكة ولا متغيرات بيئة (0021-D2 W2).
+ * ÙØ´ØºÙÙ Ø­Ø§ÙØ§Øª Ø§ÙÙØªØ¬Ø± â ÙÙØ·Ù Ø®Ø§ÙØµ Ø¨Ø³Ø ÙÙ ØºÙØ± Ø¯Ø§ØªØ§Ø¨ÙØ² ÙÙØ§ Ø´Ø¨ÙØ© ÙÙØ§ ÙØªØºÙØ±Ø§Øª Ø¨ÙØ¦Ø© (0021-D2 W2).
  *
- * الاستخدام:  pnpm --filter @zell/storefront cases
+ * Ø§ÙØ§Ø³ØªØ®Ø¯Ø§Ù:  pnpm --filter @zell/storefront cases
  *
- * زي apps/admin/scripts/run-cases.mjs: بيحوّل ملفات كل مجلد في SUITES بـ TypeScript (موجود أصلًا في devDependencies —
- * مفيش dependency جديدة ولا تغيير في pnpm-lock.yaml) لـ CommonJS في مجلد مؤقت، وبيشغّل دالة الحالات فعليًا.
- * الفرق: ملفات المتجر بتستورد @zell/core، فالمشغّل بيحوّل packages/core/src كمان لـ node_modules/@zell/core المؤقت.
+ * Ø²Ù apps/admin/scripts/run-cases.mjs: Ø¨ÙØ­ÙÙÙ ÙÙÙØ§Øª ÙÙ ÙØ¬ÙØ¯ ÙÙ SUITES Ø¨Ù TypeScript (ÙÙØ¬ÙØ¯ Ø£ØµÙÙØ§ ÙÙ devDependencies â
+ * ÙÙÙØ´ dependency Ø¬Ø¯ÙØ¯Ø© ÙÙØ§ ØªØºÙÙØ± ÙÙ pnpm-lock.yaml) ÙÙ CommonJS ÙÙ ÙØ¬ÙØ¯ ÙØ¤ÙØªØ ÙØ¨ÙØ´ØºÙÙ Ø¯Ø§ÙØ© Ø§ÙØ­Ø§ÙØ§Øª ÙØ¹ÙÙÙØ§.
+ * Ø§ÙÙØ±Ù: ÙÙÙØ§Øª Ø§ÙÙØªØ¬Ø± Ø¨ØªØ³ØªÙØ±Ø¯ @zell/coreØ ÙØ§ÙÙØ´ØºÙÙ Ø¨ÙØ­ÙÙÙ packages/core/src ÙÙØ§Ù ÙÙ node_modules/@zell/core Ø§ÙÙØ¤ÙØª.
  *
- * ⚠️ الملفات اللي بتتشغّل لازم تكون خالية من server-only ومن أي استيراد قيمة برّه المجلد غير @zell/core
- *    (استيراد الأنواع بس مسموح لأنه بيتشال وقت التحويل). استثناء: مجلدات also في الـ suite بتتحوّل قبلها
- *    (المجلد نفسه بس، من غير اللي جواه)، فاستيراد قيمة منها مسموح.
- * suite فيها core: true = ملف حالات من packages/core/src نفسه، بيتشغّل من node_modules/@zell/core المؤقت.
+ * â ï¸ Ø§ÙÙÙÙØ§Øª Ø§ÙÙÙ Ø¨ØªØªØ´ØºÙÙ ÙØ§Ø²Ù ØªÙÙÙ Ø®Ø§ÙÙØ© ÙÙ server-only ÙÙÙ Ø£Ù Ø§Ø³ØªÙØ±Ø§Ø¯ ÙÙÙØ© Ø¨Ø±ÙÙ Ø§ÙÙØ¬ÙØ¯ ØºÙØ± @zell/core
+ *    (Ø§Ø³ØªÙØ±Ø§Ø¯ Ø§ÙØ£ÙÙØ§Ø¹ Ø¨Ø³ ÙØ³ÙÙØ­ ÙØ£ÙÙ Ø¨ÙØªØ´Ø§Ù ÙÙØª Ø§ÙØªØ­ÙÙÙ). Ø§Ø³ØªØ«ÙØ§Ø¡: ÙØ¬ÙØ¯Ø§Øª also ÙÙ Ø§ÙÙ suite Ø¨ØªØªØ­ÙÙÙ ÙØ¨ÙÙØ§
+ *    (Ø§ÙÙØ¬ÙØ¯ ÙÙØ³Ù Ø¨Ø³Ø ÙÙ ØºÙØ± Ø§ÙÙÙ Ø¬ÙØ§Ù)Ø ÙØ§Ø³ØªÙØ±Ø§Ø¯ ÙÙÙØ© ÙÙÙØ§ ÙØ³ÙÙØ­.
+ * suite ÙÙÙØ§ core: true = ÙÙÙ Ø­Ø§ÙØ§Øª ÙÙ packages/core/src ÙÙØ³ÙØ Ø¨ÙØªØ´ØºÙÙ ÙÙ node_modules/@zell/core Ø§ÙÙØ¤ÙØª.
  *
- * سطر النتيجة:  ZELL_STOREFRONT_CASES_RESULT pass=<n> fail=<n>
- * والخروج بكود 1 لو فيه أي فشل، أو لو مفيش ولا حالة اتشغّلت.
+ * Ø³Ø·Ø± Ø§ÙÙØªÙØ¬Ø©:  ZELL_STOREFRONT_CASES_RESULT pass=<n> fail=<n>
+ * ÙØ§ÙØ®Ø±ÙØ¬ Ø¨ÙÙØ¯ 1 ÙÙ ÙÙÙ Ø£Ù ÙØ´ÙØ Ø£Ù ÙÙ ÙÙÙØ´ ÙÙØ§ Ø­Ø§ÙØ© Ø§ØªØ´ØºÙÙØª.
  */
 
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -40,11 +40,12 @@ const SUITES = [
   { name: 'seo', dir: 'lib/seo', entry: 'structuredData.cases.ts', run: 'runSeoCases' },
   { name: 'buy-now', dir: 'lib/buy', entry: 'buyNow.cases.ts', run: 'runBuyNowCases' },
   { name: 'reveal', dir: 'lib/reveal', entry: 'reveal.cases.ts', run: 'runRevealCases' },
-  // أكواد الخصم: الحالات كانت بتتعمل typecheck بس ومابتتشغّلش (مراجعة أمنية 2026-11).
+  { name: 'inspection', dir: 'lib/install', entry: 'inspection.cases.ts', run: 'runInspectionCases' },
+  // Ø£ÙÙØ§Ø¯ Ø§ÙØ®ØµÙ: Ø§ÙØ­Ø§ÙØ§Øª ÙØ§ÙØª Ø¨ØªØªØ¹ÙÙ typecheck Ø¨Ø³ ÙÙØ§Ø¨ØªØªØ´ØºÙÙØ´ (ÙØ±Ø§Ø¬Ø¹Ø© Ø£ÙÙÙØ© 2026-11).
   { name: 'coupon', dir: 'lib/orders', entry: 'coupon.cases.ts', run: 'runStorefrontCouponCases' },
   { name: 'coupon-checkout', dir: 'lib/orders', entry: 'couponCheckout.cases.ts', run: 'runCheckoutCouponCases', also: ['lib', 'lib/size'] },
   { name: 'core-coupons', core: true, entry: 'coupons.cases.ts', run: 'runCouponCases' },
-  // META-PIXEL §٤-١ — العنوان النضيف والـ referrer وشرط التهيئة والـ runtime ببيئة مزيّفة
+  // META-PIXEL Â§Ù¤-Ù¡ â Ø§ÙØ¹ÙÙØ§Ù Ø§ÙÙØ¶ÙÙ ÙØ§ÙÙ referrer ÙØ´Ø±Ø· Ø§ÙØªÙÙØ¦Ø© ÙØ§ÙÙ runtime Ø¨Ø¨ÙØ¦Ø© ÙØ²ÙÙÙØ©
   { name: 'meta-pixel', dir: 'lib/analytics', entry: 'metaPixel.cases.ts', run: 'runMetaPixelCases' },
 ]
 
@@ -67,7 +68,7 @@ function transpileDir(srcDir, outDir) {
         getCurrentDirectory: () => srcDir,
         getNewLine: () => '\n',
       })
-      throw new Error('تحويل ' + srcDir + '/' + file + ' فشل:\n' + text)
+      throw new Error('ØªØ­ÙÙÙ ' + srcDir + '/' + file + ' ÙØ´Ù:\n' + text)
     }
     writeFileSync(join(outDir, file.replace(/\.ts$/, '.js')), result.outputText)
   }
@@ -94,7 +95,7 @@ try {
     }
     const mod = require(join(outDir, suite.entry.replace(/\.ts$/, '.js')))
     const runner = mod[suite.run]
-    if (typeof runner !== 'function') throw new Error(suite.entry + ' مافيهوش ' + suite.run)
+    if (typeof runner !== 'function') throw new Error(suite.entry + ' ÙØ§ÙÙÙÙØ´ ' + suite.run)
 
     const report = await runner()
     for (const failure of report.failures) {
