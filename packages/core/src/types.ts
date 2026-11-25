@@ -87,6 +87,8 @@ export type StoreSettings = {
   installation: InstallationConfig
   whatsappNumber: string
   whatsappMessage: string
+  /** هوية المتجر الكاملة بما فيها inspectionEnabled. */
+  storeIdentity: StoreIdentity
   shippingRates: Record<string, number>
   shippingDefaultPiastres: number
   freeShippingThresholdPiastres: number
