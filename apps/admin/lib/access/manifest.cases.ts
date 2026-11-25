@@ -241,3 +241,5 @@ export async function runManifestCases(): Promise<ManifestCasesReport> {
 
   return { passed, failures }
 }
+
+// CI re-run triggered for failed sql tests
