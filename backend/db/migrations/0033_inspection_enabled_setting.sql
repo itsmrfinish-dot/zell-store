@@ -1,8 +1,10 @@
 -- backend/db/migrations/0033_inspection_enabled_setting.sql
 -- INSPECTION-TOGGLE: safely replace zell_save_identity function to include inspection_enabled parameter
+-- Wrapped in transaction for safe handling of DROP+CREATE
 -- Steps: (1) drop the old 5-param function, (2) create new 6-param function with FOR UPDATE + null conflict check, (3) add inspection_enabled row
 -- Related: apps/admin/lib/validation/settings.ts, apps/admin/lib/mutations/settings.ts
--- Idempotent: safe to re-run; dropping non-existent function is acceptable
+
+BEGIN;
 
 -- Step 1: Drop the old 5-parameter version if it exists
 DROP FUNCTION IF EXISTS public.zell_save_identity(
@@ -103,6 +105,8 @@ grant execute on function public.zell_save_identity(
   p_whatsapp_message text,
   p_inspection_enabled boolean
 ) to service_role;
+
+COMMIT;
 
 -- Verify the function exists and has the correct 6-parameter signature
 DO $$
