@@ -1,39 +1,11 @@
-/**
- * â ï¸â ï¸ FALLBACK ÙØ¤ÙØª â **ÙØ´ ÙØµØ¯Ø± Ø¨ÙØ§ÙØ§Øª**. â ï¸â ï¸
- *
- * ÙØ³Ø®Ø© ÙØ¬ÙÙØ¯Ø© Ø¨Ø§ÙÙØ¯ ÙÙ ØµÙÙÙ Production ÙÙØª ÙØªØ§Ø¨Ø© Ø§ÙÙØ±Ø­ÙØ© Ø§ÙØ£ÙÙÙØ Ø¹Ø´Ø§Ù
- * Ø§ÙÙØ§Ø¬ÙØ© ØªØªØ¨ÙÙ ÙØªØªØ±Ø§Ø¬Ø¹ Ø¨Ø£Ø±ÙØ§Ù Ø­ÙÙÙÙØ© ÙÙ ØºÙØ± Ø£Ù ÙÙØªØ§Ø­ Supabase ÙÙ Ø§ÙØ±ÙØ¨Ù.
- *
- *   â¢ Ø§ÙØ£Ø±ÙØ§Ù Ø¨ØªÙØ¯Ù ÙÙ ÙØ§ Ø­Ø¯ ÙØ¹Ø¯ÙÙ ÙÙØªØ¬ Ø£Ù Ø³Ø¹Ø± ÙÙ Ø§ÙØ¯Ø§Ø´Ø¨ÙØ±Ø¯.
- *   â¢ ÙÙÙÙØ¹ Ø£Ù ÙÙØ·Ù Ø£Ø¹ÙØ§Ù ÙØ¹ØªÙØ¯ Ø¹ÙÙ Ø§ÙÙÙÙ Ø¯Ù.
- *   â¢ ÙØµÙØ±Ù Ø§ÙØ­Ø°ÙØ ÙØ´ Ø§ÙØªÙØ³Ø¹Ø©.
- *
- * ð« **ÙÙÙØ´ Ø£Ù ÙØ³Ø§Ø± ØµÙØ± ÙÙ Production ÙÙØ§.** Ø§ÙÙØ¹Ø§Ø±Ø¶ ÙØ§Ø¶ÙØ© Ø¹Ù ÙØµØ¯ â
- * Ø§ÙØ±ÙØ§Ø¨Ø· Ø§ÙØ­ÙÙÙÙØ© Ø¨ØªØªØ¨ÙÙ ÙÙ Ø·Ø¨ÙØ© Ø§ÙÙØ±Ø§Ø¡Ø© Ø§ÙÙØ¹ØªÙØ¯Ø© Ø¹ÙÙ Ø§ÙØ³ÙØ±ÙØ±.
- */
-import { DEFAULT_INSPECTION_NOTE, DEFAULT_WHATSAPP_MESSAGE } from '@zell/core'
-import type { StoreProduct, StoreCollection, StoreSettings } from '@zell/core'
-import { DEFAULT_INSTALLATION_TOOLS_PAGE, DEFAULT_STORE_CONTENT, NO_PUBLISHED_POLICIES } from '@zell/core'
-
-export const FALLBACK_PRODUCTS: StoreProduct[] = [
-  {
-    id: 1,
-    name_ar: 'Ø¹Ø§Ø²Ù Ø­Ø±Ø§Ø±Ø©',
-    name_en: 'Heat Rejection Window Film',
-    brand: null,
-    description_ar:
-      'Ø§ÙØµØ§ÙØ© Ø£Ù Ø§ÙØ£ÙØ¶Ø© Ø§ÙÙÙ Ø§ÙØ´ÙØ³ Ø¨ØªØ¶Ø±Ø¨ÙØ§ Ø·ÙÙ Ø§ÙÙÙØ§Ø±: Ø¨ÙÙÙÙ Ø§ÙØ­Ø±Ø§Ø±Ø© ÙØ§ÙÙÙØ¬Ø ÙØ§ÙØªÙÙÙÙ ÙØªØ¹Ø¨ Ø£ÙÙØ ÙØ§ÙÙØ±Ø´ ÙØ§ ÙØ¨ÙØªØ´. Ø§ÙØ±Ø¤ÙØ© ÙÙ Ø¬ÙÙ ØªÙØ¶Ù ÙØ§Ø¶Ø­Ø©.',
-    gallery: [],
-    image_url: null,
-    images: [],
-    before_image: null,
-    after_image: null,
-    price_per_meter_piastres: 18000,
-    width_cm: 50,
-    min_length_cm: 300,
-    step_cm: 50,
-    max_length_cm: 3000,
-  },
+  storeIdentity: {
+    storeName: this.storeName,
+    offerText: this.offerText,
+    offerEnabled: this.offerEnabled,
+    whatsappNumber: this.whatsappNumber,
+    whatsappMessage: this.whatsappMessage,
+    inspectionEnabled: true,
+  }
   {
     id: 2,
     name_ar: 'ÙØµÙÙØ± (Ø®ØµÙØµÙØ©)',
@@ -131,16 +103,6 @@ export const FALLBACK_SETTINGS: StoreSettings = {
   // Ø§ÙÙØªØ§ÙÙØ¬ Ø§ÙÙØ¤ÙØª ÙØ§Ø¨ÙØ¹Ø±Ø¶Ø´ Ø´Ø±ÙØ· â Ø§ÙØ´Ø±ÙØ· Ø¨ÙØ§ÙØ§Øª Ø­ÙÙÙÙØ© ÙÙ settings Ø¨Ø³
   announcement: { enabled: false, text: '', href: '', ctaLabel: '' },
   content: DEFAULT_STORE_CONTENT,
-  get storeIdentity() {
-    return {
-      storeName: this.storeName,
-      offerText: this.offerText,
-      offerEnabled: this.offerEnabled,
-      whatsappNumber: this.whatsappNumber,
-      whatsappMessage: this.whatsappMessage,
-      inspectionEnabled: true,
-    };
-  },
 }
 
 /**
