@@ -29,6 +29,7 @@ export type IdentityInput = {
   offerText: string
   whatsappNumber: string
   whatsappMessage: string
+  inspectionEnabled: boolean
 }
 
 const MAX_GOVERNORATES = 60
