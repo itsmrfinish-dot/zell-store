@@ -55,7 +55,7 @@ begin
 
   -- Ensure inspection_enabled row exists (insert if missing)
   insert into public.settings (key, value)
-  values ('inspection_enabled', p_inspection_enabled::text)
+  values ('inspection_enabled', pg_catalog.to_jsonb(p_inspection_enabled))
   on conflict (key) do nothing;
 
   -- Update all settings including inspection_enabled
