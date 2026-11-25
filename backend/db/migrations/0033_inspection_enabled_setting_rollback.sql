@@ -1,6 +1,9 @@
 -- backend/db/migrations/0033_inspection_enabled_setting_rollback.sql
 -- INSPECTION-TOGGLE: rollback for 0033 - restore zell_save_identity to 5-parameter version
+-- Wrapped in transaction for safe handling
 -- Steps: (1) drop the 6-param overload, (2) recreate the 5-param original, (3) delete inspection_enabled row
+
+BEGIN;
 
 -- Step 1: Drop the 6-parameter version if it exists
 DROP FUNCTION IF EXISTS public.zell_save_identity(
@@ -91,6 +94,8 @@ grant execute on function public.zell_save_identity(
 
 -- Step 3: Remove inspection_enabled setting row
 DELETE FROM public.settings WHERE key = 'inspection_enabled';
+
+COMMIT;
 
 -- Verify the function has been restored to 5 parameters
 DO $$
