@@ -20,6 +20,7 @@ esac
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 DBDIR="$ROOT/backend/db"
 MIG="$DBDIR/migrations"
+MIG_0033="$MIG/0033_inspection_enabled_setting.sql"
 CIDIR="$DBDIR/ci"
 LIST="$CIDIR/build_from_scratch.list"
 # Apply 0033 migration before testing K01
