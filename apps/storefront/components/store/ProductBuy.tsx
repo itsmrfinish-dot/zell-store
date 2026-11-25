@@ -57,6 +57,8 @@ export function ProductBuy({
   /** SIZE-TEXTS — نصوص «حدد المقاس» من «المحتوى» (الغايب = النصوص الافتراضية). */
   sizeTexts?: ProductSizeTexts
   whatsappNumber?: string
+  /** فعّل/عطّل صندوق طلب المعاينة — الافتراضي ON. */
+  inspectionEnabled?: boolean
 }) {
   const cart = useCart()
   // BUY-NOW — «اطلب دلوقتي»: إضافة مرة واحدة + علامة تحميل فورية + منع الضغط المتكرر (lib/buy/buyNow.ts)
