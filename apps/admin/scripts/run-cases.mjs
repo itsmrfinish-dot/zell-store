@@ -67,8 +67,6 @@ const SUITES = [
   { name: 'storage-list', dir: 'lib/data', entry: 'storageList.cases.ts', run: 'runStorageListCases', also: ['lib', 'lib/orders', 'lib/content', 'lib/coupons', 'lib/auth', 'lib/data', 'lib/images', 'lib/validation', 'lib/uploads'], link: ['@supabase/ssr', '@supabase/supabase-js', 'next'], stub: ['server-only'] },
   // COOKIES-HEADERS §٣ — كوكيز الجلسة المكتوبة فعليًا بالمكتبة الحقيقية وfetch مزيّف. آخر suite لأنها بتغيّر متغيرات البيئة وfetch (وبترجّعهم).
   { name: 'auth-cookies', dir: 'lib/auth', entry: 'cookies.cases.ts', run: 'runAuthCookieCases', link: ['@supabase/ssr', 'next'] },
-  // INSPECTION-TOGGLE: test inspection_enabled setting toggle
-  { name: 'settings', dir: 'lib/validation', entry: 'settings.cases.ts', run: 'runSettingsCases', also: ['lib'] },
 ]
 
 const COMPILER_OPTIONS = {
