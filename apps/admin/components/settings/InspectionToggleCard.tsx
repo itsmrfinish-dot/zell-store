@@ -1,7 +1,9 @@
-import type { StoreIdentity } from '../../lib/adminData'
+'use client'
+
+import type { StoreIdentity } from '../../../lib/adminData'
 import { Card } from '../ui/Field'
 import { Switch } from '../ui/Switch'
-import { saveIdentityAction } from '../../lib/actions'
+import { saveIdentityAction } from '../../../lib/actions'
 import { useState } from 'react'
 
 /**
@@ -9,8 +11,6 @@ import { useState } from 'react'
  * 
  * - ON (الافتراضي): يظهر الصندوق في صفحة المنتج عند اختيار التركيب الفني
  * - OFF: لا يظهر الصندوق خالص، والعميل لا يستطيع اختيار طلب المعاينة
- * 
- * الأسعار: مفيش أي تغيير — العميل يشوف سعر واحد بس (سعر الفيلم بالمتر الطولي)
  */
 export function InspectionToggleCard({ identity, canSave }: { identity: StoreIdentity; canSave: boolean }) {
   const [isSaving, setIsSaving] = useState(false)
@@ -35,15 +35,13 @@ export function InspectionToggleCard({ identity, canSave }: { identity: StoreIde
       title="طلب المعاينة قبل التركيب"
       description="اسمح للعميل باختيار طلب معاينة قبل التركيب الفني (تُظهر/تُخفي الصندوق)"
     >
-      <div className="flex items-center gap-3">
-        <Switch
-          checked={isEnabled}
-          onCheckedChange={handleToggle}
-          disabled={!canSave || isSaving}
-        />
-        <span className="text-sm">{isEnabled ? 'مفعّل' : 'معطّل'}</span>
-      </div>
-      <p className="mt-2 text-xs text-muted">
+      <Switch
+        checked={isEnabled}
+        onChange={handleToggle}
+        label={isEnabled ? 'مفعّل' : 'معطّل'}
+        disabled={!canSave || isSaving}
+      />
+      <p className="mt-2 text-xs text-muted-foreground">
         {isEnabled
           ? 'صندوق طلب المعاينة ظاهر في صفحة المنتج عند اختيار التركيب الفني'
           : 'صندوق طلب المعاينة مختفي — العميل لن يستطيع اختيار طلب المعاينة'}
