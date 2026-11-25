@@ -155,14 +155,14 @@ const SHIPPING_KEYS = [
   'free_shipping_threshold_piastres',
   'shipping_disabled_governorates',
 ] as const
-const IDENTITY_KEYS = ['store_name', 'logo_url', 'offer_text', 'offer_enabled', 'whatsapp_number', 'whatsapp_message'] as const
+const IDENTITY_KEYS = ['store_name', 'logo_url', 'offer_text', 'offer_enabled', 'whatsapp_number', 'whatsapp_message', 'inspection_enabled'] as const
 
 /**
  * المفاتيح اللي zell_save_identity بتقفلها وبتقارن عليها.
  * logo_url **مش** فيهم عن قصد: لو كان، أي تغيير للوجو كان هيدي
  * CONFLICT وهمي لكل حفظ هوية.
  */
-const IDENTITY_SAVE_KEYS = ['store_name', 'offer_text', 'whatsapp_number', 'whatsapp_message'] as const
+const IDENTITY_SAVE_KEYS = ['store_name', 'offer_text', 'whatsapp_number', 'whatsapp_message', 'inspection_enabled'] as const
 /**
  * ⚠️ `telegram_bot_token` **اتشال من هنا** عن قصد (ب١٩). الأسرار بقت في
  *    متغيرات بيئة المتجر على Vercel، واللوحة مالهاش أي داعي تقرا سر —
