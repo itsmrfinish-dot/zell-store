@@ -408,6 +408,14 @@ export function toStoreSettings(rows: SettingRow[], logo: StoreImage | null = nu
     couponsEnabled: map.get('coupons_enabled') === true,
     announcement: settingAnnouncement(map),
     content: settingContent(map),
+    storeIdentity: {
+      storeName: settingString(map, 'store_name', 'myzill'),
+      offerText: settingString(map, 'offer_text'),
+      offerEnabled: map.get('offer_enabled') !== false,
+      whatsappNumber: settingString(map, 'whatsapp_number'),
+      whatsappMessage: settingString(map, 'whatsapp_message'),
+      inspectionEnabled: map.get('inspection_enabled') !== false, // Default: true
+    },
   }
 }
 
