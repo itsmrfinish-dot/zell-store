@@ -1,10 +1,4 @@
-/**
- * Test cases for inspection_enabled - inspection toggle feature
- * in settings page (admin/lib/mutations/settings.ts).
- * Integration test requirement in CI.
- */
-
-import type { InspectionEnabled } from '..'
+import { toStoreSettings } from '../data/mappers'
 
 export type InspectionCaseFailure = { name: string; expected: string; actual: string }
 
@@ -18,24 +12,34 @@ function check(name: string, actual: unknown, expected: unknown): void {
   else failures.push({ name, expected: e, actual: a })
 }
 
-/**
- * INSPECTION-TYPE-CHECK - Verify inspection_enabled is boolean | null
- */
-function testInspectionType(): void {
-  const enabled: InspectionEnabled = true
-  const disabled: InspectionEnabled = false
-  const nullable: InspectionEnabled = null
+function testInspectionEnabledMapping(): void {
+  // Test inspection_enabled = true maps to storeIdentity.inspectionEnabled = true
+  const rowTrue = {
+    id: '1',
+    key: 'inspection_enabled',
+    value: JSON.stringify(true),
+    created_at: '2026-01-01T00:00:00Z',
+    updated_at: '2026-01-01T00:00:00Z',
+  }
   
-  check('type_enabled_true', enabled, true)
-  check('type_enabled_false', disabled, false)
-  check('type_enabled_null', nullable, null)
+  const settingsTrue = toStoreSettings([rowTrue], {})
+  check('inspection_enabled_true', settingsTrue.storeIdentity.inspectionEnabled, true)
+  
+  // Test inspection_enabled = false maps to storeIdentity.inspectionEnabled = false
+  const rowFalse = { ...rowTrue, value: JSON.stringify(false) }
+  const settingsFalse = toStoreSettings([rowFalse], {})
+  check('inspection_enabled_false', settingsFalse.storeIdentity.inspectionEnabled, false)
+  
+  // Test missing inspection_enabled row defaults to true
+  const noInspectionRows = [
+    { ...rowTrue, key: 'store_name', value: JSON.stringify('test') }
+  ]
+  const settingsDefault = toStoreSettings(noInspectionRows, {})
+  check('inspection_enabled_missing_defaults_true', settingsDefault.storeIdentity.inspectionEnabled, true)
 }
 
-/**
- * INSPECTION-RUN - Run all test cases
- */
 export async function runInspectionCases() {
-  testInspectionType()
+  testInspectionEnabledMapping()
   
   return {
     name: 'inspection',
