@@ -13,6 +13,9 @@ const INTERNAL_MESSAGE = 'حصل خطأ غير متوقع. حاول تاني، �
  *
  * البارامتر موجود عشان نقطة النداء تبقى واضحة، ومابيتقراش.
  */
+
+export const CLEANUP_ONLY_MESSAGE = 'تنظيف الصور للمالك بس'
+
 export function toInternalFailure(_error: unknown): MutationResult<never> {
   return { ok: false, code: 'INTERNAL', message: INTERNAL_MESSAGE }
 }

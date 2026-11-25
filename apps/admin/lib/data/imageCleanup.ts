@@ -208,7 +208,7 @@ async function isFileReferenced(supabase: any, bucket: string, objectPath: strin
   }
 }
 
-  // Exported for the storage-list cases (regression for the .abortSignal bug).
+//  Exported for the storage-list cases (regression for the .abortSignal bug).
 export async function fileExistsInStorage(supabase: any, bucket: string, objectPath: string): Promise<'exists' | 'missing' | 'error'> {
   try {
     const dir = objectPath.substring(0, objectPath.lastIndexOf('/')) || ''

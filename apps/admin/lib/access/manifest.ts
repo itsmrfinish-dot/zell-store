@@ -27,6 +27,7 @@ export type ManifestEntry = {
     | 'PRODUCT_DELETE_OWNER_ONLY_MESSAGE'
     | 'ORDER_PURGE_OWNER_ONLY_MESSAGE'
     | 'IMAGE_DELETE_OWNER_ONLY_MESSAGE'
+    | 'CLEANUP_ONLY_MESSAGE'
     | null
   mapFailure: 'rejectedFailure' | null
 }
@@ -117,5 +118,5 @@ export const ACCESS_MANIFEST: readonly ManifestEntry[] = [
   { kind: 'action', file: 'lib/couponActions.ts', symbol: 'setCouponsEnabledAction', capability: 'zell.coupons.edit', mutates: true, todayGuard: 'owner', todayFlag: true, forbiddenMessage: 'OWNER_ONLY_MESSAGE', mapFailure: null },
   { kind: 'page', file: 'app/(dashboard)/maintenance/image-cleanup/page.tsx', symbol: 'default', capability: 'zell.images.cleanup', mutates: false, todayGuard: 'owner', todayFlag: false, forbiddenMessage: null, mapFailure: null },
   { kind: 'action', file: 'lib/couponActions.ts', symbol: 'deleteCouponAction', capability: 'zell.coupons.edit', mutates: true, todayGuard: 'owner', todayFlag: true, forbiddenMessage: 'OWNER_ONLY_MESSAGE', mapFailure: null },
-  { kind: 'action', file: 'lib/actions.ts', symbol: 'cleanupImagesAction', capability: 'zell.images.cleanup', mutates: true, todayGuard: 'owner', todayFlag: true, forbiddenMessage: 'OWNER_ONLY_MESSAGE', mapFailure: null },
+  { kind: 'action', file: 'lib/actions.ts', symbol: 'cleanupImagesAction', capability: 'zell.images.cleanup', mutates: true, todayGuard: 'owner', todayFlag: true, forbiddenMessage: 'CLEANUP_ONLY_MESSAGE', mapFailure: null },
 ]
