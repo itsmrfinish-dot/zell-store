@@ -175,6 +175,7 @@ export default async function ProductPage({ params }: PageProps) {
       whatsappNumber={settings.whatsappNumber}
               sizeEntry={settings.content.productSizeEntry}
               sizeTexts={settings.content.productSizeTexts}
+              inspectionEnabled={settings.identity?.inspectionEnabled !== false}
             />
           )}
         </div>
