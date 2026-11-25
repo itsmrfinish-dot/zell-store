@@ -1,4 +1,8 @@
 name: CI
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 
 # التحقق من البناء. مفيش نشر ولا دمج ولا أي وصول لقاعدة بيانات.
 on:
