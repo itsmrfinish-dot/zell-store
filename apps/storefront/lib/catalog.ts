@@ -133,10 +133,10 @@ export const FALLBACK_SETTINGS: StoreSettings = {
   content: DEFAULT_STORE_CONTENT,
   storeIdentity: {
     storeName: 'myzill',
-    offerText: 'Store Upgrade Tools Free Delivery',
+    offerText: 'Ø£Ø¯ÙØ§Øª Ø§ÙØªØ±ÙÙØ¨ ÙØ±ÙÙØ© ÙØ¬Ø§ÙØ§Ù',
     offerEnabled: true,
     whatsappNumber: '201000000000',
-    whatsappMessage: 'Hello myzill, I want to consult about window installation at home',
+    whatsappMessage: 'ÙØ±Ø­Ø¨Ø§Ù myzillØ Ø¹Ø§ÙØ² Ø£Ø³ØªÙØ³Ø± Ø¹Ù ÙÙÙÙ Ø²Ø¬Ø§Ø¬ ÙÙØ¨ÙØª',
     inspectionEnabled: true,
   },
 }
