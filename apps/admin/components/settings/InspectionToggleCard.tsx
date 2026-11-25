@@ -1,5 +1,6 @@
 import type { StoreIdentity } from '../../lib/adminData'
-import { Card, Toggle } from '../ui/Field'
+import { Card } from '../ui/Field'
+import { Switch } from '../ui/Switch'
 import { saveIdentityAction } from '../../lib/actions'
 import { useState } from 'react'
 
@@ -34,12 +35,14 @@ export function InspectionToggleCard({ identity, canSave }: { identity: StoreIde
       title="طلب المعاينة قبل التركيب"
       description="اسمح للعميل باختيار طلب معاينة قبل التركيب الفني (تُظهر/تُخفي الصندوق)"
     >
-      <Toggle
-        label={isEnabled ? 'مفعّل' : 'معطّل'}
-        checked={isEnabled}
-        onChange={handleToggle}
-        disabled={!canSave || isSaving}
-      />
+      <div className="flex items-center gap-3">
+        <Switch
+          checked={isEnabled}
+          onCheckedChange={handleToggle}
+          disabled={!canSave || isSaving}
+        />
+        <span className="text-sm">{isEnabled ? 'مفعّل' : 'معطّل'}</span>
+      </div>
       <p className="mt-2 text-xs text-muted">
         {isEnabled
           ? 'صندوق طلب المعاينة ظاهر في صفحة المنتج عند اختيار التركيب الفني'
