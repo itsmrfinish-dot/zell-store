@@ -23,7 +23,7 @@ export function InspectionToggleCard({ identity, canSave }: { identity: StoreIde
       await saveIdentityAction({
         ...identity,
         inspectionEnabled: enabled,
-      })
+      }, identity.updatedAt)
     } finally {
       setIsSaving(false)
     }
