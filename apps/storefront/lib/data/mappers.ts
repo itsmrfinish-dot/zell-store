@@ -313,6 +313,8 @@ export const PUBLIC_SETTING_KEYS = [
   'faqs',
   'footer_links',
   'trust_line',
+  // INSPECTION-TOGGLE: allow inspection_enabled to pass through to storefront
+  'inspection_enabled',
 ] as const
 
 function settingString(map: Map<string, unknown>, key: string, fallback = ''): string {
