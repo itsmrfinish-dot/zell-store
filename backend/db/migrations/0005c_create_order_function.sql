@@ -111,38 +111,38 @@ begin
   ------------------------------------------------------------------
   if p_idempotency_key is null
      or pg_catalog.length(pg_catalog.btrim(p_idempotency_key)) not between 16 and 128 then
-    raise exception 'ZELL_IDEMPOTENCY_REQUIRED' using errcode = '4[2-5]001';
+    raise exception 'ZELL_IDEMPOTENCY_REQUIRED' using errcode = '45001';
   end if;
   if p_request_hash is null or p_request_hash !~ '^[0-9a-f]{64}$' then
-    raise exception 'ZELL_REQUEST_HASH_INVALID' using errcode = '4[2-5]004';
+    raise exception 'ZELL_REQUEST_HASH_INVALID' using errcode = '45004';
   end if;
 
   ------------------------------------------------------------------
   -- (ب) التحقق من المدخلات النصّية
   ------------------------------------------------------------------
   if pg_catalog.length(pg_catalog.btrim(coalesce(p_customer_name, ''))) < 3 then
-    raise exception 'ZELL_INVALID_NAME' using errcode = '4[2-5]020';
+    raise exception 'ZELL_INVALID_NAME' using errcode = '45020';
   end if;
   if coalesce(p_customer_phone, '') !~ '^01[0125][0-9]{8}$' then
-    raise exception 'ZELL_INVALID_PHONE' using errcode = '4[2-5]021';
+    raise exception 'ZELL_INVALID_PHONE' using errcode = '45021';
   end if;
   if pg_catalog.length(pg_catalog.btrim(coalesce(p_address, ''))) < 8 then
-    raise exception 'ZELL_INVALID_ADDRESS' using errcode = '4[2-5]022';
+    raise exception 'ZELL_INVALID_ADDRESS' using errcode = '45022';
   end if;
 
   ------------------------------------------------------------------
   -- (ج) تحقق آمن من شكل السلة **قبل** أي cast
   ------------------------------------------------------------------
   if p_items is null or pg_catalog.jsonb_typeof(p_items) <> 'array' then
-    raise exception 'ZELL_CART_INVALID' using errcode = '4[2-5]023';
+    raise exception 'ZELL_CART_INVALID' using errcode = '45023';
   end if;
 
   v_count := pg_catalog.jsonb_array_length(p_items);
   if v_count = 0 then
-    raise exception 'ZELL_CART_EMPTY' using errcode = '4[2-5]024';
+    raise exception 'ZELL_CART_EMPTY' using errcode = '45024';
   end if;
   if v_count > c_max_items then
-    raise exception 'ZELL_CART_TOO_LARGE' using errcode = '4[2-5]025';
+    raise exception 'ZELL_CART_TOO_LARGE' using errcode = '45025';
   end if;
 
   -- كل عنصر لازم يكون object فيه رقمين صحيحين موجبين
@@ -155,7 +155,7 @@ begin
        or (e ->> 'productId') !~ '^[1-9][0-9]{0,8}$'
        or (e ->> 'lengthCm')  !~ '^[1-9][0-9]{0,6}$'
   ) then
-    raise exception 'ZELL_CART_INVALID' using errcode = '4[2-5]023';
+    raise exception 'ZELL_CART_INVALID' using errcode = '45023';
   end if;
 
   ------------------------------------------------------------------
@@ -169,14 +169,14 @@ begin
      or pg_catalog.jsonb_typeof(v_rates) <> 'object'
      or pg_catalog.jsonb_typeof(v_default) <> 'number'
      or pg_catalog.jsonb_typeof(v_free) <> 'number' then
-    raise exception 'ZELL_SETTINGS_MISSING' using errcode = '4[2-5]030';
+    raise exception 'ZELL_SETTINGS_MISSING' using errcode = '45030';
   end if;
 
   if not (v_rates ? coalesce(p_governorate, '')) then
-    raise exception 'ZELL_GOVERNORATE_NOT_SERVED' using errcode = '4[2-5]031';
+    raise exception 'ZELL_GOVERNORATE_NOT_SERVED' using errcode = '45031';
   end if;
   if pg_catalog.jsonb_typeof(v_rates -> p_governorate) <> 'number' then
-    raise exception 'ZELL_SETTINGS_MISSING' using errcode = '4[2-5]030';
+    raise exception 'ZELL_SETTINGS_MISSING' using errcode = '45030';
   end if;
 
   ------------------------------------------------------------------
@@ -185,7 +185,7 @@ begin
   if (select pg_catalog.count(*) from public.orders o
        where o.customer_phone = p_customer_phone
          and o.created_at > now() - interval '1 day') >= c_max_per_phone_day then
-    raise exception 'ZELL_PHONE_DAILY_LIMIT' using errcode = '4[2-5]011';
+    raise exception 'ZELL_PHONE_DAILY_LIMIT' using errcode = '45011';
   end if;
 
   ------------------------------------------------------------------
@@ -263,7 +263,7 @@ begin
         raise;
       end if;
       if attempt = c_number_tries then
-        raise exception 'ZELL_ORDER_NUMBER_EXHAUSTED' using errcode = '4[2-5]050';
+        raise exception 'ZELL_ORDER_NUMBER_EXHAUSTED' using errcode = '45050';
       end if;
     end;
   end loop;
@@ -279,7 +279,7 @@ begin
 
     if v_existing.order_number is not null then
       if v_existing.request_hash is distinct from p_request_hash then
-        raise exception 'ZELL_IDEMPOTENCY_MISMATCH' using errcode = '4[2-5]003';
+        raise exception 'ZELL_IDEMPOTENCY_MISMATCH' using errcode = '45003';
       end if;
       return pg_catalog.jsonb_build_object(
         'ok', true, 'replayed', true,
@@ -289,7 +289,7 @@ begin
         'total_piastres', v_existing.total_piastres);
     end if;
 
-    raise exception 'ZELL_ITEM_UNAVAILABLE' using errcode = '4[2-5]040';
+    raise exception 'ZELL_ITEM_UNAVAILABLE' using errcode = '45040';
   end if;
 
   return pg_catalog.jsonb_build_object(
