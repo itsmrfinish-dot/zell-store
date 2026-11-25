@@ -69,6 +69,15 @@ export type StoreProduct = ProductRules & {
   after_image: string | null
 }
 
+export type StoreIdentity = {
+  storeName: string
+  offerText: string
+  offerEnabled: boolean
+  whatsappNumber: string
+  whatsappMessage: string
+  inspectionEnabled?: boolean
+}
+
 export type StoreSettings = {
   storeName: string
   /** اللوجو النشط من site_images. */
