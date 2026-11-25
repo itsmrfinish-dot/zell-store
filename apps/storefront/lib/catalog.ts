@@ -131,6 +131,14 @@ export const FALLBACK_SETTINGS: StoreSettings = {
   // الكتالوج المؤقت مابيعرضش شريط — الشريط بيانات حقيقية من settings بس
   announcement: { enabled: false, text: '', href: '', ctaLabel: '' },
   content: DEFAULT_STORE_CONTENT,
+  storeIdentity: {
+    storeName: 'myzill',
+    offerText: 'أد�ات ا�تر��ب �ر��ة �جا�ا�',
+    offerEnabled: true,
+    whatsappNumber: '201000000000',
+    whatsappMessage: '�رحبا� myzill� عا�ز أست�سر ع� ���� زجاج ��ب�ت',
+    inspectionEnabled: true, // Default: ON
+  },
 }
 
 /**
