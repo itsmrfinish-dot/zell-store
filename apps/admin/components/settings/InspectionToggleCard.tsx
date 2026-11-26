@@ -1,9 +1,9 @@
 'use client'
 
-import type { StoreIdentity } from '../../../lib/adminData'
+import type { StoreIdentity } from '../../lib/adminData'
 import { Card } from '../ui/Field'
 import { Switch } from '../ui/Switch'
-import { saveIdentityAction } from '../../../lib/actions'
+import { saveIdentityAction } from '../../lib/actions'
 import { useState } from 'react'
 
 /**
