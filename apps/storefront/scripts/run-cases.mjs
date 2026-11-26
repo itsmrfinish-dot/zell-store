@@ -40,7 +40,7 @@ const SUITES = [
   { name: 'seo', dir: 'lib/seo', entry: 'structuredData.cases.ts', run: 'runSeoCases' },
   { name: 'buy-now', dir: 'lib/buy', entry: 'buyNow.cases.ts', run: 'runBuyNowCases' },
   { name: 'reveal', dir: 'lib/reveal', entry: 'reveal.cases.ts', run: 'runRevealCases' },
-  { name: 'inspection', dir: 'lib/install', entry: 'inspection.cases.ts', run: 'runInspectionCases' },
+  { name: 'inspection', dir: 'lib/install', entry: 'inspection.cases.ts', run: 'runInspectionCases', also: ['lib/data'] },
   // Ø£ÙÙØ§Ø¯ Ø§ÙØ®ØµÙ: Ø§ÙØ­Ø§ÙØ§Øª ÙØ§ÙØª Ø¨ØªØªØ¹ÙÙ typecheck Ø¨Ø³ ÙÙØ§Ø¨ØªØªØ´ØºÙÙØ´ (ÙØ±Ø§Ø¬Ø¹Ø© Ø£ÙÙÙØ© 2026-11).
   { name: 'coupon', dir: 'lib/orders', entry: 'coupon.cases.ts', run: 'runStorefrontCouponCases' },
   { name: 'coupon-checkout', dir: 'lib/orders', entry: 'couponCheckout.cases.ts', run: 'runCheckoutCouponCases', also: ['lib', 'lib/size'] },
