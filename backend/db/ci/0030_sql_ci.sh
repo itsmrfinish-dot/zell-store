@@ -92,8 +92,8 @@ while IFS='|' read -r kind rel _reason; do
   fi
   pg_f "$DB" "$runf" > "$TMP/build_$n.log" 2>&1 || stop "B01 build step $n $rel" "$(tailof "$TMP/build_$n.log")"
 done < "$LIST"
-ok=no; [ "$n" -gt 11 ] && [ "$last" = "migrations/0033_inspection_enabled_setting.sql" ] && ok=yes
-record "B01 database built from build_from_scratch.list in full ($n steps, last $last = 0033)" "$ok" "steps=$n last=$last"
+ok=no; [ "$n" -gt 11 ] && [ "$last" = "../migrations/0034_install_basis_toggle.sql" ] && ok=yes
+record "B01 database built from build_from_scratch.list in full ($n steps, last $last = 0034)" "$ok" "steps=$n last=$last"
 [ "$ok" = yes ] || finish
 
 # ---- S01: حالة ما بعد البناء ----
