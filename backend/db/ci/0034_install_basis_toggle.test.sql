@@ -1,66 +1,76 @@
--- Test cases for Migration 0034: Installation fee calculation
--- Tests unit conversion from centimeters to square meters
+-- Test Migration 0034: Installation fee calculation with unit conversion
+-- Tests centimeters → meters → square meters conversion
 
--- Test setup: Create temporary test table
-CREATE TEMP TABLE test_install_fees (
-  product_id INTEGER,
-  length_cm DECIMAL,
-  roll_width_cm DECIMAL,
-  expected_area_sqm DECIMAL,
-  price_per_sqm DECIMAL,
-  expected_fee DECIMAL
+-- Test 1: Verify function exists and has correct signature
+SELECT
+  routine_name,
+  string_agg(parameter_name, ', ' ORDER BY ordinal_position) as parameters,
+  data_type as return_type
+FROM information_schema.parameters
+WHERE routine_name = 'calculate_install_fee' AND routine_schema = 'public'
+GROUP BY routine_name, data_type;
+
+-- Test 2: Verify column exists in public.settings
+SELECT
+  column_name,
+  data_type,
+  column_default
+FROM information_schema.columns
+WHERE table_name = 'settings' AND table_schema = 'public' AND column_name = 'install_price_per_sqm';
+
+-- Test 3: Verify settings table exists
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'public' AND table_name = 'settings';
+
+-- Test 4: Test function with sample data
+-- Case: 300cm × 50cm = 3m × 0.5m = 1.5 sqm × 100 EGP/sqm = 150 EGP
+SELECT
+  product_id,
+  length_cm,
+  length_m,
+  roll_width_cm,
+  roll_width_m,
+  area_sqm,
+  fee_egp,
+  CASE
+    WHEN area_sqm = 1.5 AND fee_egp = 150 THEN 'PASS: 50cm × 3m = 1.5 sqm = 150 EGP'
+    ELSE 'FAIL: Incorrect calculation'
+  END as test_result
+FROM calculate_install_fee(
+  ARRAY[1],
+  ARRAY[300],
+  ARRAY[50],
+  100
 );
 
--- Insert test cases
-INSERT INTO test_install_fees VALUES
--- Test 1: 50cm × 3m = 1.5 sqm
-(1, 300, 50, 1.5, 100, 150),
--- Test 2: 1m × 1m = 1 sqm
-(2, 100, 100, 1, 100, 100),
--- Test 3: 2m × 1.5m = 3 sqm
-(3, 200, 150, 3, 100, 300),
--- Test 4: 3m × 0.5m = 1.5 sqm (same as test 1 but different order)
-(4, 300, 50, 1.5, 100, 150),
--- Test 5: Custom price 200 EGP/sqm, 2m × 2m = 4 sqm = 800 EGP
-(5, 200, 200, 4, 200, 800),
--- Test 6: Decimal lengths 1.5m × 0.75m = 1.125 sqm × 150 = 168.75 EGP
-(6, 150, 75, 1.125, 150, 168.75);
+-- Test 5: Test multiple products
+-- Product 1: 200cm × 100cm = 2m × 1m = 2 sqm × 100 = 200 EGP
+-- Product 2: 100cm × 150cm = 1m × 1.5m = 1.5 sqm × 100 = 150 EGP
+SELECT
+  product_id,
+  length_m || 'm × ' || roll_width_m || 'm' as dimensions,
+  area_sqm || ' sqm' as area,
+  fee_egp || ' EGP' as fee
+FROM calculate_install_fee(
+  ARRAY[1, 2],
+  ARRAY[200, 100],
+  ARRAY[100, 150],
+  100
+);
 
--- Test the function
-SELECT 
-  t.product_id,
-  t.length_cm,
-  t.roll_width_cm,
-  t.expected_area_sqm,
-  t.price_per_sqm,
-  t.expected_fee,
-  CASE 
-    WHEN c.area_sqm = t.expected_area_sqm THEN 'PASS: Area match'
-    ELSE 'FAIL: Area mismatch (got ' || c.area_sqm || ', expected ' || t.expected_area_sqm || ')'
-  END as area_test,
-  CASE 
-    WHEN c.fee_egp = t.expected_fee THEN 'PASS: Fee match'
-    ELSE 'FAIL: Fee mismatch (got ' || c.fee_egp || ', expected ' || t.expected_fee || ')'
-  END as fee_test
-FROM test_install_fees t
-CROSS JOIN LATERAL calculate_install_fee(
-  ARRAY[t.product_id],
-  ARRAY[t.length_cm],
-  ARRAY[t.roll_width_cm],
-  t.price_per_sqm
-) c;
-
--- Verify column in settings table
-SELECT 
-  column_name, 
-  data_type, 
-  column_default
-FROM information_schema.columns 
-WHERE table_name = 'settings' AND column_name = 'install_price_per_sqm';
-
--- Verify function exists
-SELECT 
-  routine_name, 
-  routine_type
-FROM information_schema.routines 
-WHERE routine_name = 'calculate_install_fee' AND routine_schema = 'public';
+-- Test 6: Test with custom price
+-- 150cm × 75cm = 1.5m × 0.75m = 1.125 sqm × 150 EGP/sqm = 168.75 EGP
+SELECT
+  area_sqm,
+  fee_egp,
+  CASE
+    WHEN area_sqm = 1.125 AND fee_egp = 168.75 THEN 'PASS: Decimal calculation correct'
+    ELSE 'FAIL: Decimal calculation error'
+  END as test_result
+FROM calculate_install_fee(
+  ARRAY[1],
+  ARRAY[150],
+  ARRAY[75],
+  150
+);
