@@ -16,7 +16,7 @@ DB="zell_baseline_ci"
 trap "dropdb -h '$PGHOST' -U postgres --if-exists '$DB' > /dev/null 2>&1" EXIT
 
 # A01: Build from scratch
-./backend/db/ci/build_from_scratch.sh > "$TMP/a01.log" 2>&1 || { echo "FAIL A01" >&2; cat "$TMP/a01.log" >&2; exit 1; }
+bash backend/db/ci/build_from_scratch.sh > "$TMP/a01.log" 2>&1 || { echo "FAIL A01" >&2; cat "$TMP/a01.log" >&2; exit 1; }
 
 # B01: Apply 0033
 PGPASSWORD="$PGPASSWORD" psql -h "$PGHOST" -U postgres -d "$DB" -v ON_ERROR_STOP=1 -f "$MIG/0033_inspection_enabled_setting.sql" > "$TMP/b01.log" 2>&1 || { echo "FAIL B01: apply" >&2; cat "$TMP/b01.log" >&2; exit 1; }
