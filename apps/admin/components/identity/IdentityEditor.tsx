@@ -36,7 +36,7 @@ export function IdentityEditor({ identity }: { identity: StoreIdentity }) {
   }, [identity, syncedAt])
 
   function save() {
-    void run(() => saveIdentityAction(draftRef.current, draftRef.current.updatedAt), {
+    void run(() => saveIdentityAction({ ...draftRef.current, inspectionEnabled: draftRef.current.inspectionEnabled ?? true }, draftRef.current.updatedAt), {
       onSuccess: () => router.refresh(),
     })
   }
