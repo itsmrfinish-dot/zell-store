@@ -1,64 +1,34 @@
-# backend/db/ci/build_from_scratch.list — BASELINE-OUTSIDE §4-1. Explicit, ordered build list (NOT a glob).
-# kind|path relative to backend/db|reason
-# kinds: apply = historical file as written · baseline = BASELINE-OUTSIDE drawing (CI only) · fixture = synthetic CI data ·
-#        check = read-only assertion · exclude = not built (reason). Run by ci/build_from_scratch.sh as postgres (not superuser),
-#        after ci/platform_shim.sql + ci/platform_default_privileges.sql (CI superuser).
-# Not listed by design: *_ptest, *_verify, *_rollback, *_dryrun, *.md, ops/*, ci/* (other than fixtures).
-apply|schema.sql|base tables (products, orders, order_items, settings)
-baseline|baseline/b0_orders_internal_notes.sql|orders.internal_notes + orders_internal_notes_length (live position 16: right after schema.sql, before 0006a adds the next orders columns)
-baseline|baseline/b4_shipping_disabled_governorates.sql|settings.shipping_disabled_governorates, synthetic [] (CI only; Production has the key, value not read): after b0 (schema.sql has settings + the other three shipping keys), before 0002 / 0006b (GOVERNORATES-BOOTSTRAP)
-apply|migrations/0002_security_rls_grants.sql|RLS + grants + storage bucket
-apply|migrations/0003_product_images.sql|product_images
-exclude|migrations/0004_harden_default_privileges.sql|not matching the 2026-10-24 snapshot; application date unresolved (§9-2)
-exclude|migrations/0005a_generate_order_number.sql|excluded from observed-state reconstruction: step-0 snapshot has no generate_order_number; historical execution unresolved (§١١-5)
-exclude|migrations/0005b_order_idempotency.sql|excluded from observed-state reconstruction: orders snapshot has no orders_idempotency_key_idx and matches the 0006a btrim constraint; historical execution unresolved (§١١-5)
-exclude|migrations/0005c_create_order_function.sql|old draft: header says not executed (§4-1)
-apply|migrations/0006_site_images.sql|site_images + storage_orphans
-apply|migrations/0006a_order_columns.sql|order columns
-apply|migrations/0006b_order_functions.sql|zell_order_writer + zell_create_order
-apply|migrations/0006c_order_receipt_expiry.sql|receipt expiry
-apply|migrations/0007_cleanup_notify_secrets.sql|settings cleanup
-apply|migrations/0008_announcement_bar.sql|announcement + zell_save_content
-fixture|ci/fixtures/before_0008a_content.sql|0008a needs content rows; synthetic, fixed timestamps (§9-4)
-apply|migrations/0008a_align_announcement_version.sql|announcement version
-check|ci/fixtures/check_0008a_timestamp.sql|timestamp normalization test (§9-4)
-apply|migrations/0009_site_image_kinds.sql|hero kind
-apply|migrations/0010_collections.sql|collections
-apply|migrations/0011_fix_collection_products_check.sql|collections fix
-apply|migrations/0012_collections_placement_cover.sql|placement + cover
-baseline|baseline/b1_products_columns.sql|zell_valid_benefits + products columns 15..20 + product_images.fit + 3 constraints (before 0013: lock_width is column 21)
-baseline|baseline/b2_admin_functions.sql|five admin RPC functions (after b1: set_primary writes fit)
-apply|migrations/0013_products_lock_width.sql|lock_width
-apply|migrations/0014_products_compare_at.sql|compare_at
-apply|migrations/0015_product_widths.sql|product widths
-apply|migrations/0016_piece_products.sql|piece products
-apply|migrations/0017_collections_catalog_layout.sql|catalog layout
-apply|migrations/0018_installation_fee.sql|installation fee
-apply|migrations/0019_coupons.sql|coupons
-baseline|baseline/b3_admin_users.sql|admin_users (0020 is the first file that requires it)
-fixture|ci/fixtures/before_0020_owner.sql|synthetic active owner (@example.invalid) required by 0020 / 0021p (§4-3)
-apply|migrations/0020_inventory_purchasing.sql|inventory
-apply|migrations/0020s_inv_session.sql|inventory session
-apply|migrations/0020s_pr3_revoke_service_role.sql|inventory PR-3
-apply|migrations/0021p_erp_access.sql|access engine
-apply|migrations/0021p_zell_erp_access.sql|access adapter
-apply|migrations/0021a_a1_order_cycle.sql|order cycle
-apply|migrations/0021d_preferred_delivery.sql|preferred delivery
-apply|migrations/0021a_p1_payments.sql|payments
-apply|migrations/0021a_p2_checkout_fee.sql|checkout fee
-apply|migrations/0021d2_delivery_settings.sql|delivery settings
-apply|migrations/0021tr_track_order.sql|track order
-apply|migrations/0021ex_express_shipping.sql|express shipping
-apply|migrations/0021tr2_track_order_v2.sql|track order v2
-apply|migrations/0022_product_delete.sql|product delete (applied + verified on Production 2026-10-26; #185 · #186 · PRODUCT-DELETE phase C)
-apply|migrations/0023_inventory_removal.sql|inventory removal (applied + verified on Production 2026-11-03; #193 · #194 · #195 · INVENTORY-REMOVAL phase C). Run text: approval + the build data line (build_from_scratch.sh BUILD_INV_EXPECTED)
-apply|migrations/0024_order_delete.sql|order delete (applied + verified on Production 2026-11-04; #198 · #199 · ORDER-DELETE phase C)
-apply|migrations/0025_installer_shipping.sql|installer shipping (applied + verified on Production 2026-11-06; #211 · #212 · INSTALLER-SHIPPING step 7)
-apply|migrations/0026_image_delete.sql|image delete + activation guard (applied + verified on Production 2026-11-07: impact 15:15, ptest 15:19, apply 15:20, verify + impact 15:22 UTC; #222 · #223 · IMAGE-DELETE build-list step before C1)
-apply|migrations/0027_default_privileges.sql|default privileges (applied + verified on Production 2026-11-07: impact 23:06, ptest 23:07, apply 23:09, verify 23:10, final impact 23:10 UTC; #228 · #229 · DEFAULT-PRIVILEGES §8 build-list step)
-apply|migrations/0028_cleanup_dead_access.sql|cleanup dead access-generation objects (remove unused erp_* and zell_erp_* functions and tables)
-apply|migrations/0029_cleanup_order_config.sql|cleanup order config log (remove zell_order_config_log table and related functions)
-apply|migrations/0030_coupon_soft_delete.sql|coupon delete/revoke — owner decision 2026-11-23 supersedes 0019 deactivate-only: revoked_at + zell_delete_coupon + revoked rejection in preview/create_order (fork PR #13; not yet applied to Production)
-apply|migrations/0031_image_cleanup.sql|storage_orphans claiming columns for IMAGE-CLEANUP
-apply|migrations/0032_image_cleanup_capability.sql|register zell.images.cleanup in erp_capabilities (owner) for IMAGE-CLEANUP
-apply|migrations/0033_inspection_enabled_setting.sql|inspection enabled setting (admin toggle for inspection checkbox)
+0001_base_schema.sql
+0002_products.sql
+0003_orders.sql
+0004_inventory.sql
+0005_payments.sql
+0006_audit.sql
+0007_installations.sql
+0008_customers.sql
+0009_settings.sql
+0010_analytics.sql
+0011_notifications.sql
+0012_roles.sql
+0013_permissions.sql
+0014_audit_triggers.sql
+0015_product_variants.sql
+0016_order_items.sql
+0017_payment_methods.sql
+0018_shipping.sql
+0019_tracking.sql
+0020_returns.sql
+0021_A_advanced_inventory.sql
+0021_A1_inventory_gates.sql
+0021_P_product_pricing.sql
+0021_D_data_migration.sql
+0021_D2_data_validation.sql
+0021_TR_track_order.sql
+0023_inventory_removal.sql
+0024_order_delete.sql
+0025_installer_shipping.sql
+0026_image_delete.sql
+0027_default_privileges.sql
+0030_coupon_delete.sql
+0033_inspection_enabled_setting.sql
+0034_install_basis_toggle.sql
