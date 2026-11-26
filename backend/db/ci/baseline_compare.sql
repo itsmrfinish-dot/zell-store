@@ -198,8 +198,6 @@ select 'CMP DIFF ' || e.k || ' only_in_production=' || x::text
 from cmp_expected e join cmp_actual a using (k), pg_catalog.jsonb_array_elements(e.v) x
 where a.v is distinct from e.v and pg_catalog.jsonb_typeof(e.v) = 'array' and pg_catalog.jsonb_typeof(a.v) = 'array' and not (a.v @> pg_catalog.jsonb_build_array(x));
 
-  AND pronamespace = 'public'::regnamespace 
-  AND array_length(proargtypes, 1) = 6;
 
 select 'CMP DIFF ' || a.k || ' only_in_build=' || y::text
 from cmp_expected e join cmp_actual a using (k), pg_catalog.jsonb_array_elements(a.v) y
