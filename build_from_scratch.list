@@ -1,0 +1,5 @@
+backend|backend/installation/calculateInstallationFee.ts|Core logic for installation fee calculations with CM to M conversion
+backend|backend/migrations/0034_install_basis_toggle.sql|Database migration for installation basis toggle feature
+frontend|frontend/components/InstallationFeeDisplay.tsx|Displays installation fees with conversion steps (CM→M→sqm)
+frontend|frontend/components/ProductBuy.tsx|Product purchase form with dimension inputs and fee integration
+test|__tests__/installation.test.ts|Validates CM to M conversion and fee calculations
