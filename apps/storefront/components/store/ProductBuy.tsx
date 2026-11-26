@@ -30,6 +30,7 @@ import { SizePanel } from './SizePanel'
 import { AddonsPicker } from './AddonsPicker'
 import { currentInstallModeLine, installChoiceRequired, revealToolsOnChange, showToolSuggestions } from '../../lib/install/installChoice'
 import { InstallChoice } from './InstallChoice'
+import { InstallationFeeDisplay } from '../../../../frontend/components/InstallationFeeDisplay'
 import { buildInspectionMessage, buildWhatsAppUrl } from '../../lib/install/inspection'
 import type { SizeDecision } from '../../lib/size/sizeEntry'
 
@@ -258,6 +259,13 @@ export function ProductBuy({
           />
           {/* الاختيار واحد للطلب كله (cart.installMode): لو متحدد، سطر واضح بالقيمة الحالية وإنها للطلب كله وبتتغيّر من هنا */}
           {currentLine !== null ? <p className="text-sm text-fg">{currentLine}</p> : null}
+          {installer && fee !== null ? (
+            <InstallationFeeDisplay
+              lengthCm={lengthCm}
+              rollWidthCm={effective.width_cm}
+              feePerSquareMeterPiastres={fee}
+            />
+          ) : null}
         </div>
       ) : null}
 
