@@ -223,6 +223,8 @@ export type StoreIdentity = {
   offerEnabled?: boolean
   whatsappNumber: string
   whatsappMessage: string
+  /** فعّل/عطّل صندوق طلب المعاينة قبل التركيب — الافتراضي ON. */
+  inspectionEnabled?: boolean
   /**
    * أحدث updated_at بين **أربعة** مفاتيح بس: الاسم ونص العرض ورقم
    * ورسالة الواتساب. اللوجو مش داخل — zell_save_identity مابتلمسهوش.

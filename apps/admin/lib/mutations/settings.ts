@@ -81,6 +81,7 @@ export async function saveIdentity(
       p_offer_text: value.offerText,
       p_whatsapp_number: value.whatsappNumber,
       p_whatsapp_message: value.whatsappMessage,
+      p_inspection_enabled: value.inspectionEnabled,
     })
 
     if (changedAt === null) return { ok: false, code: 'CONFLICT', message: CONFLICT_MESSAGE }

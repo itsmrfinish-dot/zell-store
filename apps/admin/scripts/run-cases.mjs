@@ -62,7 +62,7 @@ const SUITES = [
   // أكواد الخصم: الحالات كانت بتتعمل typecheck بس ومابتتشغّلش (مراجعة أمنية 2026-11).
   { name: 'coupons', dir: 'lib/coupons', entry: 'form.cases.ts', run: 'runAdminCouponCases', also: ['lib', 'lib/orders'] },
   // SERVICE-CLIENT — إنشاء عميل الخدمة من غير كوكيز (regression للـ dry-run).
-  { name: 'service-client', dir: 'lib/auth', entry: 'serviceClient.cases.ts', run: 'runServiceClientCases', link: ['@supabase/ssr', '@supabase/supabase-js', 'next'], stub: ['server-only']},
+    { name: 'service-client', dir: 'lib/auth', entry: 'serviceClient.cases.ts', run: 'runServiceClientCases', link: ['@supabase/ssr', '@supabase/supabase-js', 'next'], stub: ['server-only'] },
     // STORAGE-LIST — regression لحذف .abortSignal من storage list() (الـ dry-run كان بيفشل كل الملفات).
   { name: 'storage-list', dir: 'lib/data', entry: 'storageList.cases.ts', run: 'runStorageListCases', also: ['lib', 'lib/orders', 'lib/content', 'lib/coupons', 'lib/auth', 'lib/data', 'lib/images', 'lib/validation', 'lib/uploads'], link: ['@supabase/ssr', '@supabase/supabase-js', 'next'], stub: ['server-only'] },
   // COOKIES-HEADERS §٣ — كوكيز الجلسة المكتوبة فعليًا بالمكتبة الحقيقية وfetch مزيّف. آخر suite لأنها بتغيّر متغيرات البيئة وfetch (وبترجّعهم).

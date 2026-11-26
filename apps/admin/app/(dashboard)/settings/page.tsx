@@ -4,6 +4,7 @@ import { DeliverySettingsCard } from '../../../components/settings/DeliverySetti
 import { SettingsEditor } from '../../../components/settings/SettingsEditor'
 import { OrderPurgeCard } from '../../../components/orders/OrderPurgeCard'
 import { SystemHealthView } from '../../../components/settings/SystemHealthView'
+import { InspectionToggleCard } from '../../../components/settings/InspectionToggleCard'
 import { adminData } from '../../../lib/adminData'
 import { pageWithAccess } from '../../../lib/access/instance'
 import { getDeliverySettings } from '../../../lib/data/deliverySettings'
@@ -15,7 +16,7 @@ export const dynamic = 'force-dynamic'
 
 export default pageWithAccess('zell.settings.view', async function SettingsPage(ctx) {
   // 0021-D2 — إعداد موعد التسليم: القراية لأي أدمن شغّال، والحفظ للمالك بس (والقرار النهائي في الداتابيز)
-  const [settings, health, delivery] = await Promise.all([adminData.getOperationalSettings(), getSystemHealth(), getDeliverySettings()])
+  const [settings, health, delivery, storeIdentity] = await Promise.all([adminData.getOperationalSettings(), getSystemHealth(), getDeliverySettings(), adminData.getIdentity()])
 
   return (
     <>
@@ -24,6 +25,7 @@ export default pageWithAccess('zell.settings.view', async function SettingsPage(
         <SystemHealthView health={health} />
         <DeliverySettingsCard key={delivery?.updatedAt ?? 'none'} settings={delivery} canSave={ctx.identity.role === 'owner'} />
         <SettingsEditor settings={settings} />
+        <InspectionToggleCard identity={storeIdentity} canSave={ctx.identity.role === 'owner'} />
         {/* ORDER-DELETE (المرحلة C): مسح كل الطلبات — للمالك بس (قرار المالك §١٠)، والقرار النهائي في الداتابيز. */}
         {ctx.identity.role === 'owner' ? <OrderPurgeCard scope="all" /> : null}
       </div>
