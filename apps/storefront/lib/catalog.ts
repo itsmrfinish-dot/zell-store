@@ -131,6 +131,16 @@ export const FALLBACK_SETTINGS: StoreSettings = {
   // الكتالوج المؤقت مابيعرضش شريط — الشريط بيانات حقيقية من settings بس
   announcement: { enabled: false, text: '', href: '', ctaLabel: '' },
   content: DEFAULT_STORE_CONTENT,
+  get storeIdentity() {
+    return {
+      storeName: this.storeName,
+      offerText: this.offerText,
+      offerEnabled: this.offerEnabled,
+      whatsappNumber: this.whatsappNumber,
+      whatsappMessage: this.whatsappMessage,
+      inspectionEnabled: true,
+    };
+  },
 }
 
 /**

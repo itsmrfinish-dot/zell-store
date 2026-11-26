@@ -29,6 +29,7 @@ export type IdentityInput = {
   offerText: string
   whatsappNumber: string
   whatsappMessage: string
+  inspectionEnabled: boolean
 }
 
 const MAX_GOVERNORATES = 60
@@ -128,6 +129,7 @@ export function validateIdentity(input: IdentityInput): { ok: true; value: Ident
     offerText: offerText.value ?? '',
     whatsappNumber: phone,
     whatsappMessage: whatsappMessage.value ?? '',
+    inspectionEnabled: input.inspectionEnabled ?? true,
   }
   return { ok: true, value }
 }

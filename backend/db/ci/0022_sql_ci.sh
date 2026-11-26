@@ -413,6 +413,13 @@ record "IMP5 impact query after re-apply = the after-apply result (columns 2-31)
 # نفس حارس BASELINE (call_contract.mjs) بـ --pending require: نداءات zell_product_delete* بتتفحص فعليًا (الوجود · أسماء المعاملات ·
 # EXECUTE لـ authenticated · مفيش لـ anon و service_role)، زي ما هتتفحص في build_from_scratch بعد المرحلة C.
 # --later skip: الداتابيز هنا مبنية لحد قبل 0022، فدوال الـ migrations اللي بعدها في القايمة (0024) مش موجودة (call_contract_policy.json later).
+
+# Apply 0033 INSPECTION-TOGGLE before K22 call contract check
+if su_f "$DB" "$MIG/0033_inspection_enabled_setting.sql" > "$TMP/j01_apply.log" 2>&1; then
+  record "J01 apply 0033 inspection_enabled_setting" yes ""
+else
+  record "J01 apply 0033 inspection_enabled_setting" no "$(tailof "$TMP/j01_apply.log")"
+fi
 if node "$CIDIR/call_contract.mjs" --root "$ROOT" --policy "$CIDIR/call_contract_policy.json" --sql "$TMP/cc.sql" --pending require --later skip > "$TMP/cc_static.log" 2>&1; then
   psql -X -q -tA -v ON_ERROR_STOP=1 -U "$SUPER" -d "$DB" -f "$TMP/cc.sql" < /dev/null > "$TMP/cc_db.log" 2>&1; rc=$?
   fails=$(grep -c '^CALL FAIL ' "$TMP/cc_db.log" || true)

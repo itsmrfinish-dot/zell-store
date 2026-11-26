@@ -43,6 +43,7 @@ export function ProductBuy({
   whatsappNumber = '',
   sizeEntry = 'cm',
   sizeTexts,
+  inspectionEnabled = true,
 }: {
   product: StoreProduct
   gift?: string
@@ -56,6 +57,8 @@ export function ProductBuy({
   /** SIZE-TEXTS — نصوص «حدد المقاس» من «المحتوى» (الغايب = النصوص الافتراضية). */
   sizeTexts?: ProductSizeTexts
   whatsappNumber?: string
+  /** فعّل/عطّل صندوق طلب المعاينة — الافتراضي ON. */
+  inspectionEnabled?: boolean
 }) {
   const cart = useCart()
   // BUY-NOW — «اطلب دلوقتي»: إضافة مرة واحدة + علامة تحميل فورية + منع الضغط المتكرر (lib/buy/buyNow.ts)
@@ -213,7 +216,7 @@ export function ProductBuy({
       />
 
       {/* صندوق طلب المعاينة */}
-      {cart.installMode === 'installer' && installation?.inspectionNote && whatsappNumber ? (
+      {inspectionEnabled && cart.installMode === 'installer' && installation?.inspectionNote && whatsappNumber ? (
         <div className="rounded-lg border border-border bg-card p-4 space-y-3">
           <h3 className="font-semibold">محتاج معاينة</h3>
           <p className="text-sm text-muted-foreground whitespace-pre-wrap">{installation.inspectionNote}</p>
