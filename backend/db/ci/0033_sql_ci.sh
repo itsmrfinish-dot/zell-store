@@ -11,8 +11,8 @@ trap "rm -rf '$TMP'" EXIT
 DBDIR="backend/db"
 MIG="$DBDIR/migrations"
 
-DB="$(mktemp -u)"
-createdb -h "$PGHOST" -U postgres "$DB" > /dev/null 2>&1 || { echo "refusing: could not create test database" >&2; exit 2; }
+# build_from_scratch.sh builds this database itself on a fresh cluster
+DB="zell_baseline_ci"
 trap "dropdb -h '$PGHOST' -U postgres --if-exists '$DB' > /dev/null 2>&1" EXIT
 
 # A01: Build from scratch
