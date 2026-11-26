@@ -282,6 +282,13 @@ ok=no; imp_gate apply && imp_gate verifies && [ "$(imp_f apply 2-8)" = "$IMPACT_
 record "M04 impact after apply: columns 2-8 = plan step 4, 9-31 = before; after verify 0024 + the 9 verifies (plan step 5 order): columns 2-31 = after apply" "$ok" "apply=$(imp_detail apply) verifies=$(imp_detail verifies)"
 # --later skip:0026_image_delete.sql,0030_coupon_soft_delete.sql: الداتابيز هنا مبنية لحد قبل 0024 + 0024، فدالة 0026 و0030 (بعدهم في القايمة) مش موجودة (call_contract_policy.json later).
 # أسماء 0024 نفسها بتتفحص زي الأول.
+
+# Apply 0033 INSPECTION-TOGGLE before K01 baseline contract check
+if su_f "$DB" "$MIG/0033_inspection_enabled_setting.sql" > "$TMP/j01_apply.log" 2>&1; then
+  record "J01 apply 0033 inspection_enabled_setting" yes ""
+else
+  record "J01 apply 0033 inspection_enabled_setting" no "$(tailof "$TMP/j01_apply.log")"
+fi
 if node "$CIDIR/call_contract.mjs" --root "$ROOT" --policy "$CIDIR/call_contract_policy.json" --sql "$TMP/cc.sql" --later skip:0026_image_delete.sql,0030_coupon_soft_delete.sql > "$TMP/cc_static.log" 2>&1; then
   psql -X -q -tA -v ON_ERROR_STOP=1 -v VERBOSITY=verbose -U "$SUPER" -d "$DB" -f "$TMP/cc.sql" < /dev/null > "$TMP/cc_db.log" 2>&1; rc=$?
   fails=$(grep -c '^CALL FAIL ' "$TMP/cc_db.log" || true)
