@@ -286,6 +286,8 @@ record "M04 impact after apply: columns 2-8 = plan step 4, 9-31 = before; after 
 # Apply 0033 INSPECTION-TOGGLE before K01 baseline contract check
 if su_f "$DB" "$MIG/0033_inspection_enabled_setting.sql" > "$TMP/j01_apply.log" 2>&1; then
   record "J01 apply 0033 inspection_enabled_setting" yes ""
+  # 0033 changes zell_save_identity, so baseline for rollback checks (RB1, RB3, V7A, V7B) must be taken after 0033 is applied
+  FP0=$(fp_out)
 else
   record "J01 apply 0033 inspection_enabled_setting" no "$(tailof "$TMP/j01_apply.log")"
 fi
