@@ -777,8 +777,8 @@ export function CheckoutForm({
                     {installationChosen ? 'تمام، هنبعتلك فني تركيب' : 'محتاج فني تركيب؟'}
                   </span>
                   <span className={'mt-0.5 block text-sm ' + (installationChosen ? 'text-brand-fg/85' : 'text-muted')}>
-                    {settings.installation.feePerMeterPiastres !== null
-                      ? formatPiastres(settings.installation.feePerMeterPiastres) + ' للمتر من أفلام المقاس + انتقال حسب المنطقة'
+                    {installationRate !== null
+                      ? formatPiastres(installationRate) + ' لالمتر المربع من أفلام المقاس + انتقال حسب المنطقة'
                       : 'فني يركّبهولك'}
                   </span>
                   {settings.installation.note ? (
