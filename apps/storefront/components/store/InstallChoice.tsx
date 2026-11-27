@@ -102,7 +102,7 @@ export function InstallChoice({
       {mode === 'installer' ? (
         <div className="mt-3 space-y-1 rounded border border-dashed border-border p-3 text-xs text-muted">
           <p className="text-sm font-semibold text-fg">
-            <Num>{formatPiastres(feePerSquareMeterPiastres)}</Num> / m\u00B2
+            <Num>{formatPiastres(feePerSquareMeterPiastres)}</Num> / m&sup2;
           </p>
           <InstallationFeeDisplay dimensions={dimensions} feePerSquareMeterPiastres={feePerSquareMeterPiastres} />
           <p>
