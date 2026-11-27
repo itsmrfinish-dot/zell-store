@@ -66,7 +66,7 @@ export function ProductBuy({
   const busy = buyNow.busy
   // PR4 — «هتركّبه إزاي؟»: النية على مستوى السلة (cart.installMode)، وCheckout الحكم النهائي
   const installerGovernorates = installation ? installationReadyGovernorates(installation) : []
-  const fee = installation?.feePerSquareMeterPiastres ?? installation?.feePerMeterPiastres ?? null
+  const fee = installation?.feePerMeterPiastres ?? null
   const showChoice = installerGovernorates.length > 0 && fee !== null
   // INSTALLER-ONLY — المنتج ده «فني فقط» من اللوحة: الفني لوحده، ومن غير «بنفسي» ولا اقتراحات أدوات
   const installerOnly = showChoice && installation !== null && installerRequiredFor(installation, product.id)
@@ -250,9 +250,8 @@ export function ProductBuy({
               // أدوات مختارة ولسه مااتضافتش بتتصفّر — مابتتضافش من غير ما العميل يشوفها
               if (next === 'installer') setAddonQty({})
             }}
-            feePerSquareMeterPiastres={fee}
+            feePerMeterPiastres={fee}
             lengthCm={lengthCm}
-            dimensions={[{ lengthCm, rollWidthCm: effective.width_cm }]}
             governorates={installerGovernorates}
             context="product"
             installerOnly={installerOnly}

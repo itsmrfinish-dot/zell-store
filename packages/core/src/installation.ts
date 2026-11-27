@@ -47,8 +47,6 @@ export type InstallationConfig = {
   enabled: boolean
   note: string
   /** null = لسه متحددش، والفني مش متاح لحد ما يتكتب. */
-  feePerSquareMeterPiastres: number | null
-  /** Deprecated JSON alias retained for existing data and the 0025 parity contract. */
   feePerMeterPiastres: number | null
   areas: InstallationAreas
   /** INSTALLER-ONLY — ناقص = 'choice' (العميل يختار). */
@@ -86,8 +84,7 @@ export function parseInstallationConfig(value: unknown): InstallationConfig {
       if (Object.keys(out).length > 0) areas[governorate] = out
     }
   }
-  const fee = raw['feePerSquareMeterPiastres'] ?? raw['feePerMeterPiastres']
-  const normalizedFee = isInstallationMoney(fee, 1) ? fee : null
+  const fee = raw['feePerMeterPiastres']
   const mode = raw['mode']
   const inspectionNote = typeof raw['inspectionNote'] === 'string' 
     ? raw['inspectionNote'].trim().substring(0, INSTALLATION_LIMITS.inspectionNote)
@@ -101,8 +98,7 @@ export function parseInstallationConfig(value: unknown): InstallationConfig {
     note: typeof raw['note'] === 'string' ? raw['note'] : '',
     inspectionNote: inspectionNote || DEFAULT_INSPECTION_NOTE,
     whatsappMessage: whatsappMessage || DEFAULT_WHATSAPP_MESSAGE,
-    feePerSquareMeterPiastres: normalizedFee,
-    feePerMeterPiastres: normalizedFee,
+    feePerMeterPiastres: isInstallationMoney(fee, 1) ? fee : null,
     areas,
     mode: isInstallationMode(mode) ? mode : 'choice',
     installerOnlyProductIds: parseInstallerOnlyIds(raw['installerOnlyProductIds']),
@@ -134,53 +130,30 @@ export function installationLengthCm(
  * القيم موجبة، فالنص بيتقرب لفوق — نفس round(numeric) في zell_create_order بالحرف.
  * للعرض بس؛ الرقم المعتمد من الداتابيز.
  */
-export type InstallationDimension = Readonly<{ lengthCm: number; rollWidthCm: number }>
-
-/** Returns total measured area in square metres for all selected lines. */
-export function installationAreaSquareMeters(dimensions: readonly InstallationDimension[]): number {
-  return dimensions.reduce((area, dimension) => {
-    if (!Number.isInteger(dimension.lengthCm) || !Number.isInteger(dimension.rollWidthCm)) return area
-    if (dimension.lengthCm <= 0 || dimension.rollWidthCm <= 0) return area
-    return area + (dimension.lengthCm / 100) * (dimension.rollWidthCm / 100)
-  }, 0)
-}
-
-export function installationFeeForAreaPiastres(feePerSquareMeterPiastres: number, areaSquareMeters: number): number {
-  if (!Number.isInteger(feePerSquareMeterPiastres) || feePerSquareMeterPiastres < 0) return 0
-  if (!Number.isFinite(areaSquareMeters) || areaSquareMeters <= 0) return 0
-  return Math.round(feePerSquareMeterPiastres * areaSquareMeters)
-}
-
-/** Calculates the piastre fee for a square-metre rate; two args retain legacy 0025 parity. */
-export function installationFeePiastres(feePerSquareMeterPiastres: number, lengthCm: number, rollWidthCm?: number): number {
-  if (!Number.isInteger(feePerSquareMeterPiastres) || !Number.isInteger(lengthCm)) return 0
-  if (feePerSquareMeterPiastres <= 0 || lengthCm <= 0) return 0
-  if (rollWidthCm === undefined) {
-    const linearProduct = feePerSquareMeterPiastres * lengthCm
-    const linearRemainder = linearProduct % 100
-    return (linearProduct - linearRemainder) / 100 + (linearRemainder >= 50 ? 1 : 0)
-  }
-  if (!Number.isInteger(rollWidthCm) || rollWidthCm <= 0) return 0
-  const areaSquareMeters = (lengthCm / 100) * (rollWidthCm / 100)
-  return installationFeeForAreaPiastres(feePerSquareMeterPiastres, areaSquareMeters)
+export function installationFeePiastres(feePerMeterPiastres: number, lengthCm: number): number {
+  if (!Number.isInteger(feePerMeterPiastres) || !Number.isInteger(lengthCm)) return 0
+  if (feePerMeterPiastres <= 0 || lengthCm <= 0) return 0
+  const product = feePerMeterPiastres * lengthCm
+  const rest = product % 100
+  return (product - rest) / 100 + (rest >= 50 ? 1 : 0)
 }
 
 /** المناطق المتاحة للفني في محافظة — فاضية لو الفني مقفول أو سعر المتر ناقص. */
 export function installationAreasIn(config: InstallationConfig, governorate: string): string[] {
-  if (!config.enabled || config.feePerSquareMeterPiastres === null) return []
+  if (!config.enabled || config.feePerMeterPiastres === null) return []
   return Object.keys(config.areas[governorate] ?? {})
 }
 
 /** انتقال الفني لمنطقة بالقرش — null = الفني مش متاح هناك. */
 export function installationTravelPiastres(config: InstallationConfig, governorate: string, area: string): number | null {
-  if (!config.enabled || config.feePerSquareMeterPiastres === null) return null
+  if (!config.enabled || config.feePerMeterPiastres === null) return null
   const travel = config.areas[governorate]?.[area]
   return travel === undefined ? null : travel
 }
 
 /** المحافظات اللي فيها منطقة متاحة للفني — فاضية لو الفني مقفول أو سعر المتر ناقص. */
 export function installationReadyGovernorates(config: InstallationConfig): string[] {
-  if (!config.enabled || config.feePerSquareMeterPiastres === null) return []
+  if (!config.enabled || config.feePerMeterPiastres === null) return []
   return installationGovernorates(config.areas)
 }
 

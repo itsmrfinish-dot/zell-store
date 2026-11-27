@@ -62,7 +62,7 @@ function toDraft(record: InstallationRecord, groups: ShippingAreaGroup[]): Draft
     }
     if (Object.keys(out).length > 0) areas[group.governorate] = out
   }
-  const fee = record.config.feePerSquareMeterPiastres ?? record.config.feePerMeterPiastres
+  const fee = record.config.feePerMeterPiastres
   return {
     enabled: record.config.enabled,
     note: record.config.note,
@@ -113,7 +113,7 @@ function validate(draft: Draft): Checked {
   }
   return {
     ok: true,
-    input: { enabled: draft.enabled, note: draft.note, inspectionNote: draft.inspectionNote, whatsappMessage: draft.whatsappMessage, feePerSquareMeterPiastres: fee, areas, mode: draft.mode, installerOnlyProductIds: draft.productIds },
+    input: { enabled: draft.enabled, note: draft.note, inspectionNote: draft.inspectionNote, whatsappMessage: draft.whatsappMessage, feePerMeterPiastres: fee, areas, mode: draft.mode, installerOnlyProductIds: draft.productIds },
   }
 }
 
@@ -259,8 +259,11 @@ export function InstallationEditor({
 
           <Field
             htmlFor="installation-fee"
-            label="سعر تركيب المتر المربع (ج.م)"
-            hint={'بعد القياس بتتحسب تكلفة التركيب بالمتر المربع حسب المقاس الفعلي، وبيتم الاتفاق على التكلفة النهائية قبل بدء الشغل' + (fee === null ? '' : ' Example: 1.50 m\u00B2 \u00D7 100 = 150.')}
+            label="سعر تركيب المتر الطولي (ج.م)"
+            hint={
+              'يُحسب على مجموع أطوال المنتجات المبيعة بالمقاس في الطلب، ولا تدخل فيه المنتجات المبيعة بالعدد.' +
+              (fee === null ? '' : ' مثال: فيلم 5 متر = ' + formatPiastres(fee * 5) + ' تركيب.')
+            }
           >
             <input
               id="installation-fee"
