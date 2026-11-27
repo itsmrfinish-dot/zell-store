@@ -41,7 +41,7 @@ export type InstallationInput = {
   note: string
   inspectionNote: string
   whatsappMessage: string
-  feePerMeterPiastres: number | null
+  feePerSquareMeterPiastres: number | null
   areas: InstallationAreas
   /** INSTALLER-ONLY — طريقة التركيب (الغايب = 'choice'). */
   mode?: InstallationMode
@@ -70,7 +70,7 @@ export async function installerAreasMissingFromShipping(): Promise<OrphanArea[]>
 }
 
 function sameConfig(a: InstallationConfig, b: InstallationConfig): boolean {
-  if (a.enabled !== b.enabled || a.note !== b.note || a.inspectionNote !== b.inspectionNote || a.whatsappMessage !== b.whatsappMessage || a.feePerMeterPiastres !== b.feePerMeterPiastres) return false
+  if (a.enabled !== b.enabled || a.note !== b.note || a.inspectionNote !== b.inspectionNote || a.whatsappMessage !== b.whatsappMessage || a.feePerSquareMeterPiastres !== b.feePerSquareMeterPiastres) return false
   if ((a.mode ?? 'choice') !== (b.mode ?? 'choice')) return false
   if ((a.installerOnlyProductIds ?? []).join(',') !== (b.installerOnlyProductIds ?? []).join(',')) return false
   const flat = (areas: InstallationAreas): string =>
@@ -124,7 +124,7 @@ export async function saveInstallation(raw: unknown, rawExpected: unknown): Prom
   }
 
   let fee: number | null = null
-  const feeRaw = input['feePerMeterPiastres']
+  const feeRaw = input['feePerSquareMeterPiastres'] ?? input['feePerMeterPiastres']
   if (feeRaw !== null && feeRaw !== undefined) {
     if (!isInstallationMoney(feeRaw, 1)) {
       return { ok: false, code: 'VALIDATION', message: 'سعر تركيب المتر لازم يكون من 0.01 لـ ' + MAX_POUNDS + ' جنيه' }
@@ -181,7 +181,10 @@ export async function saveInstallation(raw: unknown, rawExpected: unknown): Prom
       mode,
       installerOnlyProductIds,
     }
-    if (fee !== null) value['feePerMeterPiastres'] = fee
+    if (fee !== null) {
+      value['feePerSquareMeterPiastres'] = fee
+      value['feePerMeterPiastres'] = fee
+    }
 
     if (rawExpected === null) {
       try {
@@ -207,7 +210,7 @@ export async function saveInstallation(raw: unknown, rawExpected: unknown): Prom
     }
 
     const stored = await readInstallationRecord()
-    const expected: InstallationConfig = { enabled, note, inspectionNote: normalizedInspectionNote, whatsappMessage: normalizedWhatsappMessage, feePerMeterPiastres: fee, areas, mode, installerOnlyProductIds }
+    const expected: InstallationConfig = { enabled, note, inspectionNote: normalizedInspectionNote, whatsappMessage: normalizedWhatsappMessage, feePerSquareMeterPiastres: fee, feePerMeterPiastres: fee, areas, mode, installerOnlyProductIds }
     if (stored.updatedAt === null || !sameConfig(stored.config, expected)) return toInternalFailure(null)
     return { ok: true, data: stored }
   } catch (error) {

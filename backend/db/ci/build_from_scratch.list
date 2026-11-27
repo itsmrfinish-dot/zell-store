@@ -63,3 +63,4 @@ apply|migrations/0031_image_cleanup.sql|storage_orphans claiming columns for IMA
 apply|migrations/0032_image_cleanup_capability.sql|register zell.images.cleanup in erp_capabilities (owner) for IMAGE-CLEANUP
 apply|migrations/0033_inspection_enabled_setting.sql|inspection enabled setting (admin toggle for inspection checkbox)
 apply|../migrations/0034_install_basis_toggle.sql|installation fee basis and square-meter calculation
+apply|migrations/0035_install_fee_order_calculation.sql|per-square-metre order fee calculation

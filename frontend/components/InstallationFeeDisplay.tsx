@@ -1,34 +1,25 @@
+import { formatPiastres, installationAreaSquareMeters, installationFeeForAreaPiastres, type InstallationDimension } from '../../packages/core/src'
+
 type InstallationFeeDisplayProps = {
-  lengthCm: number
-  rollWidthCm: number
+  dimensions: readonly InstallationDimension[]
   feePerSquareMeterPiastres: number
 }
 
 export function InstallationFeeDisplay({
-  lengthCm,
-  rollWidthCm,
+  dimensions,
   feePerSquareMeterPiastres,
 }: InstallationFeeDisplayProps) {
-  if (
-    !Number.isFinite(lengthCm) ||
-    lengthCm <= 0 ||
-    !Number.isFinite(rollWidthCm) ||
-    rollWidthCm <= 0 ||
-    !Number.isFinite(feePerSquareMeterPiastres) ||
-    feePerSquareMeterPiastres < 0
-  ) {
+  const areaSquareMeters = installationAreaSquareMeters(dimensions)
+  if (!Number.isFinite(feePerSquareMeterPiastres) || feePerSquareMeterPiastres < 0 || areaSquareMeters <= 0) {
     return null
   }
 
-  const lengthMeters = lengthCm / 100
-  const rollWidthMeters = rollWidthCm / 100
-  const areaSquareMeters = lengthMeters * rollWidthMeters
-  const feePiastres = Math.round(areaSquareMeters * feePerSquareMeterPiastres)
+  const feePiastres = installationFeeForAreaPiastres(feePerSquareMeterPiastres, areaSquareMeters)
 
   return (
     <div aria-live="polite" className="rounded-lg border border-border bg-card p-3 text-sm text-fg">
-      <p>Installation area: {areaSquareMeters.toFixed(2)} m²</p>
-      <p>Installation fee: {feePiastres.toLocaleString('en-US')}</p>
+      <p>Installation area: {areaSquareMeters.toFixed(2)} {'m\u00B2'}</p>
+      <p>Installation fee: {formatPiastres(feePiastres)}</p>
     </div>
   )
 }

@@ -30,7 +30,6 @@ import { SizePanel } from './SizePanel'
 import { AddonsPicker } from './AddonsPicker'
 import { currentInstallModeLine, installChoiceRequired, revealToolsOnChange, showToolSuggestions } from '../../lib/install/installChoice'
 import { InstallChoice } from './InstallChoice'
-import { InstallationFeeDisplay } from '../../../../frontend/components/InstallationFeeDisplay'
 import { buildInspectionMessage, buildWhatsAppUrl } from '../../lib/install/inspection'
 import type { SizeDecision } from '../../lib/size/sizeEntry'
 
@@ -67,7 +66,7 @@ export function ProductBuy({
   const busy = buyNow.busy
   // PR4 — «هتركّبه إزاي؟»: النية على مستوى السلة (cart.installMode)، وCheckout الحكم النهائي
   const installerGovernorates = installation ? installationReadyGovernorates(installation) : []
-  const fee = installation?.feePerMeterPiastres ?? null
+  const fee = installation?.feePerSquareMeterPiastres ?? installation?.feePerMeterPiastres ?? null
   const showChoice = installerGovernorates.length > 0 && fee !== null
   // INSTALLER-ONLY — المنتج ده «فني فقط» من اللوحة: الفني لوحده، ومن غير «بنفسي» ولا اقتراحات أدوات
   const installerOnly = showChoice && installation !== null && installerRequiredFor(installation, product.id)
@@ -251,21 +250,15 @@ export function ProductBuy({
               // أدوات مختارة ولسه مااتضافتش بتتصفّر — مابتتضافش من غير ما العميل يشوفها
               if (next === 'installer') setAddonQty({})
             }}
-            feePerMeterPiastres={fee}
+            feePerSquareMeterPiastres={fee}
             lengthCm={lengthCm}
+            dimensions={[{ lengthCm, rollWidthCm: effective.width_cm }]}
             governorates={installerGovernorates}
             context="product"
             installerOnly={installerOnly}
           />
           {/* الاختيار واحد للطلب كله (cart.installMode): لو متحدد، سطر واضح بالقيمة الحالية وإنها للطلب كله وبتتغيّر من هنا */}
           {currentLine !== null ? <p className="text-sm text-fg">{currentLine}</p> : null}
-          {installer && fee !== null ? (
-            <InstallationFeeDisplay
-              lengthCm={lengthCm}
-              rollWidthCm={effective.width_cm}
-              feePerSquareMeterPiastres={fee}
-            />
-          ) : null}
         </div>
       ) : null}
 
