@@ -5,11 +5,11 @@ export type InstallationFeeCalculation = {
   fee: number
 }
 
-/** Converts the selected centimeter dimensions to meters before pricing the area. */
+/** Converts the selected centimeter dimensions to meters and calculates fee from LENGTH ONLY (linear pricing, rate per meter). */
 export function calculateInstallationFee(
   lengthCm: number,
   rollWidthCm: number,
-  feePerSquareMeter: number,
+  feePerMeter: number,
 ): InstallationFeeCalculation {
   if (!Number.isFinite(lengthCm) || lengthCm <= 0) {
     throw new RangeError('lengthCm must be a positive finite number')
@@ -17,14 +17,14 @@ export function calculateInstallationFee(
   if (!Number.isFinite(rollWidthCm) || rollWidthCm <= 0) {
     throw new RangeError('rollWidthCm must be a positive finite number')
   }
-  if (!Number.isFinite(feePerSquareMeter) || feePerSquareMeter < 0) {
-    throw new RangeError('feePerSquareMeter must be a non-negative finite number')
+  if (!Number.isFinite(feePerMeter) || feePerMeter < 0) {
+    throw new RangeError('feePerMeter must be a non-negative finite number')
   }
 
   const lengthMeters = lengthCm / 100
   const rollWidthMeters = rollWidthCm / 100
   const areaSquareMeters = lengthMeters * rollWidthMeters
-  const fee = Math.round(areaSquareMeters * feePerSquareMeter)
+  const fee = Math.round(lengthMeters * feePerMeter)
 
   return { lengthMeters, rollWidthMeters, areaSquareMeters, fee }
 }

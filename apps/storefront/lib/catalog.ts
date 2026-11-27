@@ -112,7 +112,7 @@ export const FALLBACK_SETTINGS: StoreSettings = {
   offerText: 'أدوات التركيب مرفقة مجاناً',
   offerEnabled: true,
   installation: {
-    inspectionNote: DEFAULT_INSPECTION_NOTE, whatsappMessage: DEFAULT_WHATSAPP_MESSAGE, enabled: false, note: '', feePerSquareMeterPiastres: null, feePerMeterPiastres: null, areas: {} },
+    inspectionNote: DEFAULT_INSPECTION_NOTE, whatsappMessage: DEFAULT_WHATSAPP_MESSAGE, enabled: false, note: '', feePerMeterPiastres: null, areas: {} },
   whatsappNumber: '201000000000',
   whatsappMessage: 'مرحباً myzill، عايز أستفسر عن فيلم زجاج للبيت',
   shippingRates: FALLBACK_SHIPPING_RATES,
