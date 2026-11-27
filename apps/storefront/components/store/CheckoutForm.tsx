@@ -778,7 +778,7 @@ export function CheckoutForm({
                   </span>
                   <span className={'mt-0.5 block text-sm ' + (installationChosen ? 'text-brand-fg/85' : 'text-muted')}>
                     {installationRate !== null
-                      ? formatPiastres(installationRate) + ' لالمتر المربع من أفلام المقاس + انتقال حسب المنطقة'
+                      ? formatPiastres(installationRate) + ' للمتر المربع من أفلام المقاس + انتقال حسب المنطقة'
                       : 'فني يركّبهولك'}
                   </span>
                   {settings.installation.note ? (
