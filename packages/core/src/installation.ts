@@ -145,6 +145,12 @@ export function installationAreaSquareMeters(dimensions: readonly InstallationDi
   }, 0)
 }
 
+export function installationFeeForAreaPiastres(feePerSquareMeterPiastres: number, areaSquareMeters: number): number {
+  if (!Number.isInteger(feePerSquareMeterPiastres) || feePerSquareMeterPiastres < 0) return 0
+  if (!Number.isFinite(areaSquareMeters) || areaSquareMeters <= 0) return 0
+  return Math.round(feePerSquareMeterPiastres * areaSquareMeters)
+}
+
 /** Calculates the piastre fee for a square-metre rate; two args retain legacy 0025 parity. */
 export function installationFeePiastres(feePerSquareMeterPiastres: number, lengthCm: number, rollWidthCm?: number): number {
   if (!Number.isInteger(feePerSquareMeterPiastres) || !Number.isInteger(lengthCm)) return 0
@@ -156,7 +162,7 @@ export function installationFeePiastres(feePerSquareMeterPiastres: number, lengt
   }
   if (!Number.isInteger(rollWidthCm) || rollWidthCm <= 0) return 0
   const areaSquareMeters = (lengthCm / 100) * (rollWidthCm / 100)
-  return Math.round(feePerSquareMeterPiastres * areaSquareMeters)
+  return installationFeeForAreaPiastres(feePerSquareMeterPiastres, areaSquareMeters)
 }
 
 /** المناطق المتاحة للفني في محافظة — فاضية لو الفني مقفول أو سعر المتر ناقص. */
