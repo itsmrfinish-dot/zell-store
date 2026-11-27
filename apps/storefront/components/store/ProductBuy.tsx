@@ -34,7 +34,7 @@ import { InstallationFeeDisplay } from '../../../../frontend/components/Installa
 import { buildInspectionMessage, buildWhatsAppUrl } from '../../lib/install/inspection'
 import type { SizeDecision } from '../../lib/size/sizeEntry'
 
-/** gift: «نص العرض» لو ظاهر — بيظهر كهدية فوق زرار الإضافة. */
+/** gift: Â«ÙØµ Ø§ÙØ¹Ø±Ø¶Â» ÙÙ Ø¸Ø§ÙØ± â Ø¨ÙØ¸ÙØ± ÙÙØ¯ÙØ© ÙÙÙ Ø²Ø±Ø§Ø± Ø§ÙØ¥Ø¶Ø§ÙØ©. */
 export function ProductBuy({
   product,
   gift = '',
@@ -48,42 +48,42 @@ export function ProductBuy({
 }: {
   product: StoreProduct
   gift?: string
-  /** 0016 — منتجات قطعة بتتضاف مع الفيلم (بعددها). */
+  /** 0016 â ÙÙØªØ¬Ø§Øª ÙØ·Ø¹Ø© Ø¨ØªØªØ¶Ø§Ù ÙØ¹ Ø§ÙÙÙÙÙ (Ø¨Ø¹Ø¯Ø¯ÙØ§). */
   addons?: StoreProduct[]
   addonsTitle?: string
-  /** PR4 — إعداد الفني (0018). null = من غير «هتركّبه إزاي؟». */
+  /** PR4 â Ø¥Ø¹Ø¯Ø§Ø¯ Ø§ÙÙÙÙ (0018). null = ÙÙ ØºÙØ± Â«ÙØªØ±ÙÙØ¨Ù Ø¥Ø²Ø§ÙØÂ». */
   installation?: InstallationConfig | null
-  /** LENGTH-INPUT — الطريقة الأولى لإدخال المقاس من «المحتوى» (الغايب = سنتيمتر). */
+  /** LENGTH-INPUT â Ø§ÙØ·Ø±ÙÙØ© Ø§ÙØ£ÙÙÙ ÙØ¥Ø¯Ø®Ø§Ù Ø§ÙÙÙØ§Ø³ ÙÙ Â«Ø§ÙÙØ­ØªÙÙÂ» (Ø§ÙØºØ§ÙØ¨ = Ø³ÙØªÙÙØªØ±). */
   sizeEntry?: ProductSizeEntry
-  /** SIZE-TEXTS — نصوص «حدد المقاس» من «المحتوى» (الغايب = النصوص الافتراضية). */
+  /** SIZE-TEXTS â ÙØµÙØµ Â«Ø­Ø¯Ø¯ Ø§ÙÙÙØ§Ø³Â» ÙÙ Â«Ø§ÙÙØ­ØªÙÙÂ» (Ø§ÙØºØ§ÙØ¨ = Ø§ÙÙØµÙØµ Ø§ÙØ§ÙØªØ±Ø§Ø¶ÙØ©). */
   sizeTexts?: ProductSizeTexts
   whatsappNumber?: string
-  /** فعّل/عطّل صندوق طلب المعاينة — الافتراضي ON. */
+  /** ÙØ¹ÙÙ/Ø¹Ø·ÙÙ ØµÙØ¯ÙÙ Ø·ÙØ¨ Ø§ÙÙØ¹Ø§ÙÙØ© â Ø§ÙØ§ÙØªØ±Ø§Ø¶Ù ON. */
   inspectionEnabled?: boolean
 }) {
   const cart = useCart()
-  // BUY-NOW — «اطلب دلوقتي»: إضافة مرة واحدة + علامة تحميل فورية + منع الضغط المتكرر (lib/buy/buyNow.ts)
+  // BUY-NOW â Â«Ø§Ø·ÙØ¨ Ø¯ÙÙÙØªÙÂ»: Ø¥Ø¶Ø§ÙØ© ÙØ±Ø© ÙØ§Ø­Ø¯Ø© + Ø¹ÙØ§ÙØ© ØªØ­ÙÙÙ ÙÙØ±ÙØ© + ÙÙØ¹ Ø§ÙØ¶ØºØ· Ø§ÙÙØªÙØ±Ø± (lib/buy/buyNow.ts)
   const buyNow = useBuyNow()
   const busy = buyNow.busy
-  // PR4 — «هتركّبه إزاي؟»: النية على مستوى السلة (cart.installMode)، وCheckout الحكم النهائي
+  // PR4 â Â«ÙØªØ±ÙÙØ¨Ù Ø¥Ø²Ø§ÙØÂ»: Ø§ÙÙÙØ© Ø¹ÙÙ ÙØ³ØªÙÙ Ø§ÙØ³ÙØ© (cart.installMode)Ø ÙCheckout Ø§ÙØ­ÙÙ Ø§ÙÙÙØ§Ø¦Ù
   const installerGovernorates = installation ? installationReadyGovernorates(installation) : []
-  const fee = installation?.feePerMeterPiastres ?? null
+  const fee = installation?.feePerSquareMeterPiastres ?? null
   const showChoice = installerGovernorates.length > 0 && fee !== null
-  // INSTALLER-ONLY — المنتج ده «فني فقط» من اللوحة: الفني لوحده، ومن غير «بنفسي» ولا اقتراحات أدوات
+  // INSTALLER-ONLY â Ø§ÙÙÙØªØ¬ Ø¯Ù Â«ÙÙÙ ÙÙØ·Â» ÙÙ Ø§ÙÙÙØ­Ø©: Ø§ÙÙÙÙ ÙÙØ­Ø¯ÙØ ÙÙÙ ØºÙØ± Â«Ø¨ÙÙØ³ÙÂ» ÙÙØ§ Ø§ÙØªØ±Ø§Ø­Ø§Øª Ø£Ø¯ÙØ§Øª
   const installerOnly = showChoice && installation !== null && installerRequiredFor(installation, product.id)
   const installer = showChoice && cart.installMode === 'installer'
-  // قبل قراءة الاختيار المحفوظ (cart.ready) مانعرضش «بنفسي» الافتراضي — كان بيظهر الأدوات لحظة ويخفيها
+  // ÙØ¨Ù ÙØ±Ø§Ø¡Ø© Ø§ÙØ§Ø®ØªÙØ§Ø± Ø§ÙÙØ­ÙÙØ¸ (cart.ready) ÙØ§ÙØ¹Ø±Ø¶Ø´ Â«Ø¨ÙÙØ³ÙÂ» Ø§ÙØ§ÙØªØ±Ø§Ø¶Ù â ÙØ§Ù Ø¨ÙØ¸ÙØ± Ø§ÙØ£Ø¯ÙØ§Øª ÙØ­Ø¸Ø© ÙÙØ®ÙÙÙØ§
   const choicePending = showChoice && !cart.ready
-  // «هتركّبه إزاي؟» لازم يبقى اختيار صريح: قبل ما العميل يختار (unset) الإضافة والطلب مقفولين
-  // والسبب ظاهر جنب الأزرار. فيلم من غير الكارت أو منتج بالقطعة مابيتأثروش.
+  // Â«ÙØªØ±ÙÙØ¨Ù Ø¥Ø²Ø§ÙØÂ» ÙØ§Ø²Ù ÙØ¨ÙÙ Ø§Ø®ØªÙØ§Ø± ØµØ±ÙØ­: ÙØ¨Ù ÙØ§ Ø§ÙØ¹ÙÙÙ ÙØ®ØªØ§Ø± (unset) Ø§ÙØ¥Ø¶Ø§ÙØ© ÙØ§ÙØ·ÙØ¨ ÙÙÙÙÙÙÙ
+  // ÙØ§ÙØ³Ø¨Ø¨ Ø¸Ø§ÙØ± Ø¬ÙØ¨ Ø§ÙØ£Ø²Ø±Ø§Ø±. ÙÙÙÙ ÙÙ ØºÙØ± Ø§ÙÙØ§Ø±Øª Ø£Ù ÙÙØªØ¬ Ø¨Ø§ÙÙØ·Ø¹Ø© ÙØ§Ø¨ÙØªØ£Ø«Ø±ÙØ´.
   const choiceRequired = installChoiceRequired({ showChoice, ready: cart.ready, mode: cart.installMode, installerOnly })
   const choiceHintId = useId()
-  // سطر الاختيار الحالي (null لو لسه مااختارش)
+  // Ø³Ø·Ø± Ø§ÙØ§Ø®ØªÙØ§Ø± Ø§ÙØ­Ø§ÙÙ (null ÙÙ ÙØ³Ù ÙØ§Ø§Ø®ØªØ§Ø±Ø´)
   const currentLine = installerOnly ? null : currentInstallModeLine(cart.installMode)
   const [revealTools, setRevealTools] = useState(false)
   const toolsRef = useRef<HTMLParagraphElement>(null)
-  // «هركّبه بنفسي» بعد «فني»: الأدوات بتظهر والتركيز يروح لها (سلس، وفوري مع reduced motion).
-  // مفيش أدوات = مفيش عنصر = مفيش scroll.
+  // Â«ÙØ±ÙÙØ¨Ù Ø¨ÙÙØ³ÙÂ» Ø¨Ø¹Ø¯ Â«ÙÙÙÂ»: Ø§ÙØ£Ø¯ÙØ§Øª Ø¨ØªØ¸ÙØ± ÙØ§ÙØªØ±ÙÙØ² ÙØ±ÙØ­ ÙÙØ§ (Ø³ÙØ³Ø ÙÙÙØ±Ù ÙØ¹ reduced motion).
+  // ÙÙÙØ´ Ø£Ø¯ÙØ§Øª = ÙÙÙØ´ Ø¹ÙØµØ± = ÙÙÙØ´ scroll.
   useEffect(() => {
     if (!revealTools) return
     setRevealTools(false)
@@ -95,29 +95,29 @@ export function ProductBuy({
   }, [revealTools])
   const [lengthCm, setLengthCm] = useState(product.min_length_cm)
   const [justAdded, setJustAdded] = useState(false)
-  // ADD-REVEAL: الصفحة بتنزل لرسالة «اتضاف للسلة» بعد «ضيف للسلة» (useRevealOnAdd)
+  // ADD-REVEAL: Ø§ÙØµÙØ­Ø© Ø¨ØªÙØ²Ù ÙØ±Ø³Ø§ÙØ© Â«Ø§ØªØ¶Ø§Ù ÙÙØ³ÙØ©Â» Ø¨Ø¹Ø¯ Â«Ø¶ÙÙ ÙÙØ³ÙØ©Â» (useRevealOnAdd)
   const addedBox = useRevealOnAdd<HTMLDivElement>()
   const [blocked, setBlocked] = useState(false)
-  // LENGTH-INPUT — قرار الطلب من لقطة المقاس الحالية وقت الضغط (SizePanel بيحدّث الدالة بعد كل commit، قبل أي ضغطة):
-  // السنتيمتر الفاضي أو الغلط أو تحت الحد = إظهار الخطأ من غير إضافة (ومن أول render)، والطول المضاف من نفس اللقطة.
+  // LENGTH-INPUT â ÙØ±Ø§Ø± Ø§ÙØ·ÙØ¨ ÙÙ ÙÙØ·Ø© Ø§ÙÙÙØ§Ø³ Ø§ÙØ­Ø§ÙÙØ© ÙÙØª Ø§ÙØ¶ØºØ· (SizePanel Ø¨ÙØ­Ø¯ÙØ« Ø§ÙØ¯Ø§ÙØ© Ø¨Ø¹Ø¯ ÙÙ commitØ ÙØ¨Ù Ø£Ù Ø¶ØºØ·Ø©):
+  // Ø§ÙØ³ÙØªÙÙØªØ± Ø§ÙÙØ§Ø¶Ù Ø£Ù Ø§ÙØºÙØ· Ø£Ù ØªØ­Øª Ø§ÙØ­Ø¯ = Ø¥Ø¸ÙØ§Ø± Ø§ÙØ®Ø·Ø£ ÙÙ ØºÙØ± Ø¥Ø¶Ø§ÙØ© (ÙÙÙ Ø£ÙÙ render)Ø ÙØ§ÙØ·ÙÙ Ø§ÙÙØ¶Ø§Ù ÙÙ ÙÙØ³ Ø§ÙÙÙØ·Ø©.
   const decisionRef = useRef<(() => SizeDecision) | null>(null)
   const [attempt, setAttempt] = useState(0)
-  /** آخر سطر اتضاف (الطول والعرض) — «اطلب دلوقتي» مايضيفوش تاني لو هو هو. */
+  /** Ø¢Ø®Ø± Ø³Ø·Ø± Ø§ØªØ¶Ø§Ù (Ø§ÙØ·ÙÙ ÙØ§ÙØ¹Ø±Ø¶) â Â«Ø§Ø·ÙØ¨ Ø¯ÙÙÙØªÙÂ» ÙØ§ÙØ¶ÙÙÙØ´ ØªØ§ÙÙ ÙÙ ÙÙ ÙÙ. */
   const lastAddedRef = useRef<string | null>(null)
   const [addedLengthCm, setAddedLengthCm] = useState(product.min_length_cm)
   const [addonQty, setAddonQty] = useState<Record<number, number>>({})
-  // عدد الأدوات اللي اتضافت فعلًا في آخر «ضيف للسلة» — للرسالة بس، بيتسجّل لحظة الإضافة (قبل ما addonQty يتصفّر)
+  // Ø¹Ø¯Ø¯ Ø§ÙØ£Ø¯ÙØ§Øª Ø§ÙÙÙ Ø§ØªØ¶Ø§ÙØª ÙØ¹ÙÙØ§ ÙÙ Ø¢Ø®Ø± Â«Ø¶ÙÙ ÙÙØ³ÙØ©Â» â ÙÙØ±Ø³Ø§ÙØ© Ø¨Ø³Ø Ø¨ÙØªØ³Ø¬ÙÙ ÙØ­Ø¸Ø© Ø§ÙØ¥Ø¶Ø§ÙØ© (ÙØ¨Ù ÙØ§ addonQty ÙØªØµÙÙØ±)
   const [addedToolsCount, setAddedToolsCount] = useState(0)
-  // 0015 — العرض المختار. المنتج بعرض واحد = مفيش اختيار ومفيش تغيير.
+  // 0015 â Ø§ÙØ¹Ø±Ø¶ Ø§ÙÙØ®ØªØ§Ø±. Ø§ÙÙÙØªØ¬ Ø¨Ø¹Ø±Ø¶ ÙØ§Ø­Ø¯ = ÙÙÙØ´ Ø§Ø®ØªÙØ§Ø± ÙÙÙÙØ´ ØªØºÙÙØ±.
   const options = widthOptionsOf(product)
   const [widthCm, setWidthCm] = useState(product.width_cm)
   const effective = withWidth(product, widthCm) ?? product
   const chosenWidth = effective.width_cm === product.width_cm ? undefined : effective.width_cm
 
-  // قفل الزرار (الفني · المقاس أكبر من المتاح · طول متر غير صالح). القرار الأخير وقت الضغط من decide() تحت.
+  // ÙÙÙ Ø§ÙØ²Ø±Ø§Ø± (Ø§ÙÙÙÙ Â· Ø§ÙÙÙØ§Ø³ Ø£ÙØ¨Ø± ÙÙ Ø§ÙÙØªØ§Ø­ Â· Ø·ÙÙ ÙØªØ± ØºÙØ± ØµØ§ÙØ­). Ø§ÙÙØ±Ø§Ø± Ø§ÙØ£Ø®ÙØ± ÙÙØª Ø§ÙØ¶ØºØ· ÙÙ decide() ØªØ­Øª.
   const canAdd = !blocked && !choiceRequired && validateLength(lengthCm, effective).ok
 
-  /** القرار وقت الضغط: الفني المطلوب = ولا حاجة، وغير كده من لقطة المقاس الحالية (sizeDecision). */
+  /** Ø§ÙÙØ±Ø§Ø± ÙÙØª Ø§ÙØ¶ØºØ·: Ø§ÙÙÙÙ Ø§ÙÙØ·ÙÙØ¨ = ÙÙØ§ Ø­Ø§Ø¬Ø©Ø ÙØºÙØ± ÙØ¯Ù ÙÙ ÙÙØ·Ø© Ø§ÙÙÙØ§Ø³ Ø§ÙØ­Ø§ÙÙØ© (sizeDecision). */
   const decide = (): SizeDecision => {
     if (choiceRequired) return { kind: 'disabled' }
     const snapshot = decisionRef.current
@@ -139,8 +139,8 @@ export function ProductBuy({
   }
 
   /**
-   * الإضافات المختارة بتتضاف كسطور قطعة، والاختيار بيتصفّر عشان ماتتكررش.
-   * بترجّع عدد الأدوات اللي اتضافت فعلًا في العملية دي (للرسالة بس).
+   * Ø§ÙØ¥Ø¶Ø§ÙØ§Øª Ø§ÙÙØ®ØªØ§Ø±Ø© Ø¨ØªØªØ¶Ø§Ù ÙØ³Ø·ÙØ± ÙØ·Ø¹Ø©Ø ÙØ§ÙØ§Ø®ØªÙØ§Ø± Ø¨ÙØªØµÙÙØ± Ø¹Ø´Ø§Ù ÙØ§ØªØªÙØ±Ø±Ø´.
+   * Ø¨ØªØ±Ø¬ÙØ¹ Ø¹Ø¯Ø¯ Ø§ÙØ£Ø¯ÙØ§Øª Ø§ÙÙÙ Ø§ØªØ¶Ø§ÙØª ÙØ¹ÙÙØ§ ÙÙ Ø§ÙØ¹ÙÙÙØ© Ø¯Ù (ÙÙØ±Ø³Ø§ÙØ© Ø¨Ø³).
    */
   function addSelectedAddons(): number {
     let added = 0
@@ -156,8 +156,8 @@ export function ProductBuy({
     return added
   }
 
-  // «اطلب دلوقتي»: يضيف ويروح للبيانات على طول. لو نفس الاختيار اتضاف لسه (justAdded) مابيضيفوش تاني — يروح بس.
-  // BUY-NOW: السطر مرة واحدة بس مهما اتضغط، وأثناء الانتظار كل الاختيارات مقفولة، وبعد 15 ثانية تنبيه مش فشل.
+  // Â«Ø§Ø·ÙØ¨ Ø¯ÙÙÙØªÙÂ»: ÙØ¶ÙÙ ÙÙØ±ÙØ­ ÙÙØ¨ÙØ§ÙØ§Øª Ø¹ÙÙ Ø·ÙÙ. ÙÙ ÙÙØ³ Ø§ÙØ§Ø®ØªÙØ§Ø± Ø§ØªØ¶Ø§Ù ÙØ³Ù (justAdded) ÙØ§Ø¨ÙØ¶ÙÙÙØ´ ØªØ§ÙÙ â ÙØ±ÙØ­ Ø¨Ø³.
+  // BUY-NOW: Ø§ÙØ³Ø·Ø± ÙØ±Ø© ÙØ§Ø­Ø¯Ø© Ø¨Ø³ ÙÙÙØ§ Ø§ØªØ¶ØºØ·Ø ÙØ£Ø«ÙØ§Ø¡ Ø§ÙØ§ÙØªØ¸Ø§Ø± ÙÙ Ø§ÙØ§Ø®ØªÙØ§Ø±Ø§Øª ÙÙÙÙÙØ©Ø ÙØ¨Ø¹Ø¯ 15 Ø«Ø§ÙÙØ© ØªÙØ¨ÙÙ ÙØ´ ÙØ´Ù.
   const handleBuyNow = () => {
     const decision = decide()
     if (decision.kind === 'reveal') setAttempt((value) => value + 1)
@@ -171,14 +171,14 @@ export function ProductBuy({
         trackPixel('AddToCart', addToCartParams(product.id))
         lastAddedRef.current = key
       },
-      // الإضافات المختارة دلوقتي بتتضاف دايمًا (بتتصفّر بعد الإضافة، فمابتتكررش) — اللي ظاهر مختار = اللي بيتضاف
+      // Ø§ÙØ¥Ø¶Ø§ÙØ§Øª Ø§ÙÙØ®ØªØ§Ø±Ø© Ø¯ÙÙÙØªÙ Ø¨ØªØªØ¶Ø§Ù Ø¯Ø§ÙÙÙØ§ (Ø¨ØªØªØµÙÙØ± Ø¨Ø¹Ø¯ Ø§ÙØ¥Ø¶Ø§ÙØ©Ø ÙÙØ§Ø¨ØªØªÙØ±Ø±Ø´) â Ø§ÙÙÙ Ø¸Ø§ÙØ± ÙØ®ØªØ§Ø± = Ø§ÙÙÙ Ø¨ÙØªØ¶Ø§Ù
       () => {
         addSelectedAddons()
       },
     )
   }
 
-  /** رسالة المعاينة (واتساب) — بتتبنى مرة واحدة: بتتعرض في الصندوق وبتتبعت زي ما هي. */
+  /** Ø±Ø³Ø§ÙØ© Ø§ÙÙØ¹Ø§ÙÙØ© (ÙØ§ØªØ³Ø§Ø¨) â Ø¨ØªØªØ¨ÙÙ ÙØ±Ø© ÙØ§Ø­Ø¯Ø©: Ø¨ØªØªØ¹Ø±Ø¶ ÙÙ Ø§ÙØµÙØ¯ÙÙ ÙØ¨ØªØªØ¨Ø¹Øª Ø²Ù ÙØ§ ÙÙ. */
   const inspectionMessage = buildInspectionMessage(
     product.name_ar,
     (() => {
@@ -191,9 +191,9 @@ export function ProductBuy({
 
   return (
     <div className="space-y-4">
-      {/* BUY-NOW: وقت «اطلب دلوقتي» كل الاختيارات والأزرار مقفولة لحد ما الانتقال يتحسم — اللي ظاهر = اللي اتضاف */}
+      {/* BUY-NOW: ÙÙØª Â«Ø§Ø·ÙØ¨ Ø¯ÙÙÙØªÙÂ» ÙÙ Ø§ÙØ§Ø®ØªÙØ§Ø±Ø§Øª ÙØ§ÙØ£Ø²Ø±Ø§Ø± ÙÙÙÙÙØ© ÙØ­Ø¯ ÙØ§ Ø§ÙØ§ÙØªÙØ§Ù ÙØªØ­Ø³Ù â Ø§ÙÙÙ Ø¸Ø§ÙØ± = Ø§ÙÙÙ Ø§ØªØ¶Ø§Ù */}
       <fieldset disabled={busy} className="min-w-0 space-y-4">
-      {/* العرض جوه كارت المقاس نفسه — وتغييره بيعيد الحساب على نفس مقاس الشباك */}
+      {/* Ø§ÙØ¹Ø±Ø¶ Ø¬ÙÙ ÙØ§Ø±Øª Ø§ÙÙÙØ§Ø³ ÙÙØ³Ù â ÙØªØºÙÙØ±Ù Ø¨ÙØ¹ÙØ¯ Ø§ÙØ­Ø³Ø§Ø¨ Ø¹ÙÙ ÙÙØ³ ÙÙØ§Ø³ Ø§ÙØ´Ø¨Ø§Ù */}
       <SizePanel
         product={product}
         widthCm={effective.width_cm}
@@ -216,12 +216,12 @@ export function ProductBuy({
         attempt={attempt}
       />
 
-      {/* صندوق طلب المعاينة */}
+      {/* ØµÙØ¯ÙÙ Ø·ÙØ¨ Ø§ÙÙØ¹Ø§ÙÙØ© */}
       {inspectionEnabled && cart.installMode === 'installer' && installation?.inspectionNote && whatsappNumber ? (
         <div className="rounded-lg border border-border bg-card p-4 space-y-3">
-          <h3 className="font-semibold">محتاج معاينة</h3>
+          <h3 className="font-semibold">ÙØ­ØªØ§Ø¬ ÙØ¹Ø§ÙÙØ©</h3>
           <p className="text-sm text-muted-foreground whitespace-pre-wrap">{installation.inspectionNote}</p>
-          <p className="font-medium">الرسالة اللي هتتبعت:</p>
+          <p className="font-medium">Ø§ÙØ±Ø³Ø§ÙØ© Ø§ÙÙÙ ÙØªØªØ¨Ø¹Øª:</p>
           <p className="text-sm text-muted-foreground whitespace-pre-wrap">{inspectionMessage}</p>
           <a
             href={buildWhatsAppUrl(whatsappNumber, inspectionMessage)}
@@ -229,7 +229,7 @@ export function ProductBuy({
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700"
           >
-            💬 واتساب
+            ð¬ ÙØ§ØªØ³Ø§Ø¨
           </a>
         </div>
       ) : null}
@@ -237,7 +237,7 @@ export function ProductBuy({
       <GiftNote text={gift} />
 
       {showChoice && fee !== null && choicePending ? (
-        // مكان ثابت لحد ما الاختيار المحفوظ يتقري — من غير وميض ولا قفزة في الصفحة
+        // ÙÙØ§Ù Ø«Ø§Ø¨Øª ÙØ­Ø¯ ÙØ§ Ø§ÙØ§Ø®ØªÙØ§Ø± Ø§ÙÙØ­ÙÙØ¸ ÙØªÙØ±Ù â ÙÙ ØºÙØ± ÙÙÙØ¶ ÙÙØ§ ÙÙØ²Ø© ÙÙ Ø§ÙØµÙØ­Ø©
         <div aria-hidden="true" className="h-36 rounded-lg border border-border bg-card" />
       ) : null}
       {showChoice && fee !== null && !choicePending ? (
@@ -245,19 +245,19 @@ export function ProductBuy({
           <InstallChoice
             mode={cart.installMode}
             onChange={(next) => {
-              // «هركّبه بنفسي» بعد اختيار تاني + فيه أدوات = الأدوات بتظهر والتركيز يروح لها (نفس الشرط بالحرف، lib/install)
+              // Â«ÙØ±ÙÙØ¨Ù Ø¨ÙÙØ³ÙÂ» Ø¨Ø¹Ø¯ Ø§Ø®ØªÙØ§Ø± ØªØ§ÙÙ + ÙÙÙ Ø£Ø¯ÙØ§Øª = Ø§ÙØ£Ø¯ÙØ§Øª Ø¨ØªØ¸ÙØ± ÙØ§ÙØªØ±ÙÙØ² ÙØ±ÙØ­ ÙÙØ§ (ÙÙØ³ Ø§ÙØ´Ø±Ø· Ø¨Ø§ÙØ­Ø±ÙØ lib/install)
               if (revealToolsOnChange(cart.installMode, next, addons.length)) setRevealTools(true)
               cart.setInstallMode(next)
-              // أدوات مختارة ولسه مااتضافتش بتتصفّر — مابتتضافش من غير ما العميل يشوفها
+              // Ø£Ø¯ÙØ§Øª ÙØ®ØªØ§Ø±Ø© ÙÙØ³Ù ÙØ§Ø§ØªØ¶Ø§ÙØªØ´ Ø¨ØªØªØµÙÙØ± â ÙØ§Ø¨ØªØªØ¶Ø§ÙØ´ ÙÙ ØºÙØ± ÙØ§ Ø§ÙØ¹ÙÙÙ ÙØ´ÙÙÙØ§
               if (next === 'installer') setAddonQty({})
             }}
-            feePerMeterPiastres={fee}
+            feePerSquareMeterPiastres={fee}
             lengthCm={lengthCm}
             governorates={installerGovernorates}
             context="product"
             installerOnly={installerOnly}
           />
-          {/* الاختيار واحد للطلب كله (cart.installMode): لو متحدد، سطر واضح بالقيمة الحالية وإنها للطلب كله وبتتغيّر من هنا */}
+          {/* Ø§ÙØ§Ø®ØªÙØ§Ø± ÙØ§Ø­Ø¯ ÙÙØ·ÙØ¨ ÙÙÙ (cart.installMode): ÙÙ ÙØªØ­Ø¯Ø¯Ø Ø³Ø·Ø± ÙØ§Ø¶Ø­ Ø¨Ø§ÙÙÙÙØ© Ø§ÙØ­Ø§ÙÙØ© ÙØ¥ÙÙØ§ ÙÙØ·ÙØ¨ ÙÙÙ ÙØ¨ØªØªØºÙÙØ± ÙÙ ÙÙØ§ */}
           {currentLine !== null ? <p className="text-sm text-fg">{currentLine}</p> : null}
           {installer && fee !== null ? (
             <InstallationFeeDisplay
@@ -269,12 +269,12 @@ export function ProductBuy({
         </div>
       ) : null}
 
-      {/* مع الفني اقتراحات الأدوات بتختفي — مش محتاجها. وقبل الاختيار مابتظهرش عشان «بنفسي» مايبانش افتراضي */}
+      {/* ÙØ¹ Ø§ÙÙÙÙ Ø§ÙØªØ±Ø§Ø­Ø§Øª Ø§ÙØ£Ø¯ÙØ§Øª Ø¨ØªØ®ØªÙÙ â ÙØ´ ÙØ­ØªØ§Ø¬ÙØ§. ÙÙØ¨Ù Ø§ÙØ§Ø®ØªÙØ§Ø± ÙØ§Ø¨ØªØ¸ÙØ±Ø´ Ø¹Ø´Ø§Ù Â«Ø¨ÙÙØ³ÙÂ» ÙØ§ÙØ¨Ø§ÙØ´ Ø§ÙØªØ±Ø§Ø¶Ù */}
       {!showToolSuggestions({ installer: installer || installerOnly, choicePending, choiceRequired, addonCount: addons.length }) ? null : (
         <div className="space-y-2">
           {showChoice ? (
             <p ref={toolsRef} tabIndex={-1} className="scroll-mt-24 text-sm font-semibold text-fg outline-none">
-              اختار أدوات التركيب اللي محتاجها
+              Ø§Ø®ØªØ§Ø± Ø£Ø¯ÙØ§Øª Ø§ÙØªØ±ÙÙØ¨ Ø§ÙÙÙ ÙØ­ØªØ§Ø¬ÙØ§
             </p>
           ) : null}
           <AddonsPicker
@@ -287,7 +287,7 @@ export function ProductBuy({
         </div>
       )}
 
-      {/* «ضيف للسلة» الأساسي وفوق (المسار الأوضح مع الأدوات والفني)، و«اطلب دلوقتي» تحته ثانوي — السلوك زي ما هو */}
+      {/* Â«Ø¶ÙÙ ÙÙØ³ÙØ©Â» Ø§ÙØ£Ø³Ø§Ø³Ù ÙÙÙÙ (Ø§ÙÙØ³Ø§Ø± Ø§ÙØ£ÙØ¶Ø­ ÙØ¹ Ø§ÙØ£Ø¯ÙØ§Øª ÙØ§ÙÙÙÙ)Ø ÙÂ«Ø§Ø·ÙØ¨ Ø¯ÙÙÙØªÙÂ» ØªØ­ØªÙ Ø«Ø§ÙÙÙ â Ø§ÙØ³ÙÙÙ Ø²Ù ÙØ§ ÙÙ */}
       <div className="grid gap-2">
         <Button
           size="lg"
@@ -296,7 +296,7 @@ export function ProductBuy({
           {...(choiceRequired ? { 'aria-describedby': choiceHintId } : {})}
         >
           <ShoppingBag className="h-5 w-5" />
-          ضيف للسلة
+          Ø¶ÙÙ ÙÙØ³ÙØ©
         </Button>
         <Button
           size="lg"
@@ -314,7 +314,7 @@ export function ProductBuy({
             </>
           ) : (
             <>
-              اطلب دلوقتي
+              Ø§Ø·ÙØ¨ Ø¯ÙÙÙØªÙ
               <ArrowLeft className="h-5 w-5" />
             </>
           )}
@@ -322,44 +322,44 @@ export function ProductBuy({
         {choiceRequired ? (
           <p id={choiceHintId} className="text-center text-xs font-semibold text-fg">
             {installerOnly
-              ? 'المنتج ده بيتركّب مع فني — اختار «محتاج فني تركيب» فوق الأول عشان تضيف أو تطلب.'
-              : 'اختار «هتركّبه إزاي؟» فوق الأول — بنفسي ولا مع فني — عشان تضيف أو تطلب.'}
+              ? 'Ø§ÙÙÙØªØ¬ Ø¯Ù Ø¨ÙØªØ±ÙÙØ¨ ÙØ¹ ÙÙÙ â Ø§Ø®ØªØ§Ø± Â«ÙØ­ØªØ§Ø¬ ÙÙÙ ØªØ±ÙÙØ¨Â» ÙÙÙ Ø§ÙØ£ÙÙ Ø¹Ø´Ø§Ù ØªØ¶ÙÙ Ø£Ù ØªØ·ÙØ¨.'
+              : 'Ø§Ø®ØªØ§Ø± Â«ÙØªØ±ÙÙØ¨Ù Ø¥Ø²Ø§ÙØÂ» ÙÙÙ Ø§ÙØ£ÙÙ â Ø¨ÙÙØ³Ù ÙÙØ§ ÙØ¹ ÙÙÙ â Ø¹Ø´Ø§Ù ØªØ¶ÙÙ Ø£Ù ØªØ·ÙØ¨.'}
           </p>
         ) : null}
       </div>
       </fieldset>
 
-      {/* BUY-NOW: بعد 15 ثانية تنبيه (مش فشل) + تحميل كامل لصفحة البيانات — برّه الـ fieldset علشان يفضل شغّال */}
+      {/* BUY-NOW: Ø¨Ø¹Ø¯ 15 Ø«Ø§ÙÙØ© ØªÙØ¨ÙÙ (ÙØ´ ÙØ´Ù) + ØªØ­ÙÙÙ ÙØ§ÙÙ ÙØµÙØ­Ø© Ø§ÙØ¨ÙØ§ÙØ§Øª â Ø¨Ø±ÙÙ Ø§ÙÙ fieldset Ø¹ÙØ´Ø§Ù ÙÙØ¶Ù Ø´ØºÙØ§Ù */}
       <BuyNowSlowNotice phase={buyNow.phase} onRetry={buyNow.retry} />
 
       {justAdded ? (
         <div ref={addedBox.ref} tabIndex={-1} className="space-y-3 rounded-lg border border-accent/40 bg-card p-4 outline-none">
           <p className="flex items-center gap-2 text-sm font-semibold text-fg">
             <Check className="h-4 w-4 text-accent" />
-            اتضاف للسلة — <Num>{formatLength(addedLengthCm)}</Num>
+            Ø§ØªØ¶Ø§Ù ÙÙØ³ÙØ© â <Num>{formatLength(addedLengthCm)}</Num>
             {options.length > 1 ? (
               <>
-                {' · عرض '}
+                {' Â· Ø¹Ø±Ø¶ '}
                 <Num>{String(effective.width_cm)}</Num>
-                {' سم'}
+                {' Ø³Ù'}
               </>
             ) : null}
           </p>
-          {/* تأكيد بس لو أدوات اتضافت فعلًا في الضغطة دي — ومع الفني مفيش أي كلام عن الأدوات */}
+          {/* ØªØ£ÙÙØ¯ Ø¨Ø³ ÙÙ Ø£Ø¯ÙØ§Øª Ø§ØªØ¶Ø§ÙØª ÙØ¹ÙÙØ§ ÙÙ Ø§ÙØ¶ØºØ·Ø© Ø¯Ù â ÙÙØ¹ Ø§ÙÙÙÙ ÙÙÙØ´ Ø£Ù ÙÙØ§Ù Ø¹Ù Ø§ÙØ£Ø¯ÙØ§Øª */}
           {!installer && addedToolsCount > 0 ? (
-            <p className="text-xs font-semibold text-fg">اتضافت أدوات التركيب المختارة مع المنتج.</p>
+            <p className="text-xs font-semibold text-fg">Ø§ØªØ¶Ø§ÙØª Ø£Ø¯ÙØ§Øª Ø§ÙØªØ±ÙÙØ¨ Ø§ÙÙØ®ØªØ§Ø±Ø© ÙØ¹ Ø§ÙÙÙØªØ¬.</p>
           ) : null}
-          {/* من غير دعوة تانية لصفحة الأدوات: الاختيار اتعمل فوق، والأدوات متاحة من السلة */}
+          {/* ÙÙ ØºÙØ± Ø¯Ø¹ÙØ© ØªØ§ÙÙØ© ÙØµÙØ­Ø© Ø§ÙØ£Ø¯ÙØ§Øª: Ø§ÙØ§Ø®ØªÙØ§Ø± Ø§ØªØ¹ÙÙ ÙÙÙØ ÙØ§ÙØ£Ø¯ÙØ§Øª ÙØªØ§Ø­Ø© ÙÙ Ø§ÙØ³ÙØ© */}
           <Link href="/cart" className={buttonClasses('primary', 'md', 'w-full')}>
-            روح للسلة
+            Ø±ÙØ­ ÙÙØ³ÙØ©
             <ArrowLeft className="h-4 w-4" />
           </Link>
           <div className="grid grid-cols-2 gap-2">
             <Link href="/checkout" className={buttonClasses('secondary', 'md', 'w-full')}>
-              إتمام الطلب
+              Ø¥ØªÙØ§Ù Ø§ÙØ·ÙØ¨
             </Link>
             <Link href="/" className={buttonClasses('secondary', 'md', 'w-full')}>
-              كمّل تسوّق
+              ÙÙÙÙ ØªØ³ÙÙÙ
             </Link>
           </div>
         </div>
