@@ -1,4 +1,4 @@
-import { formatPiastres, installationAreaSquareMeters, type InstallationDimension } from '@zell/core'
+import { formatPiastres, installationAreaSquareMeters, installationFeeForAreaPiastres, type InstallationDimension } from '@zell/core'
 
 type InstallationFeeDisplayProps = {
   dimensions: readonly InstallationDimension[]
@@ -14,7 +14,7 @@ export function InstallationFeeDisplay({
     return null
   }
 
-  const feePiastres = Math.round(areaSquareMeters * feePerSquareMeterPiastres)
+  const feePiastres = installationFeeForAreaPiastres(feePerSquareMeterPiastres, areaSquareMeters)
 
   return (
     <div aria-live="polite" className="rounded-lg border border-border bg-card p-3 text-sm text-fg">
