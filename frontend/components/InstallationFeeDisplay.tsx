@@ -1,4 +1,4 @@
-import { formatPiastres } from '../packages/core/src/pricing'
+import { formatPiastres } from '../../../packages/core/src/pricing'
 type InstallationFeeDisplayProps = {
   lengthCm: number
   rollWidthCm: number
@@ -28,8 +28,8 @@ export function InstallationFeeDisplay({
 
   return (
     <div aria-live="polite" className="rounded-lg border border-border bg-card p-3 text-sm text-fg">
-      <p>Installation area: {areaSquareMeters.toFixed(2)} mÂ²</p>
-      <p>Installation fee: {formatPiastres(feePiastres).replace(" ج.م", "")('en-US')}</p>
+      <p>Installation area: {areaSquareMeters.toFixed(2)} mÃÂ²</p>
+      <p>Installation fee: {formatPiastres(feePiastres).replace(" Ø¬.Ù", "")('en-US')}</p>
     </div>
   )
 }
