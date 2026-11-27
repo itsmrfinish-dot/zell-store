@@ -11,7 +11,8 @@ import {
   formatPiastres,
   hasErrors,
   installationAreasIn,
-  installationFeePiastres,
+  installationAreaSquareMeters,
+  installationFeeForAreaPiastres,
   chargedShippingPiastres,
   installationLengthCm,
   installationReadyGovernorates,
@@ -332,6 +333,11 @@ export function CheckoutForm({
 
   // 0018 — الفني لأفلام المقاس بس، والشحن المجاني بيتحسب على الأصناف بس (فوق).
   const meterLengthCm = installationLengthCm(entries)
+  const installationDimensions = entries
+    .filter(({ product }) => product.sale_unit === 'meter')
+    .map(({ line, product }) => ({ lengthCm: line.lengthCm, rollWidthCm: product.width_cm }))
+  const installationArea = installationAreaSquareMeters(installationDimensions)
+  const installationRate = settings.installation.feePerSquareMeterPiastres ?? settings.installation.feePerMeterPiastres
   const installationOffered = installerChoices.length > 0 && meterLengthCm > 0
   const installationChosen = installation && installationOffered
   const travel =
@@ -340,8 +346,8 @@ export function CheckoutForm({
       : null
   const installationReady = installationChosen && travel !== null
   const installationFee =
-    installationReady && settings.installation.feePerMeterPiastres !== null
-      ? installationFeePiastres(settings.installation.feePerMeterPiastres, meterLengthCm)
+    installationReady && installationRate !== null
+      ? installationFeeForAreaPiastres(installationRate, installationArea)
       : null
   // مختار فني والمنطقة ناقصة أو مش متاحة → الإرسال مقفول لحد ما يختار متاحة أو «هركّبه بنفسي»
   const installationBlocked = installationChosen && !installationReady
@@ -353,7 +359,7 @@ export function CheckoutForm({
   const intentStranded = installation && values.governorate !== '' && meterLengthCm > 0 && installerChoices.length === 0
   // «هتركّبه إزاي؟» لسه ما اتختارش (unset) وفي أفلام بالمقاس والخدمة ظاهرة → مانفترضش «بنفسي»:
   // الكارت بيظهر والتأكيد مقفول لحد ما العميل يختار. بعد قراءة السلة بس (cart.ready).
-  const installFee = settings.installation.feePerMeterPiastres
+  const installFee = installationRate
   const choiceAvailable = meterLengthCm > 0 && installerGovernorates.length > 0 && installFee !== null
   // INSTALLER-ONLY (قرار المالك 2026-11-05) — فيلم «فني فقط» في السلة: الفني لازم يتختار صراحة، إلا لو المحافظة
   // أو المنطقة المختارة مفيهاش فني — ساعتها زي النهارده بالظبط (رسالة «مش متاح» و«هركّبه بنفسي»).
@@ -567,8 +573,9 @@ export function CheckoutForm({
           <InstallChoice
             mode={cart.installMode}
             onChange={(next) => cart.setInstallMode(next)}
-            feePerMeterPiastres={installFee}
+            feePerSquareMeterPiastres={installFee}
             lengthCm={meterLengthCm}
+            dimensions={installationDimensions}
             governorates={installerGovernorates}
             context="cart"
             installerOnly={installerOnlyHere}
