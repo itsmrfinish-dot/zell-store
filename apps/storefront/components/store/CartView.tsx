@@ -116,8 +116,11 @@ export function CartView({
 
   // PR4 — «هتركّبه إزاي؟» لأفلام المقاس في السلة. الأجر هنا تقدير؛ الانتقال والمعتمد في Checkout.
   const meterCm = installationLengthCm(entries)
+  const installationDimensions = entries
+    .filter(({ product }) => product.sale_unit === 'meter')
+    .map(({ line, product }) => ({ lengthCm: line.lengthCm, rollWidthCm: product.width_cm }))
   const installerGovernorates = installation ? installationReadyGovernorates(installation) : []
-  const fee = installation?.feePerMeterPiastres ?? null
+  const fee = installation?.feePerSquareMeterPiastres ?? installation?.feePerMeterPiastres ?? null
   const showChoice = meterCm > 0 && installerGovernorates.length > 0 && fee !== null
   // INSTALLER-ONLY — فيلم «فني فقط» في السلة = الطلب كله بفني (الاختيار واحد للطلب كله)
   const installerOnly =
@@ -257,8 +260,9 @@ export function CartView({
                 if (next === 'self' && cart.installMode !== 'self') setRevealTools(true)
                 cart.setInstallMode(next)
               }}
-              feePerMeterPiastres={fee}
+              feePerSquareMeterPiastres={fee}
               lengthCm={meterCm}
+              dimensions={installationDimensions}
               governorates={installerGovernorates}
               context="cart"
               installerOnly={installerOnly}
