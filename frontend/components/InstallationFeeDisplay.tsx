@@ -1,4 +1,4 @@
-import { formatPiastres, installationAreaSquareMeters, installationFeeForAreaPiastres, type InstallationDimension } from '@zell/core'
+import { formatPiastres, installationAreaSquareMeters, installationFeeForAreaPiastres, type InstallationDimension } from '../../packages/core/src'
 
 type InstallationFeeDisplayProps = {
   dimensions: readonly InstallationDimension[]
