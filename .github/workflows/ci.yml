@@ -15,7 +15,7 @@ on:
 jobs:
   build:
     name: install + typecheck + build
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
 
     # قراءة فقط — الـ workflow مالوش أي صلاحية كتابة على الريبو
     permissions:
@@ -106,7 +106,7 @@ jobs:
   # push لـ main وworkflow_dispatch والفرق اللي مايتقراش = تشغيل كامل.
   storefront-isr-integration-changes:
     name: "PRODUCT-ISR integration: detect changes"
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
@@ -139,7 +139,7 @@ jobs:
     name: "PRODUCT-ISR integration: ${{ matrix.group }} (synthetic source)"
     needs: storefront-isr-integration-changes
     if: needs.storefront-isr-integration-changes.outputs.run == 'true'
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     timeout-minutes: 45
     permissions:
       contents: read
@@ -172,7 +172,7 @@ jobs:
   # تحديث pnpm-lock.yaml محتاج pnpm، وبيئة التنفيذ مافيهاش.
   storefront-pixel-e2e:
     name: "META-PIXEL browser e2e: P01–P14ج (fake Meta script, synthetic source)"
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
       contents: read
@@ -211,7 +211,7 @@ jobs:
   # 0021-P — job منفصل جوه نفس الـ workflow: بيشتغل لما ملفات 0021-P تتغيّر بس (غير كده بيظهر skipped).
   sql-0021d-changes:
     name: "sql 0021-D: detect changes"
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
@@ -243,7 +243,7 @@ jobs:
     name: "sql 0021-D: ptest + apply + verify + old/new parity + rollback (postgres 17)"
     needs: sql-0021d-changes
     if: needs.sql-0021d-changes.outputs.run == 'true'
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     env:
@@ -270,7 +270,7 @@ jobs:
   # 0021-A P1 — الدفعات ورسوم التأكيد: بيشتغل لما ملفات P1 أو اللي بيعتمد عليها تتغيّر (غير كده skipped).
   sql-0021p1-changes:
     name: "sql 0021-A P1: detect changes"
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
@@ -302,7 +302,7 @@ jobs:
     name: "sql 0021-A P1: ptest + apply + verify + parity (orders + fee DB = core) + flows + rollback (postgres 17)"
     needs: sql-0021p1-changes
     if: needs.sql-0021p1-changes.outputs.run == 'true'
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     env:
@@ -340,7 +340,7 @@ jobs:
 
   sql-0021a-changes:
     name: "sql 0021-A A1: detect changes"
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
@@ -372,7 +372,7 @@ jobs:
     name: "sql 0021-A A1: ptest + apply + verify + gate + rollback (postgres 17)"
     needs: sql-0021a-changes
     if: needs.sql-0021a-changes.outputs.run == 'true'
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     env:
@@ -398,7 +398,7 @@ jobs:
 
   sql-0021p-changes:
     name: "sql 0021-P: detect changes"
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
@@ -431,7 +431,7 @@ jobs:
     name: "sql 0021-P: ptest + apply + verify + rollback + concurrency (postgres 17)"
     needs: sql-0021p-changes
     if: needs.sql-0021p-changes.outputs.run == 'true'
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     env:
@@ -460,7 +460,7 @@ jobs:
 
   sql-0021d2-changes:
     name: "sql 0021-D2: detect changes"
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
@@ -492,7 +492,7 @@ jobs:
     name: "sql 0021-D2: ptest + apply + verify + flows + rollback (postgres 17)"
     needs: sql-0021d2-changes
     if: needs.sql-0021d2-changes.outputs.run == 'true'
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     env:
@@ -518,7 +518,7 @@ jobs:
 
   sql-0021tr-changes:
     name: "sql 0021-TR: detect changes"
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
@@ -550,7 +550,7 @@ jobs:
     name: "sql 0021-TR: ptest + apply + verify + track order + rollback (postgres 17)"
     needs: sql-0021tr-changes
     if: needs.sql-0021tr-changes.outputs.run == 'true'
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     env:
@@ -576,7 +576,7 @@ jobs:
 
   sql-0021ex-changes:
     name: "sql EXPRESS-SHIPPING: detect changes"
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
@@ -608,7 +608,7 @@ jobs:
     name: "sql EXPRESS-SHIPPING: ptest + apply + verify + parity + flows + rollback (postgres 17)"
     needs: sql-0021ex-changes
     if: needs.sql-0021ex-changes.outputs.run == 'true'
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     env:
@@ -640,7 +640,7 @@ jobs:
 
   sql-0021tr2-changes:
     name: "sql TRACK-ORDER v2: detect changes"
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
@@ -672,7 +672,7 @@ jobs:
     name: "sql TRACK-ORDER v2: ptest + apply + verify + flows + concurrency + rollback + v1 guard (postgres 17)"
     needs: sql-0021tr2-changes
     if: needs.sql-0021tr2-changes.outputs.run == 'true'
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     env:
@@ -713,7 +713,7 @@ jobs:
 
   sql-0022-changes:
     name: "sql PRODUCT-DELETE: detect changes"
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
@@ -746,7 +746,7 @@ jobs:
     name: "sql PRODUCT-DELETE: guards + ptest + apply + verify + flows + concurrency + rollback (postgres 17)"
     needs: sql-0022-changes
     if: needs.sql-0022-changes.outputs.run == 'true'
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     env:
@@ -777,7 +777,7 @@ jobs:
 
   sql-baseline-changes:
     name: "sql BASELINE-OUTSIDE: detect changes"
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
@@ -811,7 +811,7 @@ jobs:
     name: "sql BASELINE-OUTSIDE: build from scratch + compare + guards + smoke + call contract (postgres 17)"
     needs: sql-baseline-changes
     if: needs.sql-baseline-changes.outputs.run == 'true'
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     env:
@@ -842,7 +842,7 @@ jobs:
 
   sql-0023-changes:
     name: "sql 0023 INVENTORY-REMOVAL: detect changes"
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
@@ -874,7 +874,7 @@ jobs:
     name: "sql 0023 INVENTORY-REMOVAL: build from list + guards + concurrency + atomic + ptest + apply + verify + existing verifies + call contract + parity (postgres 17)"
     needs: sql-0023-changes
     if: needs.sql-0023-changes.outputs.run == 'true'
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     env:
@@ -905,7 +905,7 @@ jobs:
 
   sql-0024-changes:
     name: "sql 0024 ORDER-DELETE: detect changes"
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
@@ -936,7 +936,7 @@ jobs:
     name: "sql 0024 ORDER-DELETE: build from list + ptest + guards + apply + verify + rollback + flows + concurrency + existing verifies + call contract (postgres 17)"
     needs: sql-0024-changes
     if: needs.sql-0024-changes.outputs.run == 'true'
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     env:
@@ -967,7 +967,7 @@ jobs:
 
   sql-0025-changes:
     name: "sql 0025 INSTALLER-SHIPPING: detect changes"
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
@@ -998,7 +998,7 @@ jobs:
     name: "sql 0025 INSTALLER-SHIPPING: build from list + guards + ptest + apply + verify + old/new parity + flows + negative + rollback (postgres 17)"
     needs: sql-0025-changes
     if: needs.sql-0025-changes.outputs.run == 'true'
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     env:
@@ -1029,7 +1029,7 @@ jobs:
 
   sql-0026-changes:
     name: "sql 0026 IMAGE-DELETE: detect changes"
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
@@ -1060,7 +1060,7 @@ jobs:
     name: "sql 0026 IMAGE-DELETE: build from list + guards + ptest + apply + verify + impact + flows + concurrency + rollback (postgres 17)"
     needs: sql-0026-changes
     if: needs.sql-0026-changes.outputs.run == 'true'
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     env:
@@ -1085,7 +1085,7 @@ jobs:
 
   sql-0027-changes:
     name: "sql 0027 DEFAULT-PRIVILEGES: detect changes"
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
@@ -1116,7 +1116,7 @@ jobs:
     name: "sql 0027 DEFAULT-PRIVILEGES: build from list + full default ACL snapshot + guards + ptest + apply + verify + impact + probes + rollback (postgres 17)"
     needs: sql-0027-changes
     if: needs.sql-0027-changes.outputs.run == 'true'
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     env:
@@ -1141,7 +1141,7 @@ jobs:
 
   sql-0033-changes:
     name: "sql 0033 INSPECTION-TOGGLE: detect changes"
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
@@ -1172,7 +1172,7 @@ jobs:
     name: "sql 0033 INSPECTION-TOGGLE: build fresh cluster + test (postgres 17)"
     needs: sql-0033-changes
     if: needs.sql-0033-changes.outputs.run == 'true'
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     env:
@@ -1196,7 +1196,7 @@ jobs:
 
   sql-0030-changes:
     name: "sql 0030 COUPON-DELETE: detect changes"
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
@@ -1227,7 +1227,7 @@ jobs:
     name: "sql 0030 COUPON-DELETE: build from list + flows + concurrency (postgres 17)"
     needs: sql-0030-changes
     if: needs.sql-0030-changes.outputs.run == 'true'
-    runs-on: [self-hosted, aws-lab]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     env:
